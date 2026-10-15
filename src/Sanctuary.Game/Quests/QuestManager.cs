@@ -104,11 +104,11 @@ public sealed class QuestManager : IQuestManager
         if (goalIndex >= goals.Count)
             return false;
 
-        if (goals[goalIndex].Type == QuestGoalType.Collect)
+        if (goals[goalIndex] is CollectGoal)
             return false;
 
-        if (goals[goalIndex].IsCountedTalk)
-            return goals[goalIndex].AllTalkTargetGuids().Contains(npc.Guid);
+        if (goals[goalIndex] is TalkToNpcGoal { IsCounted: true } countedGoal)
+            return countedGoal.AllTalkTargetGuids().Contains(npc.Guid);
 
         return GoalTargetGuid(quest, goalIndex) == npc.Guid;
     }
@@ -118,8 +118,8 @@ public sealed class QuestManager : IQuestManager
         if (!AdvancesHere(player, quest, npc, out var goalIndex))
             return;
 
-        if (quest.Goals[goalIndex].IsCountedTalk)
-            TryCreditCountedTalk(player, quest, goalIndex, npc);
+        if (quest.Goals[goalIndex] is TalkToNpcGoal { IsCounted: true } countedGoal)
+            TryCreditCountedTalk(player, quest, goalIndex, countedGoal, npc);
         else
             CompleteGoal(player, quest, goalIndex, npc.Guid);
     }
@@ -144,9 +144,9 @@ public sealed class QuestManager : IQuestManager
     {
         var nodeType = node.TypeDefinition.Key;
 
-        foreach (var (questId, quest, goalIndex, goal) in ActiveGoals(player))
+        foreach (var (questId, quest, goalIndex, activeGoal) in ActiveGoals(player))
         {
-            if (goal.Type != QuestGoalType.Collect || goal.CollectNodeType != nodeType)
+            if (activeGoal is not CollectGoal goal || goal.CollectNodeType != nodeType)
                 continue;
 
             var required = goal.RequiredCount;
@@ -181,9 +181,9 @@ public sealed class QuestManager : IQuestManager
 
     public void OnPlayerMoved(Player player)
     {
-        foreach (var (questId, quest, done, goal) in ActiveGoals(player))
+        foreach (var (questId, quest, done, activeGoal) in ActiveGoals(player))
         {
-            if (goal.Type != QuestGoalType.ReachLocation || goal.ReachPosition.Length < 3)
+            if (activeGoal is not ReachLocationGoal goal || goal.ReachPosition.Length < 3)
                 continue;
 
             var radius = goal.ReachRadius > 0 ? goal.ReachRadius : DefaultReachRadius;
@@ -283,7 +283,7 @@ public sealed class QuestManager : IQuestManager
 
         RefreshQuestNotifications(player, quest);
 
-        if (quest.NextQuestId != 0 && _resourceManager.Quests.TryGet(quest.NextQuestId, out var next))
+        if (quest.NextQuestId is { } nextQuestId && _resourceManager.Quests.TryGet(nextQuestId, out var next))
             RefreshQuestNotification(player, next.GiverGuid);
 
         RefreshObjectiveTarget(player);
@@ -508,10 +508,8 @@ public sealed class QuestManager : IQuestManager
         return entries;
     }
 
-    private bool TryCreditCountedTalk(Player player, QuestDefinition quest, int goalIndex, Npc npc)
+    private bool TryCreditCountedTalk(Player player, QuestDefinition quest, int goalIndex, TalkToNpcGoal goal, Npc npc)
     {
-        var goal = quest.Goals[goalIndex];
-
         if (!goal.AllTalkTargetGuids().Contains(npc.Guid))
             return false;
 
@@ -555,7 +553,7 @@ public sealed class QuestManager : IQuestManager
         return true;
     }
 
-    private static void ClearTalkProgress(Player player, QuestGoal goal)
+    private static void ClearTalkProgress(Player player, TalkToNpcGoal goal)
     {
         foreach (var guid in goal.AllTalkTargetGuids())
             player.TalkedQuestNpcs.Remove(guid);
@@ -564,11 +562,11 @@ public sealed class QuestManager : IQuestManager
     private static void ClearTalkProgress(Player player, QuestDefinition quest)
     {
         foreach (var goal in quest.Goals)
-            if (goal.IsCountedTalk)
-                ClearTalkProgress(player, goal);
+            if (goal is TalkToNpcGoal { IsCounted: true } countedGoal)
+                ClearTalkProgress(player, countedGoal);
     }
 
-    private static ulong NearestUntalkedTarget(Player player, QuestGoal goal)
+    private static ulong NearestUntalkedTarget(Player player, TalkToNpcGoal goal)
     {
         ulong nearest = 0;
         var best = float.MaxValue;
@@ -719,10 +717,10 @@ public sealed class QuestManager : IQuestManager
             var activeGoal = goals[done];
             SendObjectiveActivated(player, quest.QuestId, activeGoal);
 
-            if (activeGoal.Type == QuestGoalType.Collect
+            if (activeGoal is CollectGoal collectGoal
                 && player.QuestCollectProgress.TryGetValue(quest.QuestId, out var collected) && collected > 0)
             {
-                int req = activeGoal.RequiredCount;
+                int req = collectGoal.RequiredCount;
                 player.SendTunneled(new QuestObjectiveUpdatePacket
                 {
                     QuestId = quest.QuestId,
@@ -743,7 +741,12 @@ public sealed class QuestManager : IQuestManager
         {
             QuestId = questId,
             ObjectiveId = goal.NameId,
-            RequiredCount = goal.RequiredCount,
+            RequiredCount = goal switch
+            {
+                TalkToNpcGoal talkGoal => talkGoal.RequiredCount,
+                CollectGoal collectGoal => collectGoal.RequiredCount,
+                _ => 0
+            },
             Unknown2 = false
         });
     }
@@ -751,8 +754,8 @@ public sealed class QuestManager : IQuestManager
     private static ulong GoalTargetGuid(QuestDefinition quest, int goalIndex)
     {
         var goals = quest.Goals;
-        if (goalIndex >= 0 && goalIndex < goals.Count && goals[goalIndex].TargetGuid != 0)
-            return goals[goalIndex].TargetGuid;
+        if (goalIndex >= 0 && goalIndex < goals.Count && goals[goalIndex] is TalkToNpcGoal { TargetGuid: not 0 } talkGoal)
+            return talkGoal.TargetGuid;
         return quest.TargetGuid;
     }
 
@@ -761,16 +764,16 @@ public sealed class QuestManager : IQuestManager
         var goals = quest.Goals;
 
         if (goalIndex >= 0 && goalIndex < goals.Count
-            && goals[goalIndex].Type == QuestGoalType.Collect)
+            && goals[goalIndex] is CollectGoal collectGoal)
         {
-            var nearest = NearestCollectionNode(player, goals[goalIndex].CollectNodeType);
+            var nearest = NearestCollectionNode(player, collectGoal.CollectNodeType);
             if (nearest is not null)
                 return nearest.Guid;
         }
 
-        if (goalIndex >= 0 && goalIndex < goals.Count && goals[goalIndex].IsCountedTalk)
+        if (goalIndex >= 0 && goalIndex < goals.Count && goals[goalIndex] is TalkToNpcGoal { IsCounted: true } countedGoal)
         {
-            var untalked = NearestUntalkedTarget(player, goals[goalIndex]);
+            var untalked = NearestUntalkedTarget(player, countedGoal);
             if (untalked != 0)
                 return untalked;
         }
@@ -809,10 +812,9 @@ public sealed class QuestManager : IQuestManager
         var goals = quest.Goals;
 
         if (goalIndex >= 0 && goalIndex < goals.Count
-            && goals[goalIndex].Type == QuestGoalType.ReachLocation
-            && goals[goalIndex].ReachPosition.Length >= 3)
+            && goals[goalIndex] is ReachLocationGoal { ReachPosition.Length: >= 3 } reachGoal)
         {
-            var rp = goals[goalIndex].ReachPosition;
+            var rp = reachGoal.ReachPosition;
             var reachPos = new Vector4(rp[0], rp[1], rp[2], 1f);
             var reachZoneId = player.Zone is WorldZone reachZone
                 ? reachZone.GetZoneAreaId(reachPos)
@@ -878,10 +880,9 @@ public sealed class QuestManager : IQuestManager
 
             var onGoal = goalIndex >= 0 && goalIndex < goals.Count;
 
-            if (onGoal && goals[goalIndex].Type == QuestGoalType.ReachLocation
-                && goals[goalIndex].ReachPosition.Length >= 3)
+            if (onGoal && goals[goalIndex] is ReachLocationGoal { ReachPosition.Length: >= 3 } reachGoal)
             {
-                var rp = goals[goalIndex].ReachPosition;
+                var rp = reachGoal.ReachPosition;
                 targetPosition = new Vector3(rp[0], rp[1], rp[2]);
                 return true;
             }
@@ -931,8 +932,7 @@ public sealed class QuestManager : IQuestManager
         var goals = q.Goals;
 
         if (done >= 0 && done < goals.Count
-            && goals[done].Type == QuestGoalType.ReachLocation
-            && goals[done].ReachPosition.Length >= 3)
+            && goals[done] is ReachLocationGoal { ReachPosition.Length: >= 3 })
         {
             quest = q;
             goalIndex = done;

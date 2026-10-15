@@ -34,9 +34,8 @@ public sealed class QuestDefinition
     // Collection id granted on completion, 0 = none.
     public int RewardCollectionId { get; set; }
 
-    // 0 = none.
-    public int PrerequisiteQuestId { get; set; }
-    public int NextQuestId { get; set; }
+    public int? PrerequisiteQuestId { get; set; }
+    public int? NextQuestId { get; set; }
 
     // Quests that block this one while active or completed, for mutually exclusive quests such as the
     // two race-specific introductions. Each lists the other so the check is symmetric.
@@ -60,8 +59,8 @@ public sealed class QuestDefinition
             if (playerQuests.ContainsKey(excludedId))
                 return false;
 
-        if (PrerequisiteQuestId != 0)
-            return playerQuests.TryGetValue(PrerequisiteQuestId, out var prerequisiteDone) && prerequisiteDone;
+        if (PrerequisiteQuestId is { } prerequisiteQuestId)
+            return playerQuests.TryGetValue(prerequisiteQuestId, out var prerequisiteDone) && prerequisiteDone;
 
         return true;
     }

@@ -29,9 +29,12 @@ public sealed class TalkTarget
     public int ResponseId { get; set; }
 }
 
-// One checklist row within a quest. Goals complete in order.
-public sealed class QuestGoal
+// One checklist row within a quest. Goals complete in order. Quests.json picks the subclass with
+// "Type" (see QuestGoalJsonConverter), and a goal without one is a TalkToNpcGoal.
+public abstract class QuestGoal
 {
+    public abstract QuestGoalType Type { get; }
+
     public int NameId { get; set; }
 
     // 0 = reuse NameId.
@@ -41,9 +44,26 @@ public sealed class QuestGoal
     public int DialogueId { get; set; }
     public List<QuestDialogueLine> Dialogue { get; set; } = [];
 
-    public QuestGoalType Type { get; set; } = QuestGoalType.TalkToNpc;
+    // Hover cursor and click distance for whatever this goal makes clickable: its NPCs, or its
+    // collect pickups. Per-goal, since a quest can mix a distant landmark with a close-up pickup.
+    public byte CursorId { get; set; } = 17;
+    public int InteractRange { get; set; } = 12;
 
-    // 0 = the quest's TargetGuid, applied by the caller.
+    // The authored Dialogue, else DialogueId. Empty = say nothing.
+    public virtual IReadOnlyList<QuestDialogueLine> ConversationFor(ulong npcGuid)
+    {
+        if (Dialogue.Count > 0)
+            return Dialogue;
+
+        return DialogueId != 0 ? [new QuestDialogueLine { TextId = DialogueId }] : [];
+    }
+}
+
+public sealed class TalkToNpcGoal : QuestGoal
+{
+    public override QuestGoalType Type => QuestGoalType.TalkToNpc;
+
+    // Left at 0 in Quests.json, this becomes the quest's TargetGuid when the quest is loaded.
     public ulong TargetGuid { get; set; }
 
     // Every NPC that credits this goal, each with its own line. RequiredCount sets how many are needed.
@@ -51,21 +71,7 @@ public sealed class QuestGoal
 
     public int RequiredCount { get; set; }
 
-    // A CollectionNodeTypes.json key. Reuses the existing collection node system for pickups
-    // instead of quests owning their own spawn points.
-    public string CollectNodeType { get; set; } = string.Empty;
-
-    // [x, y, z]. The proximity check is 2D, so the Y only feeds the map pin.
-    public float[] ReachPosition { get; set; } = [];
-
-    public float ReachRadius { get; set; } = 12f;
-
-    // Hover cursor and click distance for whatever this goal makes clickable: its NPCs, or its
-    // collect pickups. Per-goal, since a quest can mix a distant landmark with a close-up pickup.
-    public byte CursorId { get; set; } = 17;
-    public int InteractRange { get; set; } = 12;
-
-    public bool IsCountedTalk => Type == QuestGoalType.TalkToNpc && RequiredCount > 1;
+    public bool IsCounted => RequiredCount > 1;
 
     public IEnumerable<ulong> AllTalkTargetGuids()
     {
@@ -77,8 +83,8 @@ public sealed class QuestGoal
                 yield return target.Guid;
     }
 
-    // The authored Dialogue, else this NPC's own line, else DialogueId. Empty = say nothing.
-    public IReadOnlyList<QuestDialogueLine> ConversationFor(ulong npcGuid)
+    // The authored Dialogue, else this NPC's own line, else DialogueId.
+    public override IReadOnlyList<QuestDialogueLine> ConversationFor(ulong npcGuid)
     {
         if (Dialogue.Count > 0)
             return Dialogue;
@@ -89,6 +95,27 @@ public sealed class QuestGoal
                 return [new QuestDialogueLine { TextId = target.DialogueId, ResponseTextId = target.ResponseId }];
         }
 
-        return DialogueId != 0 ? [new QuestDialogueLine { TextId = DialogueId }] : [];
+        return base.ConversationFor(npcGuid);
     }
+}
+
+public sealed class ReachLocationGoal : QuestGoal
+{
+    public override QuestGoalType Type => QuestGoalType.ReachLocation;
+
+    // [x, y, z]. The proximity check is 2D, so the Y only feeds the map pin.
+    public float[] ReachPosition { get; set; } = [];
+
+    public float ReachRadius { get; set; } = 12f;
+}
+
+public sealed class CollectGoal : QuestGoal
+{
+    public override QuestGoalType Type => QuestGoalType.Collect;
+
+    // A CollectionNodeTypes.json key. Reuses the existing collection node system for pickups
+    // instead of quests owning their own spawn points.
+    public string CollectNodeType { get; set; } = string.Empty;
+
+    public int RequiredCount { get; set; }
 }
