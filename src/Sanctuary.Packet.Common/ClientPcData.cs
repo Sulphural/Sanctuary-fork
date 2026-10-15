@@ -257,9 +257,7 @@ public class ClientPcData
         writer.Write(0);
         writer.Write(0);
 
-        writer.Write(0);
-
-        writer.Write(0);
+        writer.Write(0); // TODO Acquaintances
 
         writer.Write(0); // TODO Recipes
 
