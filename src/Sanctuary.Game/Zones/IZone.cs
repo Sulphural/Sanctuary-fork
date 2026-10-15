@@ -4,10 +4,10 @@ using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 
 using Sanctuary.Game.Entities;
+using Sanctuary.Game.Pathfinding;
 using Sanctuary.Game.Resources.Definitions;
 using Sanctuary.Scripting;
 using Sanctuary.UdpLibrary;
-using Sanctuary.Game.Pathfinding;
 
 namespace Sanctuary.Game.Zones;
 
@@ -66,8 +66,6 @@ public interface IZone : IScriptableZone, IDisposable
 
     bool TryRemoveNpc(ulong guid);
     bool TryRemovePlayer(ulong guid);
-
-
 
     #endregion
 

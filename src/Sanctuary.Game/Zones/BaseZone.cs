@@ -707,8 +707,6 @@ public abstract class BaseZone : IZone, IDisposable
     {
         if (_scriptManager.GetOrCreateContext(this, out var context))
         {
-            // Fresh context. Attach all scripts defined in the zone definition.
-            // We can't use `LoadScriptInBackground` here because we need to ensure that any `onStart` handlers are fully loaded.
             foreach (var script in _scripts)
                 context.LoadScript(Path.Combine("Zone", script + ".lua"));
         }
@@ -1332,7 +1330,6 @@ public abstract class BaseZone : IZone, IDisposable
     {
         var tiles = new Dictionary<int, ZoneTile>();
 
-        // Generate all tiles
         for (var longitude = _zoneDefinition.StartLongitude; longitude < _zoneDefinition.EndLongitude; longitude++)
         {
             for (var latitude = _zoneDefinition.StartLatitude; latitude < _zoneDefinition.EndLatitude; latitude++)
@@ -1343,7 +1340,6 @@ public abstract class BaseZone : IZone, IDisposable
             }
         }
 
-        // Calcualte visible tiles
         for (var rootLongitude = _zoneDefinition.StartLongitude; rootLongitude < _zoneDefinition.EndLongitude; rootLongitude++)
         {
             for (var rootLatitude = _zoneDefinition.StartLatitude; rootLatitude < _zoneDefinition.EndLatitude; rootLatitude++)

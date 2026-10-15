@@ -57,6 +57,7 @@ public class ResourceManager : IResourceManager, IDisposable
     public static readonly string NpcMovementsFile = Path.Combine(BaseDirectory, "NpcMovements.json");
     public static readonly string NpcAmbientFile = Path.Combine(BaseDirectory, "NpcAmbient.json");
     public static readonly string NameFilterFile = Path.Combine(BaseDirectory, "NameFilter.txt");
+    public static readonly string QuestsFile = Path.Combine(BaseDirectory, "Quests.json");
     public static readonly string MapsDirectory = Path.Combine(BaseDirectory, "Maps");
     public static readonly string TerrainDirectory = Path.Combine(BaseDirectory, "Terrain");
     public static readonly string NavMeshDirectory = Path.Combine(BaseDirectory, "NavMeshes");
@@ -105,6 +106,7 @@ public class ResourceManager : IResourceManager, IDisposable
     public NameFilterCollection NameFilter { get; }
     public NpcMovementDefinitionCollection NpcMovements { get; }
     public NpcAmbientDefinitionCollection NpcAmbient { get; }
+    public QuestDefinitionCollection Quests { get; }
     public MapGraphCollection Maps { get; }
     public TerrainCollection Terrains { get; }
     public NavMeshCollection NavMeshes { get; }
@@ -165,6 +167,7 @@ public class ResourceManager : IResourceManager, IDisposable
         NameFilter = new(_logger);
         NpcMovements = new(_logger);
         NpcAmbient = new(_logger);
+        Quests = new(_logger);
         Maps = new(_logger);
         Terrains = new(_logger);
         NavMeshes = new(_logger);
@@ -283,8 +286,6 @@ public class ResourceManager : IResourceManager, IDisposable
 
         foreach (var table in RewardTables.Values)
         {
-            // NOTE: We may need to fiddle with this if we ever extend past just items and currencies,
-            // though isn't everything technically an item? Didn't think that far ahead.
             if (table.DropTable.OfType<ItemRewardDropDefinition>().Any(drop => !ClientItemDefinitions.ContainsKey(drop.ItemDefinitionId)))
             {
                 _logger.LogError("Reward table {key} references an unknown item definition.", table.Key);
@@ -363,6 +364,9 @@ public class ResourceManager : IResourceManager, IDisposable
             return false;
 
         if (!NpcAmbient.Load(NpcAmbientFile))
+            return false;
+
+        if (!Quests.Load(QuestsFile))
             return false;
 
         foreach (var coin in CollectionCoins.Values)
@@ -486,6 +490,8 @@ public class ResourceManager : IResourceManager, IDisposable
                 loaded = NpcAmbient.Load(NpcAmbientFile);
             else if (e.FullPath == NameFilterFile)
                 loaded = NameFilter.Load(NameFilterFile);
+            else if (e.FullPath == QuestsFile)
+                loaded = Quests.Load(QuestsFile);
             else if (e.FullPath == RewardTablesFile)
                 loaded = RewardTables.Load(RewardTablesFile);
             else if (e.FullPath == CombatAbilitiesFile)

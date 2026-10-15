@@ -12,6 +12,7 @@ using Sanctuary.Core.Configuration;
 using Sanctuary.Core.Extensions;
 using Sanctuary.Database;
 using Sanctuary.Game;
+using Sanctuary.Game.Quests;
 using Sanctuary.Gateway;
 using Sanctuary.Scripting;
 using Sanctuary.UdpLibrary.Configuration;
@@ -41,7 +42,6 @@ builder.ConfigureAppConfiguration((hostBuilderContext, configurationBuilder) =>
 
 builder.ConfigureServices((hostBuilderContext, serviceCollection) =>
 {
-    // Options
     serviceCollection.AddOptions<DatabaseOptions>()
         .BindConfiguration(DatabaseOptions.Section)
         .ValidateOnStart();
@@ -50,15 +50,12 @@ builder.ConfigureServices((hostBuilderContext, serviceCollection) =>
         .BindConfiguration(ServerOptions.Section)
         .ValidateOnStart();
 
-    // Database
     serviceCollection.AddDatabase(hostBuilderContext.Configuration);
 
-    // Server Options
     var serverOptions = hostBuilderContext.Configuration.GetSection(ServerOptions.Section).Get<GatewayServerOptions>();
 
     ArgumentNullException.ThrowIfNull(serverOptions);
 
-    // LoginGateway UDP Client
     serviceCollection.AddSingleton(serviceProvider =>
     {
         var udpParams = new UdpParams(ManagerRole.ExternalClient)
@@ -70,7 +67,6 @@ builder.ConfigureServices((hostBuilderContext, serviceCollection) =>
         return ActivatorUtilities.CreateInstance<LoginClient>(serviceProvider, udpParams);
     });
 
-    // Gateway UDP Server
     serviceCollection.AddSingleton(serviceProvider =>
     {
         var udpParams = new UdpParams
@@ -95,12 +91,12 @@ builder.ConfigureServices((hostBuilderContext, serviceCollection) =>
 
     serviceCollection.AddHostedService<GatewayService>();
 
-    // Managers
     serviceCollection.AddSingleton<IZoneManager, ZoneManager>();
     serviceCollection.AddSingleton<IResourceManager, ResourceManager>();
     serviceCollection.AddSingleton<IScriptManager, ScriptManager>();
     serviceCollection.AddSingleton<IInteractionManager, InteractionManager>();
     serviceCollection.AddSingleton<IChatCommandManager, ChatCommandManager>();
+    serviceCollection.AddSingleton<IQuestManager, QuestManager>();
     serviceCollection.AddSingleton<IRewardManager, RewardManager>();
 });
 

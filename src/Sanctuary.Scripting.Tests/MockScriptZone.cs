@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics.CodeAnalysis;
 
 using Microsoft.Extensions.Logging;
@@ -56,4 +56,5 @@ internal class MockScriptZone(ILogger _logger) : IScriptableZone
     {
         throw new NotImplementedException();
     }
+
 }

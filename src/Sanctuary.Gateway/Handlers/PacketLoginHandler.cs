@@ -94,6 +94,7 @@ public static class PacketLoginHandler
                 .ThenInclude(x => x.IgnoreCharacter)
             .Include(x => x.Profiles)
                 .ThenInclude(x => x.Items)
+            .Include(x => x.Quests)
             .Include(x => x.GuildMember!)
                 .ThenInclude(x => x.Guild)
                     .ThenInclude(x => x.Members)
@@ -167,7 +168,6 @@ public static class PacketLoginHandler
         }
         else
         {
-            // if user is no longer a mod, remove referee profile
             ProfileHelper.RemoveSpecialProfile(character, dbContext, _logger, SpecialProfileIds.Referee);
             ProfileHelper.RemoveSpecialProfile(character, dbContext, _logger, SpecialProfileIds.Enforcer);
         }
@@ -220,9 +220,6 @@ public static class PacketLoginHandler
         connection.ClientGameSettings();
         connection.SendItemDefinitions();
 
-        // TODO
-        // AnnoucementDataSendPacket
-        // AchievementObjectiveActivatedPacket - Part 2?
 
         connection.SendSelfToClient();
 
