@@ -11,17 +11,12 @@
     "TargetGuid": 100000002049,
     "RewardCoins": 30,
     "RewardExperience": 60,
-    "RewardItems": [
-      1180,
-      75110
-    ],
+    "RewardItems": [1180, 75110],
     "PrerequisiteQuestId": 0,
     "NextQuestId": 1801,
     "NotificationAvailable": 2,
     "NotificationActive": 6,
-    "ExcludesQuestIds": [
-      2564
-    ],
+    "ExcludesQuestIds": [2564],
     "Goals": [
       {
         "NameId": 94359,
@@ -43,11 +38,7 @@
     "TargetGuid": 100000003018,
     "RewardCoins": 30,
     "RewardExperience": 70,
-    "RewardItems": [
-      8185,
-      3007,
-      2969
-    ],
+    "RewardItems": [8185, 3007, 2969],
     "PrerequisiteQuestId": 2563,
     "NextQuestId": 0,
     "NotificationAvailable": 2,
@@ -79,18 +70,12 @@
     "TargetGuid": 100000002889,
     "RewardCoins": 30,
     "RewardExperience": 60,
-    "RewardItems": [
-      56774,
-      4011,
-      4045
-    ],
+    "RewardItems": [56774, 4011, 4045],
     "PrerequisiteQuestId": 0,
     "NextQuestId": 0,
     "NotificationAvailable": 2,
     "NotificationActive": 6,
-    "ExcludesQuestIds": [
-      2563
-    ],
+    "ExcludesQuestIds": [2563],
     "Goals": [
       {
         "NameId": 115453,
@@ -142,9 +127,7 @@
     "TargetGuid": 100000002335,
     "RewardCoins": 40,
     "RewardExperience": 100,
-    "RewardItems": [
-      69834
-    ],
+    "RewardItems": [69834],
     "PrerequisiteQuestId": 3001,
     "NextQuestId": 0,
     "NotificationAvailable": 2,
@@ -201,9 +184,7 @@
     "TargetGuid": 100000033083,
     "RewardCoins": 15,
     "RewardExperience": 63,
-    "RewardItems": [
-      75855
-    ],
+    "RewardItems": [75855],
     "PrerequisiteQuestId": 104146,
     "NextQuestId": 0,
     "NotificationAvailable": 2,
@@ -307,11 +288,7 @@
       {
         "NameId": 93294,
         "Type": 1,
-        "ReachPosition": [
-          -690.38,
-          2.3,
-          -1060.25
-        ],
+        "ReachPosition": [-690.38, 2.3, -1060.25],
         "ReachRadius": 15
       },
       {
@@ -631,24 +608,15 @@
         "NameId": 101402,
         "TargetGuid": 100000001777,
         "Dialogue": [
-          {
-            "TextId": 101412,
-            "ResponseTextId": 101413
-          }
+          { "TextId": 101412, "ResponseTextId": 101413 }
         ]
       },
       {
         "NameId": 101404,
         "TargetGuid": 100000001758,
         "Dialogue": [
-          {
-            "TextId": 101414,
-            "ResponseTextId": 101415
-          },
-          {
-            "TextId": 101416,
-            "ResponseTextId": 103597
-          }
+          { "TextId": 101414, "ResponseTextId": 101415 },
+          { "TextId": 101416, "ResponseTextId": 103597 }
         ]
       },
       {
@@ -670,9 +638,7 @@
     "TargetGuid": 100000001925,
     "RewardCoins": 40,
     "RewardExperience": 90,
-    "RewardItems": [
-      15916
-    ],
+    "RewardItems": [15916],
     "PrerequisiteQuestId": 0,
     "NextQuestId": 0,
     "NotificationAvailable": 2,
@@ -814,39 +780,24 @@
         "NameId": 438901,
         "TargetGuid": 100000003842,
         "Dialogue": [
-          {
-            "TextId": 438967,
-            "ResponseTextId": 423585
-          }
+          { "TextId": 438967, "ResponseTextId": 423585 }
         ]
       },
       {
         "NameId": 438499,
         "TargetGuid": 100000003841,
         "Dialogue": [
-          {
-            "TextId": 438969,
-            "ResponseTextId": 428407
-          }
+          { "TextId": 438969, "ResponseTextId": 428407 }
         ]
       },
       {
         "NameId": 438985,
         "RequiredCount": 3,
         "TargetGuid": 100000040032,
-        "TargetGuids": [
-          100000040033,
-          100000040034
-        ],
-        "TargetDialogueIds": [
-          438971,
-          438973,
-          438975
-        ],
-        "TargetResponseIds": [
-          438972,
-          438974,
-          8136
+        "Targets": [
+          { "Guid": 100000040032, "DialogueId": 438971, "ResponseId": 438972 },
+          { "Guid": 100000040033, "DialogueId": 438973, "ResponseId": 438974 },
+          { "Guid": 100000040034, "DialogueId": 438975, "ResponseId": 8136 }
         ]
       },
       {

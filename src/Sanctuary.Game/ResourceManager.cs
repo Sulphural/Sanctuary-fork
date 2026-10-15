@@ -498,6 +498,8 @@ public class ResourceManager : IResourceManager, IDisposable
                 loaded = CombatAbilities.Load(CombatAbilitiesFile);
             else if (e.FullPath == CombatJobsFile)
                 loaded = CombatJobs.Load(CombatJobsFile);
+            else if (e.FullPath == QuestsFile)
+                loaded = Quests.Load(QuestsFile);
             else
                 _logger.LogWarning("Unknown file changed. File: {filepath}", e.FullPath);
 

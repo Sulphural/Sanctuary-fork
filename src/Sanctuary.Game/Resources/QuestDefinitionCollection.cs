@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
@@ -16,6 +16,7 @@ public class QuestDefinitionCollection
 
     public ConcurrentDictionary<int, QuestDefinition> Quests { get; } = new();
 
+    // NPC guid -> the quests it offers, and the quests it is a goal target or turn-in for.
     public ConcurrentDictionary<ulong, List<int>> ByGiver { get; } = new();
     public ConcurrentDictionary<ulong, List<int>> ByTarget { get; } = new();
 
@@ -47,6 +48,7 @@ public class QuestDefinitionCollection
 
         return false;
     }
+
     public bool TryGetNpcInteractRange(ulong npcGuid, out int interactRange)
     {
         interactRange = int.MaxValue;
@@ -139,6 +141,8 @@ public class QuestDefinitionCollection
 
         foreach (var goal in quest.Goals)
         {
+            // Intermediate goals can point at NPCs that are neither the giver nor the turn-in target, and
+            // every NPC of a counted talk goal has to be clickable, so index them all.
             foreach (var targetGuid in goal.AllTalkTargetGuids())
             {
                 var questIds = ByTarget.GetOrAdd(targetGuid, _ => []);
@@ -147,6 +151,7 @@ public class QuestDefinitionCollection
                     questIds.Add(quest.QuestId);
             }
 
+            // NameId doubles as the client's objective row key, so duplicates make goals indistinguishable.
             if (!goalNameIds.Add(goal.NameId))
                 _logger.LogWarning("Duplicate goal NameId {nameId} on quest {id} in \"{file}\".", goal.NameId, quest.QuestId, filePath);
 
