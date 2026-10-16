@@ -13,6 +13,7 @@ using Sanctuary.Database.Entities;
 using Sanctuary.Game.Entities;
 using Sanctuary.Game.Interactions;
 using Sanctuary.Game.Resources.Definitions;
+using Sanctuary.Game.Resources.Definitions.QuestGoals;
 using Sanctuary.Game.Zones;
 using Sanctuary.Packet;
 using Sanctuary.Packet.Common;
@@ -172,7 +173,7 @@ public sealed class QuestManager : IQuestManager
                 CompletedPercentage = (float)count / required
             });
 
-            PersistCollectCount(player, questId, count);
+            PersistGoalProgress(player, questId, goal.NameId, 0, count);
             RefreshObjectiveTarget(player);
             return;
         }
@@ -183,11 +184,11 @@ public sealed class QuestManager : IQuestManager
     {
         foreach (var (questId, quest, done, activeGoal) in ActiveGoals(player))
         {
-            if (activeGoal is not ReachLocationGoal goal || goal.ReachPosition.Length < 3)
+            if (activeGoal is not ReachLocationGoal goal || goal.ReachPosition == Vector3.Zero)
                 continue;
 
             var radius = goal.ReachRadius > 0 ? goal.ReachRadius : DefaultReachRadius;
-            var target = new Vector3(goal.ReachPosition[0], goal.ReachPosition[1], goal.ReachPosition[2]);
+            var target = goal.ReachPosition;
 
             if (!player.Position.IsInCircle(target, radius))
                 continue;
@@ -207,8 +208,40 @@ public sealed class QuestManager : IQuestManager
         db.SaveChanges();
     }
 
-    private void PersistCollectCount(Player player, int questId, int count)
-        => UpdateCharacterQuest(player, questId, q => q.GoalCount = count);
+    private void PersistGoalProgress(Player player, int questId, int goalId, ulong targetId, int count)
+    {
+        using var db = _dbContextFactory.CreateDbContext();
+
+        var progress = db.CharacterQuestProgress.FirstOrDefault(p => p.CharacterId == player.CharacterId
+            && p.QuestId == questId && p.GoalId == goalId && p.TargetId == targetId);
+
+        if (progress is null)
+        {
+            db.CharacterQuestProgress.Add(new DbCharacterQuestProgress
+            {
+                CharacterId = player.CharacterId,
+                QuestId = questId,
+                GoalId = goalId,
+                TargetId = targetId,
+                Count = count
+            });
+        }
+        else
+        {
+            progress.Count = count;
+        }
+
+        db.SaveChanges();
+    }
+
+    private void ClearGoalProgress(Player player, int questId)
+    {
+        using var db = _dbContextFactory.CreateDbContext();
+
+        db.CharacterQuestProgress
+            .Where(p => p.CharacterId == player.CharacterId && p.QuestId == questId)
+            .ExecuteDelete();
+    }
 
     private void PersistActiveQuest(Player player, int questId)
     {
@@ -240,7 +273,8 @@ public sealed class QuestManager : IQuestManager
             {
                 QuestId = questId,
                 CharacterId = player.CharacterId,
-                Completed = false
+                Completed = false,
+                CurrentGoalId = quest.Goals[0].NameId
             });
 
             var dbCharacter = db.Characters.FirstOrDefault(c => c.Id == player.CharacterId);
@@ -560,7 +594,7 @@ public sealed class QuestManager : IQuestManager
                 CompletedPercentage = (float)count / required
             });
 
-            PersistCollectCount(player, quest.QuestId, count);
+            PersistGoalProgress(player, quest.QuestId, goal.NameId, npc.Guid, 1);
         }
 
         QuestDialogue.Begin(player, goal.ConversationFor(npc.Guid), npc.Guid);
@@ -625,11 +659,8 @@ public sealed class QuestManager : IQuestManager
         int done = goalIndex + 1;
         player.QuestGoalProgress[quest.QuestId] = done;
 
-        UpdateCharacterQuest(player, quest.QuestId, q =>
-        {
-            q.GoalProgress = done;
-            q.GoalCount = 0;
-        });
+        UpdateCharacterQuest(player, quest.QuestId, q => q.CurrentGoalId = goals[Math.Min(done, goals.Count - 1)].NameId);
+        ClearGoalProgress(player, quest.QuestId);
 
         if (done >= goals.Count)
         {
@@ -651,7 +682,7 @@ public sealed class QuestManager : IQuestManager
         SendObjectiveForGoal(player, quest, done);
 
         var completedGoal = goals[goalIndex];
-        if (completedGoal.Type == QuestGoalType.TalkToNpc)
+        if (completedGoal is TalkToNpcGoal)
         {
             var speaker = spokenBy != 0 ? spokenBy : GoalTargetGuid(quest, goalIndex);
 
@@ -776,8 +807,9 @@ public sealed class QuestManager : IQuestManager
     private static ulong GoalTargetGuid(QuestDefinition quest, int goalIndex)
     {
         var goals = quest.Goals;
-        if (goalIndex >= 0 && goalIndex < goals.Count && goals[goalIndex] is TalkToNpcGoal { TargetGuid: not 0 } talkGoal)
-            return talkGoal.TargetGuid;
+        if (goalIndex >= 0 && goalIndex < goals.Count && goals[goalIndex] is TalkToNpcGoal talkGoal
+            && talkGoal.AllTalkTargetGuids().FirstOrDefault() is var targetGuid and not 0)
+            return targetGuid;
         return quest.TargetGuid;
     }
 
@@ -834,10 +866,9 @@ public sealed class QuestManager : IQuestManager
         var goals = quest.Goals;
 
         if (goalIndex >= 0 && goalIndex < goals.Count
-            && goals[goalIndex] is ReachLocationGoal { ReachPosition.Length: >= 3 } reachGoal)
+            && goals[goalIndex] is ReachLocationGoal reachGoal && reachGoal.ReachPosition != Vector3.Zero)
         {
-            var rp = reachGoal.ReachPosition;
-            var reachPos = new Vector4(rp[0], rp[1], rp[2], 1f);
+            var reachPos = new Vector4(reachGoal.ReachPosition, 1f);
             var reachZoneId = player.Zone is WorldZone reachZone
                 ? reachZone.GetZoneAreaId(reachPos)
                 : player.Zone.Id;
@@ -902,10 +933,9 @@ public sealed class QuestManager : IQuestManager
 
             var onGoal = goalIndex >= 0 && goalIndex < goals.Count;
 
-            if (onGoal && goals[goalIndex] is ReachLocationGoal { ReachPosition.Length: >= 3 } reachGoal)
+            if (onGoal && goals[goalIndex] is ReachLocationGoal reachGoal && reachGoal.ReachPosition != Vector3.Zero)
             {
-                var rp = reachGoal.ReachPosition;
-                targetPosition = new Vector3(rp[0], rp[1], rp[2]);
+                targetPosition = reachGoal.ReachPosition;
                 return true;
             }
 
@@ -954,7 +984,7 @@ public sealed class QuestManager : IQuestManager
         var goals = q.Goals;
 
         if (done >= 0 && done < goals.Count
-            && goals[done] is ReachLocationGoal { ReachPosition.Length: >= 3 })
+            && goals[done] is ReachLocationGoal reachGoal && reachGoal.ReachPosition != Vector3.Zero)
         {
             quest = q;
             goalIndex = done;

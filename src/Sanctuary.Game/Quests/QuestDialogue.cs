@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 
 using Sanctuary.Game.Entities;
 using Sanctuary.Game.Resources.Definitions;
+using Sanctuary.Game.Resources.Definitions.QuestGoals;
 using Sanctuary.Packet;
 
 namespace Sanctuary.Game.Quests;
