@@ -270,6 +270,12 @@ public sealed class QuestManager : IQuestManager
         ClearTalkProgress(player, quest);
         UpdateCharacterQuest(player, questId, q => q.Completed = true);
 
+        if (player.ActiveQuestId == questId)
+        {
+            player.ActiveQuestId = 0;
+            PersistActiveQuest(player, 0);
+        }
+
         player.SendTunneled(new QuestCompletePacket { QuestId = questId });
 
         player.SendTunneled(new CompletedQuestCountUpdatePacket
