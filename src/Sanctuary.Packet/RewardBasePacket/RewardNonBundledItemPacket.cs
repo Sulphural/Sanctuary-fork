@@ -2,10 +2,9 @@ using Sanctuary.Core.IO;
 
 namespace Sanctuary.Packet;
 
-public class RewardNonBundledItemPacket : ISerializablePacket
+public class RewardNonBundledItemPacket : RewardBasePacket, ISerializablePacket
 {
-    public const short OpCode = 50;
-    public const byte SubOpCode = 2;
+    public new const byte OpCode = 2;
 
     public int ItemDefinitionId;
     public int Unknown20;
@@ -14,12 +13,15 @@ public class RewardNonBundledItemPacket : ISerializablePacket
     public int Quantity;
     public int Unknown34;
 
+    public RewardNonBundledItemPacket() : base(OpCode)
+    {
+    }
+
     public byte[] Serialize()
     {
         using var writer = new PacketWriter();
 
-        writer.Write(OpCode);
-        writer.Write(SubOpCode);
+        Write(writer);
 
         writer.Write(ItemDefinitionId);
         writer.Write(Unknown20);

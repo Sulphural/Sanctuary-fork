@@ -6,7 +6,7 @@ public class BaseQuestPacket
 {
     public const short OpCode = 49;
 
-    private readonly int SubOpCode;
+    private int SubOpCode;
 
     public BaseQuestPacket(int subOpCode)
     {
@@ -21,10 +21,10 @@ public class BaseQuestPacket
 
     public bool TryRead(ref PacketReader reader)
     {
-        if (!reader.TryRead(out short opCode) && opCode != OpCode)
+        if (!reader.TryRead(out short opCode) || opCode != OpCode)
             return false;
 
-        if (!reader.TryRead(out int subOpCode) && subOpCode != SubOpCode)
+        if (!reader.TryRead(out int subOpCode) || subOpCode != SubOpCode)
             return false;
 
         return true;

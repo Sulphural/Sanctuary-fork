@@ -981,7 +981,7 @@ public sealed class QuestManager : IQuestManager
 
         if (coins > 0 || experience > 0 || grantedCollection is not null)
         {
-            var celebration = new QuestRewardBundlePacket();
+            var celebration = new RewardBundlePacket();
 
             // Success also gates whether each entry's tail is written; only the actual
             // collection id needs one here, so only flip it when there is a collection to report.

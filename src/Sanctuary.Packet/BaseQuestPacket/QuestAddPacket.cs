@@ -5,7 +5,7 @@ namespace Sanctuary.Packet;
 
 public class QuestAddPacket : BaseQuestPacket, ISerializablePacket
 {
-    public const int SubOpCode = 3;
+    public new const int OpCode = 3;
 
     public int QuestId;
     public int TitleId;
@@ -26,7 +26,7 @@ public class QuestAddPacket : BaseQuestPacket, ISerializablePacket
     public int ObjectiveDescriptionId;
     public int ObjectiveField2;
 
-    public QuestAddPacket() : base(SubOpCode)
+    public QuestAddPacket() : base(OpCode)
     {
     }
 

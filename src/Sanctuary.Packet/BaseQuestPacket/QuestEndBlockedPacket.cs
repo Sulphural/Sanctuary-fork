@@ -4,13 +4,13 @@ namespace Sanctuary.Packet;
 
 public class QuestEndBlockedPacket : BaseQuestPacket, ISerializablePacket
 {
-    public const int SubOpCode = 16;
+    public new const int OpCode = 16;
 
     public ulong NpcGuid;
     public int TextId;
     public int QuestId;
 
-    public QuestEndBlockedPacket() : base(SubOpCode)
+    public QuestEndBlockedPacket() : base(OpCode)
     {
     }
 

@@ -30,6 +30,6 @@ public class QuestReplyPacket : BaseQuestPacket, IDeserializable<QuestReplyPacke
         if (!reader.TryRead(out value.Accepted))
             return false;
 
-        return true;
+        return reader.RemainingLength == 0;
     }
 }

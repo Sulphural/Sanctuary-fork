@@ -4,7 +4,7 @@ namespace Sanctuary.Packet;
 
 public class QuestObjectiveUpdatePacket : BaseQuestPacket, ISerializablePacket
 {
-    public const int SubOpCode = 9;
+    public new const int OpCode = 9;
 
     public int QuestId;
     public int ObjectiveId;
@@ -13,7 +13,7 @@ public class QuestObjectiveUpdatePacket : BaseQuestPacket, ISerializablePacket
     public bool Unknown5;
     public int Unknown6;
 
-    public QuestObjectiveUpdatePacket() : base(SubOpCode)
+    public QuestObjectiveUpdatePacket() : base(OpCode)
     {
     }
 

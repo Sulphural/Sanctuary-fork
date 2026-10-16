@@ -38,6 +38,6 @@ public class QuestAbandonedPacket : BaseQuestPacket, IDeserializable<QuestAbando
         if (!reader.TryRead(out value.QuestId))
             return false;
 
-        return true;
+        return reader.RemainingLength == 0;
     }
 }

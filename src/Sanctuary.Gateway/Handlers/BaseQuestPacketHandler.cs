@@ -32,7 +32,7 @@ public static class BaseQuestPacketHandler
         {
             QuestReplyPacket.OpCode => QuestReplyPacketHandler.HandlePacket(connection, reader.Span),
             QuestAbandonedPacket.OpCode => QuestAbandonedPacketHandler.HandlePacket(connection, reader.Span),
-            QuestEndPacket.SubOpCode + 1 => HandleQuestEndReply(connection),
+            QuestEndPacket.OpCode + 1 => HandleQuestEndReply(connection),
             _ => HandleUnknownOpCode(subOpCode)
         };
     }

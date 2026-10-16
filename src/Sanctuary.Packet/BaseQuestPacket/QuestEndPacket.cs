@@ -7,7 +7,7 @@ namespace Sanctuary.Packet;
 
 public class QuestEndPacket : BaseQuestPacket, ISerializablePacket
 {
-    public const int SubOpCode = 13;
+    public new const int OpCode = 13;
 
     public ulong NpcGuid;
     public int QuestId;
@@ -17,7 +17,7 @@ public class QuestEndPacket : BaseQuestPacket, ISerializablePacket
 
     public RewardBundleBase RewardBundle { get; } = new();
 
-    public QuestEndPacket() : base(SubOpCode)
+    public QuestEndPacket() : base(OpCode)
     {
     }
 
