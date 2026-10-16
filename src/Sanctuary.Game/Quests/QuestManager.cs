@@ -634,9 +634,12 @@ public sealed class QuestManager : IQuestManager
         player.SendTunneled(new QuestObjectiveAddedPacket
         {
             QuestId = quest.QuestId,
-            ObjectiveNameId = goals[done].NameId,
-            ObjectiveDescriptionId = goals[done].NameId,
-            ObjectiveField2 = goals[done].DescriptionId != 0 ? goals[done].DescriptionId : goals[done].NameId
+            Objective =
+            {
+                ObjectiveId = goals[done].NameId,
+                NameId = goals[done].NameId,
+                DescriptionId = goals[done].DescriptionId != 0 ? goals[done].DescriptionId : goals[done].NameId
+            }
         });
         SendObjectiveActivated(player, quest.QuestId, goals[done]);
         SendObjectiveForGoal(player, quest, done);
@@ -705,9 +708,12 @@ public sealed class QuestManager : IQuestManager
             player.SendTunneled(new QuestObjectiveAddedPacket
             {
                 QuestId = quest.QuestId,
-                ObjectiveNameId = goals[i].NameId,
-                ObjectiveDescriptionId = goals[i].NameId,
-                ObjectiveField2 = goals[i].DescriptionId != 0 ? goals[i].DescriptionId : goals[i].NameId
+                Objective =
+                {
+                    ObjectiveId = goals[i].NameId,
+                    NameId = goals[i].NameId,
+                    DescriptionId = goals[i].DescriptionId != 0 ? goals[i].DescriptionId : goals[i].NameId
+                }
             });
         }
 

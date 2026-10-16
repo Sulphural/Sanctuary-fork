@@ -10,7 +10,7 @@ public class QuestObjectiveUpdatePacket : BaseQuestPacket, ISerializablePacket
     public int ObjectiveId;
     public int CurrentCount;
     public float CompletedPercentage;
-    public bool Unknown5;
+    public bool Silent;
     public int Unknown6;
 
     public QuestObjectiveUpdatePacket() : base(OpCode)
@@ -27,7 +27,7 @@ public class QuestObjectiveUpdatePacket : BaseQuestPacket, ISerializablePacket
         writer.Write(ObjectiveId);
         writer.Write(CurrentCount);
         writer.Write(CompletedPercentage);
-        writer.Write(Unknown5);
+        writer.Write(Silent);
         writer.Write(Unknown6);
 
         return writer.Buffer;
