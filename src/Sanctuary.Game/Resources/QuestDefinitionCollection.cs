@@ -3,11 +3,13 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Text.Json;
 
 using Microsoft.Extensions.Logging;
 
 using Sanctuary.Game.Resources.Definitions;
+using Sanctuary.Game.Resources.Definitions.QuestGoals;
 
 namespace Sanctuary.Game.Resources;
 
@@ -28,31 +30,6 @@ public class QuestDefinitionCollection
 
     public bool TryGet(int questId, out QuestDefinition definition) => Quests.TryGetValue(questId, out definition!);
 
-    public bool TryGetNpcInteractRange(ulong npcGuid, out int interactRange)
-    {
-        interactRange = int.MaxValue;
-
-        foreach (var index in new[] { ByGiver, ByTarget })
-        {
-            if (!index.TryGetValue(npcGuid, out var questIds))
-                continue;
-
-            foreach (var questId in questIds)
-                if (TryGet(questId, out var quest))
-                    foreach (var goal in quest.Goals)
-                        if (goal.InteractRange > 0)
-                            interactRange = Math.Min(interactRange, goal.InteractRange);
-        }
-
-        if (interactRange == int.MaxValue)
-        {
-            interactRange = 0;
-            return false;
-        }
-
-        return true;
-    }
-
     public bool Load(string filePath)
     {
         if (!File.Exists(filePath))
@@ -70,7 +47,7 @@ public class QuestDefinitionCollection
                 PropertyNameCaseInsensitive = true,
                 ReadCommentHandling = JsonCommentHandling.Skip,
                 AllowTrailingCommas = true,
-                Converters = { new QuestGoalJsonConverter() }
+                AllowOutOfOrderMetadataProperties = true
             };
 
             var entries = JsonSerializer.Deserialize<List<QuestDefinition>>(fileStream, jsonSerializerOptions);
@@ -104,6 +81,8 @@ public class QuestDefinitionCollection
                 IndexGoals(entry, filePath);
             }
 
+            EnforceSymmetricExclusions(filePath);
+
             _logger.LogInformation("Loaded {count} quest definitions from \"{file}\".", Quests.Count, filePath);
         }
         catch (Exception ex)
@@ -128,8 +107,8 @@ public class QuestDefinitionCollection
             switch (goal)
             {
                 case TalkToNpcGoal talkGoal:
-                    if (talkGoal.TargetGuid == 0 && talkGoal.Targets.Count == 0)
-                        talkGoal.TargetGuid = quest.TargetGuid;
+                    if (talkGoal.Targets.Count == 0)
+                        talkGoal.Targets.Add(new TalkTarget { Guid = quest.TargetGuid });
 
                     // Intermediate goals can point at NPCs that are neither the giver nor the turn-in target, and
                     // every NPC of a counted talk goal has to be clickable, so index them all.
@@ -146,8 +125,8 @@ public class QuestDefinitionCollection
                     break;
 
                 case ReachLocationGoal reachGoal:
-                    if (reachGoal.ReachPosition.Length != 3)
-                        _logger.LogWarning("Reach goal on quest {id} has no [x, y, z] ReachPosition in \"{file}\"; it can never be credited.", quest.QuestId, filePath);
+                    if (reachGoal.ReachPosition == Vector3.Zero)
+                        _logger.LogWarning("Reach goal on quest {id} has no ReachPosition in \"{file}\"; it can never be credited.", quest.QuestId, filePath);
                     break;
 
                 case CollectGoal collectGoal:
@@ -157,6 +136,27 @@ public class QuestDefinitionCollection
                     if (collectGoal.RequiredCount <= 0)
                         _logger.LogWarning("Collect goal on quest {id} has no RequiredCount in \"{file}\"; it can never be completed.", quest.QuestId, filePath);
                     break;
+            }
+        }
+    }
+
+    private void EnforceSymmetricExclusions(string filePath)
+    {
+        foreach (var quest in Quests.Values)
+        {
+            foreach (var excludedId in quest.ExcludesQuestIds)
+            {
+                if (!Quests.TryGetValue(excludedId, out var excluded))
+                {
+                    _logger.LogWarning("Quest {id} excludes unknown quest {excludedId} in \"{file}\".", quest.QuestId, excludedId, filePath);
+                    continue;
+                }
+
+                if (excluded.ExcludesQuestIds.Contains(quest.QuestId))
+                    continue;
+
+                excluded.ExcludesQuestIds.Add(quest.QuestId);
+                _logger.LogWarning("Quest {id} excludes quest {excludedId}, which did not exclude it back; added the missing exclusion. \"{file}\"", quest.QuestId, excludedId, filePath);
             }
         }
     }
