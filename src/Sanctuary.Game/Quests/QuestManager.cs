@@ -311,14 +311,24 @@ public sealed class QuestManager : IQuestManager
         ClearTalkProgress(player, quest);
         QuestDialogue.Clear(player);
 
+        var wasActive = player.ActiveQuestId == questId;
+        if (wasActive)
+            player.ActiveQuestId = 0;
+
         using (var db = _dbContextFactory.CreateDbContext())
         {
             var dbQuest = db.CharacterQuests.FirstOrDefault(x => x.QuestId == questId && x.CharacterId == player.CharacterId);
             if (dbQuest is not null)
-            {
                 db.CharacterQuests.Remove(dbQuest);
-                db.SaveChanges();
+
+            if (wasActive)
+            {
+                var dbCharacter = db.Characters.FirstOrDefault(c => c.Id == player.CharacterId);
+                if (dbCharacter is not null)
+                    dbCharacter.ActiveQuestId = null;
             }
+
+            db.SaveChanges();
         }
 
         player.SendTunneled(new QuestAbandonedPacket { QuestId = questId });
