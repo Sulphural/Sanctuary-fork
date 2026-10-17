@@ -291,7 +291,7 @@ public class GatewayConnection : UdpConnection
             foreach (var progress in dbQuest.Progress.Where(progress => progress.GoalId == dbQuest.CurrentGoalId))
             {
                 if (progress.TargetId != 0)
-                    Player.TalkedQuestNpcs.Add(progress.TargetId);
+                    Player.TalkedQuestNpcs.Add((int)progress.TargetId);
 
                 goalCount += progress.Count;
             }

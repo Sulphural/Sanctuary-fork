@@ -105,7 +105,7 @@ public sealed class Player : ClientPcData, IEntity
 
     public Dictionary<int, int> QuestCollectProgress { get; } = new();
 
-    public HashSet<ulong> TalkedQuestNpcs { get; } = new();
+    public HashSet<int> TalkedQuestNpcs { get; } = new();
 
     public Queue<QuestDialogueLine> PendingDialogue { get; } = new();
     public ulong PendingDialogueNpcGuid { get; set; }
@@ -840,7 +840,7 @@ public sealed class Player : ClientPcData, IEntity
     {
         var quests = _resourceManager.Quests;
 
-        if (quests.ByGiver.TryGetValue(npc.Guid, out var giverQuestIds))
+        if (quests.ByGiver.TryGetValue(npc.DefinitionId, out var giverQuestIds))
         {
             foreach (var questId in giverQuestIds)
             {
@@ -849,7 +849,7 @@ public sealed class Player : ClientPcData, IEntity
             }
         }
 
-        if (quests.ByTarget.TryGetValue(npc.Guid, out var targetQuestIds))
+        if (quests.ByTarget.TryGetValue(npc.DefinitionId, out var targetQuestIds))
         {
             foreach (var questId in targetQuestIds)
             {

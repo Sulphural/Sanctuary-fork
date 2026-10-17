@@ -43,6 +43,8 @@ public class Npc : IScriptableNpc, IEntity
     public ILogger Logger => Zone.Logger;
     public ScriptRuntime ScriptRuntime => Zone.ScriptRuntime;
 
+    public int DefinitionId { get; set; }
+
     public int NameId { get; set; }
     public string? Name { get; set; }
     public int SubTextNameId { get; set; }

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -44,7 +45,7 @@ public static class QuestReplyPacketHandler
 
         if (_resourceManager.Quests.TryGet(packet.QuestId, out var quest))
         {
-            player.LastInteractNpcGuid = quest.GiverGuid;
+            player.LastInteractNpcGuid = player.Zone.Npcs.FirstOrDefault(npc => npc.DefinitionId == quest.GiverNpcId)?.Guid ?? 0;
             player.LastInteractAt = DateTime.UtcNow;
         }
 

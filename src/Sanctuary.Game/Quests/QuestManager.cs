@@ -33,8 +33,8 @@ public sealed class QuestManager : IQuestManager
         _logger = logger;
     }
 
-    public bool IsQuestNpc(ulong npcGuid)
-        => _resourceManager.Quests.ByGiver.ContainsKey(npcGuid) || _resourceManager.Quests.ByTarget.ContainsKey(npcGuid);
+    public bool IsQuestNpc(int npcId)
+        => _resourceManager.Quests.ByGiver.ContainsKey(npcId) || _resourceManager.Quests.ByTarget.ContainsKey(npcId);
 
     private IEnumerable<(int QuestId, QuestDefinition Quest, int GoalIndex, QuestGoal Goal)> ActiveGoals(Player player)
     {
@@ -75,7 +75,7 @@ public sealed class QuestManager : IQuestManager
             });
         }
 
-        if (quests.ByGiver.TryGetValue(npc.Guid, out var giverQuestIds))
+        if (quests.ByGiver.TryGetValue(npc.DefinitionId, out var giverQuestIds))
         {
             foreach (var questId in giverQuestIds)
             {
@@ -109,9 +109,9 @@ public sealed class QuestManager : IQuestManager
             return false;
 
         if (goals[goalIndex] is TalkToNpcGoal { IsCounted: true } countedGoal)
-            return countedGoal.AllTalkTargetGuids().Contains(npc.Guid);
+            return countedGoal.AllTalkTargetNpcIds().Contains(npc.DefinitionId);
 
-        return GoalTargetGuid(quest, goalIndex) == npc.Guid;
+        return GoalTargetNpcId(quest, goalIndex) == npc.DefinitionId;
     }
 
     private void AdvanceAtNpc(Player player, QuestDefinition quest, Npc npc)
@@ -122,7 +122,7 @@ public sealed class QuestManager : IQuestManager
         if (quest.Goals[goalIndex] is TalkToNpcGoal { IsCounted: true } countedGoal)
             TryCreditCountedTalk(player, quest, goalIndex, countedGoal, npc);
         else
-            CompleteGoal(player, quest, goalIndex, npc.Guid);
+            CompleteGoal(player, quest, goalIndex, npc);
     }
 
     public void OnNpcInteract(Player player, Npc npc)
@@ -324,7 +324,7 @@ public sealed class QuestManager : IQuestManager
         RefreshQuestNotifications(player, quest);
 
         if (quest.NextQuestId is { } nextQuestId && _resourceManager.Quests.TryGet(nextQuestId, out var next))
-            RefreshQuestNotification(player, next.GiverGuid);
+            RefreshQuestNotifications(player, next.GiverNpcId);
 
         RefreshObjectiveTarget(player);
     }
@@ -429,17 +429,26 @@ public sealed class QuestManager : IQuestManager
 
     private void RefreshQuestNotifications(Player player, QuestDefinition quest)
     {
-        RefreshQuestNotification(player, quest.GiverGuid);
-        RefreshQuestNotification(player, quest.TargetGuid);
+        RefreshQuestNotifications(player, quest.GiverNpcId);
+        RefreshQuestNotifications(player, quest.TargetNpcId);
 
         foreach (var excludedId in quest.ExcludesQuestIds)
         {
             if (!_resourceManager.Quests.TryGet(excludedId, out var excludedQuest))
                 continue;
 
-            RefreshQuestNotification(player, excludedQuest.GiverGuid);
-            RefreshQuestNotification(player, excludedQuest.TargetGuid);
+            RefreshQuestNotifications(player, excludedQuest.GiverNpcId);
+            RefreshQuestNotifications(player, excludedQuest.TargetNpcId);
         }
+    }
+
+    private void RefreshQuestNotifications(Player player, int npcId)
+    {
+        if (npcId == 0)
+            return;
+
+        foreach (var npc in player.Zone.Npcs.Where(npc => npc.DefinitionId == npcId).ToList())
+            RefreshQuestNotification(player, npc.Guid);
     }
 
     public void RefreshQuestNotification(Player player, ulong npcGuid)
@@ -502,7 +511,7 @@ public sealed class QuestManager : IQuestManager
             IconId = quest.IconId,
             Unknown6 = quest.ObjectiveDescriptionId,
             Unknown7 = false,
-            NpcGuid = quest.GiverGuid,
+            NpcGuid = NearestNpcGuid(player, quest.GiverNpcId),
             Unknown10 = 0,
             Unknown11 = false,
             Unknown12 = false
@@ -560,10 +569,10 @@ public sealed class QuestManager : IQuestManager
 
     private bool TryCreditCountedTalk(Player player, QuestDefinition quest, int goalIndex, TalkToNpcGoal goal, Npc npc)
     {
-        if (!goal.AllTalkTargetGuids().Contains(npc.Guid))
+        if (!goal.AllTalkTargetNpcIds().Contains(npc.DefinitionId))
             return false;
 
-        bool alreadyCredited = !player.TalkedQuestNpcs.Add(npc.Guid);
+        bool alreadyCredited = !player.TalkedQuestNpcs.Add(npc.DefinitionId);
 
         if (!alreadyCredited)
             RefreshQuestNotification(player, npc.Guid);
@@ -578,7 +587,7 @@ public sealed class QuestManager : IQuestManager
         {
             player.QuestCollectProgress.Remove(quest.QuestId);
             ClearTalkProgress(player, goal);
-            CompleteGoal(player, quest, goalIndex, npc.Guid);
+            CompleteGoal(player, quest, goalIndex, npc);
             return true;
         }
 
@@ -594,10 +603,10 @@ public sealed class QuestManager : IQuestManager
                 CompletedPercentage = (float)count / required
             });
 
-            PersistGoalProgress(player, quest.QuestId, goal.NameId, npc.Guid, 1);
+            PersistGoalProgress(player, quest.QuestId, goal.NameId, (ulong)npc.DefinitionId, 1);
         }
 
-        QuestDialogue.Begin(player, goal.ConversationFor(npc.Guid), npc.Guid);
+        QuestDialogue.Begin(player, goal.ConversationFor(npc.DefinitionId), npc.Guid);
 
         RefreshObjectiveTarget(player);
         return true;
@@ -605,8 +614,8 @@ public sealed class QuestManager : IQuestManager
 
     private static void ClearTalkProgress(Player player, TalkToNpcGoal goal)
     {
-        foreach (var guid in goal.AllTalkTargetGuids())
-            player.TalkedQuestNpcs.Remove(guid);
+        foreach (var npcId in goal.AllTalkTargetNpcIds())
+            player.TalkedQuestNpcs.Remove(npcId);
     }
 
     private static void ClearTalkProgress(Player player, QuestDefinition quest)
@@ -621,12 +630,12 @@ public sealed class QuestManager : IQuestManager
         ulong nearest = 0;
         var best = float.MaxValue;
 
-        foreach (var guid in goal.AllTalkTargetGuids())
+        foreach (var npcId in goal.AllTalkTargetNpcIds())
         {
-            if (player.TalkedQuestNpcs.Contains(guid))
+            if (player.TalkedQuestNpcs.Contains(npcId))
                 continue;
 
-            if (!player.Zone.TryGetNpc(guid, out var npc))
+            if (NearestNpc(player, npcId) is not { } npc)
                 continue;
 
             var dx = npc.Position.X - player.Position.X;
@@ -636,13 +645,13 @@ public sealed class QuestManager : IQuestManager
             if (distance < best)
             {
                 best = distance;
-                nearest = guid;
+                nearest = npc.Guid;
             }
         }
 
         return nearest;
     }
-    private void CompleteGoal(Player player, QuestDefinition quest, int goalIndex, ulong spokenBy = 0)
+    private void CompleteGoal(Player player, QuestDefinition quest, int goalIndex, Npc? spokenBy = null)
     {
         var goals = quest.Goals;
 
@@ -684,9 +693,10 @@ public sealed class QuestManager : IQuestManager
         var completedGoal = goals[goalIndex];
         if (completedGoal is TalkToNpcGoal)
         {
-            var speaker = spokenBy != 0 ? spokenBy : GoalTargetGuid(quest, goalIndex);
+            var speakerNpcId = spokenBy?.DefinitionId ?? GoalTargetNpcId(quest, goalIndex);
+            var speakerGuid = spokenBy?.Guid ?? NearestNpcGuid(player, speakerNpcId);
 
-            QuestDialogue.Begin(player, completedGoal.ConversationFor(speaker), speaker);
+            QuestDialogue.Begin(player, completedGoal.ConversationFor(speakerNpcId), speakerGuid);
         }
     }
 
@@ -700,7 +710,7 @@ public sealed class QuestManager : IQuestManager
     {
         var end = new QuestEndPacket
         {
-            NpcGuid = GoalTargetGuid(quest, quest.Goals.Count - 1),
+            NpcGuid = NearestNpcGuid(player, GoalTargetNpcId(quest, quest.Goals.Count - 1)),
             QuestId = quest.QuestId,
             TitleId = quest.TurnInDialogueId,
             DescriptionId = quest.TitleId
@@ -804,13 +814,40 @@ public sealed class QuestManager : IQuestManager
         });
     }
 
-    private static ulong GoalTargetGuid(QuestDefinition quest, int goalIndex)
+    private static Npc? NearestNpc(Player player, int npcId)
+    {
+        Npc? nearest = null;
+        var best = float.MaxValue;
+
+        foreach (var npc in player.Zone.Npcs)
+        {
+            if (npc.DefinitionId != npcId)
+                continue;
+
+            var dx = npc.Position.X - player.Position.X;
+            var dz = npc.Position.Z - player.Position.Z;
+            var distance = dx * dx + dz * dz;
+
+            if (distance < best)
+            {
+                best = distance;
+                nearest = npc;
+            }
+        }
+
+        return nearest;
+    }
+
+    private static ulong NearestNpcGuid(Player player, int npcId)
+        => npcId != 0 && NearestNpc(player, npcId) is { } npc ? npc.Guid : 0;
+
+    private static int GoalTargetNpcId(QuestDefinition quest, int goalIndex)
     {
         var goals = quest.Goals;
         if (goalIndex >= 0 && goalIndex < goals.Count && goals[goalIndex] is TalkToNpcGoal talkGoal
-            && talkGoal.AllTalkTargetGuids().FirstOrDefault() is var targetGuid and not 0)
-            return targetGuid;
-        return quest.TargetGuid;
+            && talkGoal.AllTalkTargetNpcIds().FirstOrDefault() is var targetNpcId and not 0)
+            return targetNpcId;
+        return quest.TargetNpcId;
     }
 
     private ulong ResolveGoalTargetGuid(Player player, QuestDefinition quest, int goalIndex)
@@ -832,7 +869,7 @@ public sealed class QuestManager : IQuestManager
                 return untalked;
         }
 
-        return GoalTargetGuid(quest, goalIndex);
+        return NearestNpcGuid(player, GoalTargetNpcId(quest, goalIndex));
     }
 
     private static CollectionNode? NearestCollectionNode(Player player, string nodeType)

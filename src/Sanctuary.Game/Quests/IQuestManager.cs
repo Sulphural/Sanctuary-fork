@@ -8,7 +8,7 @@ namespace Sanctuary.Game.Quests;
 
 public interface IQuestManager
 {
-    bool IsQuestNpc(ulong npcGuid);
+    bool IsQuestNpc(int npcId);
 
     List<NpcInteractionOption> GetInteractionOptions(Player player, Npc npc);
 

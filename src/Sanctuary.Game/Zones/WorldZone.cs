@@ -61,13 +61,13 @@ public sealed class WorldZone : BaseZone
 
         foreach (var npc in Npcs)
         {
-            if (!_questManager.IsQuestNpc(npc.Guid))
+            if (!_questManager.IsQuestNpc(npc.DefinitionId))
                 continue;
 
-            if (_resourceManager.Quests.TryGetNpcCursorId(npc.Guid, out var cursorId))
+            if (_resourceManager.Quests.TryGetNpcCursorId(npc.DefinitionId, out var cursorId))
                 npc.CursorId = cursorId;
 
-            if (_resourceManager.Quests.TryGetNpcInteractRange(npc.Guid, out var interactRange))
+            if (_resourceManager.Quests.TryGetNpcInteractRange(npc.DefinitionId, out var interactRange))
                 npc.InteractRange = interactRange;
 
             _questManager.RefreshQuestNotification(player, npc.Guid);

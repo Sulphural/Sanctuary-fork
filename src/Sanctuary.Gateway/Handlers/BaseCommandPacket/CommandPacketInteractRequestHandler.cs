@@ -71,7 +71,7 @@ public static class CommandPacketInteractRequestHandler
         if (entity is CollectionCoin collectionCoin)
             return HandleCollectionCoin(connection, collectionCoin);
 
-        if (entity is Npc npc && _questManager.IsQuestNpc(npc.Guid))
+        if (entity is Npc npc && _questManager.IsQuestNpc(npc.DefinitionId))
         {
             connection.Player.LastInteractNpcGuid = npc.Guid;
             connection.Player.LastInteractAt = DateTime.UtcNow;
