@@ -22,6 +22,7 @@ public class ConsumableCollection
     public ObservableConcurrentDictionary<int, TransformAbilityDefinition> Transformations { get; } = new();
     public ObservableConcurrentDictionary<int, RandomTransformFoodDefinition> RandomTransformFoods { get; } = new();
     public ObservableConcurrentDictionary<int, PartyFavorDefinition> PartyFavors { get; } = new();
+    public ObservableConcurrentDictionary<int, FireworkDefinition> Fireworks { get; } = new();
 
     public ConsumableCollection(ILogger logger)
     {
@@ -109,6 +110,12 @@ public class ConsumableCollection
                                 && float.IsFinite(entry.Range) && entry.Range > 0,
                             PartyFavors.TryAdd);
                         break;
+                    case "fireworks":
+                        ResourceHelper.LoadDefinitions<FireworkDefinition>(property.Value, jsonSerializerOptions, _logger, filePath,
+                            entry => entry.ItemId,
+                            entry => entry.ItemId > 0 && entry.EffectId > 0 && entry.CooldownMs >= 0,
+                            Fireworks.TryAdd);
+                        break;
                 }
             }
 
@@ -118,6 +125,7 @@ public class ConsumableCollection
             _logger.LogInformation("Loaded {count} Transformation definitions.", Transformations.Count);
             _logger.LogInformation("Loaded {count} RandomTransformFood definitions.", RandomTransformFoods.Count);
             _logger.LogInformation("Loaded {count} PartyFavor definitions.", PartyFavors.Count);
+            _logger.LogInformation("Loaded {count} Firework definitions.", Fireworks.Count);
         }
         catch (Exception ex)
         {
@@ -126,7 +134,7 @@ public class ConsumableCollection
         }
 
         if (Boomboxes.Count == 0 && FoodEffects.Count == 0 && Transformations.Count == 0 && Cakes.Count == 0
-            && RandomTransformFoods.Count == 0 && PartyFavors.Count == 0)
+            && RandomTransformFoods.Count == 0 && PartyFavors.Count == 0 && Fireworks.Count == 0)
         {
             _logger.LogError("No data was loaded from \"{file}\"", filePath);
             return false;

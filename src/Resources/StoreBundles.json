@@ -24067,6 +24067,36 @@
         "MembersOnlyPrice":  1
     },
     {
+        "Comment":  "Anniversary Firework",
+        "LaunchTime":  "2026-10-17T00:00:00+00:00",
+        "ExpireTime":  "2040-08-15T07:00:00+00:00",
+        "Image":  {
+                      "Image":  "6362"
+                  },
+        "Entries":  [
+                        {
+                            "Quantity":  1,
+                            "GameItemId":  77436,
+                            "MarketingItemId":  77436
+                        }
+                    ],
+        "Id":  900119,
+        "NameId":  14571,
+        "DescriptionId":  14577,
+        "Status":  1,
+        "CurrencyType":  1,
+        "Price":  1,
+        "AltCurrencyPrice":  1,
+        "StoreId":  1,
+        "CategoryGroupId":  115,
+        "DisplayOrder":  1,
+        "CategoryDisplayOrder":  1,
+        "DiscountType":  104,
+        "SkuId":  1,
+        "MemberDiscount":  1,
+        "MembersOnlyPrice":  1
+    },
+    {
         "Comment":  "Ballet Boombox - cannot find the correct store entry (never released, staff events only)",
         "LaunchTime":  "2026-09-15T00:00:00+00:00",
         "ExpireTime":  "2040-08-15T07:00:00+00:00",

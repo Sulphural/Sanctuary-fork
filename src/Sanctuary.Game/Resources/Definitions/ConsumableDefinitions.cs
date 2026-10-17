@@ -15,4 +15,6 @@ public class ConsumableDefinitions
     public List<RandomTransformFoodDefinition> RandomTransformFoods { get; set; } = new();
 
     public List<PartyFavorDefinition> PartyFavors { get; set; } = new();
+
+    public List<FireworkDefinition> Fireworks { get; set; } = new();
 }

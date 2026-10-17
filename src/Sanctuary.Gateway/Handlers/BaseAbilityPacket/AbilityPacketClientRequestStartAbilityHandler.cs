@@ -42,6 +42,7 @@ public static class AbilityPacketClientRequestStartAbilityHandler
             new BoomboxAbility(abilityServices),
             new CakeAbility(abilityServices),
             new SillyStringAbility(abilityServices),
+            new FireworkAbility(abilityServices),
             new TransformFoodAbility(abilityServices),
             new FoodEffectAbility(abilityServices),
             new DefaultConsumableAbility(abilityServices),

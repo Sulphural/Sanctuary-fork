@@ -217,5 +217,9 @@
     { "ItemId": 68909, "EffectId": 15818, "Comment": "Red Silly String Can" },
     { "ItemId": 68910, "EffectId": 15826, "Comment": "Green Silly String Can" },
     { "ItemId": 68911, "EffectId": 15828, "Comment": "Yellow Silly String Can" }
+  ],
+
+  "Fireworks": [
+    { "ItemId": 77436, "EffectId": 5354, "Comment": "Anniversary Firework - PFX_fireworks_multi_celebration-medium" }
   ]
 }
