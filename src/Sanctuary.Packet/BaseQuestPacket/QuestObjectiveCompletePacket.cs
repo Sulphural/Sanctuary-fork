@@ -9,7 +9,8 @@ public class QuestObjectiveCompletePacket : BaseQuestPacket, ISerializablePacket
     public int QuestId;
     public int ObjectiveId;
     public float Percent;
-    public int Unknown;
+    // Played on completion; 0 plays nothing.
+    public int CompositeEffectId;
     public bool Silent;
 
     public QuestObjectiveCompletePacket() : base(OpCode)
@@ -25,7 +26,7 @@ public class QuestObjectiveCompletePacket : BaseQuestPacket, ISerializablePacket
         writer.Write(QuestId);
         writer.Write(ObjectiveId);
         writer.Write(Percent);
-        writer.Write(Unknown);
+        writer.Write(CompositeEffectId);
         writer.Write(Silent);
 
         return writer.Buffer;

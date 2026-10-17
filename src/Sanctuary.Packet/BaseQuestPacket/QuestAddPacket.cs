@@ -26,15 +26,15 @@ public class QuestAddPacket : BaseQuestPacket, ISerializablePacket
         Multiplier = 0f
     };
 
-    public int Unknown;
-
     public Dictionary<int, QuestObjectiveInfo> Objectives { get; set; } = [];
 
     public int IconId;
     public bool SystemQuest;
+    // ClientQuestData::m_bUnknown; never read by the client.
     public bool Unknown2;
 
-    public bool Unknown3;
+    // Shows the quest in the tracker (QuestHandler:PopulateHelper).
+    public bool ShowInTracker;
 
     public QuestAddPacket() : base(OpCode)
     {
@@ -57,7 +57,6 @@ public class QuestAddPacket : BaseQuestPacket, ISerializablePacket
         writer.Write(CompletedPercentage);
 
         RewardBundle.Serialize(writer);
-        writer.Write(Unknown);
 
         writer.Write(Objectives);
 
@@ -65,7 +64,7 @@ public class QuestAddPacket : BaseQuestPacket, ISerializablePacket
         writer.Write(SystemQuest);
         writer.Write(Unknown2);
 
-        writer.Write(Unknown3);
+        writer.Write(ShowInTracker);
 
         return writer.Buffer;
     }

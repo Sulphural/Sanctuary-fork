@@ -637,6 +637,8 @@ public sealed class QuestManager : IQuestManager
         });
     }
 
+    private const float DefaultOfferCameraDistance = 6f;
+
     private void Offer(Player player, QuestDefinition quest)
     {
         var offer = new QuestInfoPacket
@@ -646,12 +648,12 @@ public sealed class QuestManager : IQuestManager
             DescriptionId = quest.DescriptionId,
             HelperTextId = quest.TitleId,
             IconId = quest.IconId,
-            Unknown6 = quest.ObjectiveDescriptionId,
-            Unknown7 = false,
+            GoalsTextId = quest.ObjectiveDescriptionId,
+            MembersOnly = false,
             NpcGuid = NearestNpcGuid(player, quest.GiverNpcId),
-            Unknown10 = 0,
+            CameraDistance = quest.CameraDistance ?? DefaultOfferCameraDistance,
             Unknown11 = false,
-            Unknown12 = false
+            AcceptOnly = false
         };
 
         FillRewardBundle(offer.RewardBundle, quest);
@@ -662,8 +664,8 @@ public sealed class QuestManager : IQuestManager
     private void FillRewardBundle(RewardBundleBase bundle, QuestDefinition quest)
     {
         bundle.Success = false;
-        bundle.Unknown1 = quest.RewardCoins;
-        bundle.RewardKind = quest.RewardExperience;
+        bundle.Coins = quest.RewardCoins;
+        bundle.Experience = quest.RewardExperience;
         bundle.Unknown3 = 0;
         bundle.Multiplier = 1f;
         bundle.IconId = -1;
@@ -817,14 +819,8 @@ public sealed class QuestManager : IQuestManager
         player.SendTunneled(new QuestObjectiveAddedPacket
         {
             QuestId = quest.QuestId,
-            Objective =
-            {
-                ObjectiveId = goals[done].NameId,
-                NameId = goals[done].NameId,
-                DescriptionId = goals[done].DescriptionId != 0 ? goals[done].DescriptionId : goals[done].NameId
-            }
+            Objective = ObjectiveFor(goals[done], ObjectiveActive)
         });
-        SendObjectiveActivated(player, quest.QuestId, goals[done]);
         SendObjectiveForGoal(player, quest, done);
 
         var completedGoal = goals[goalIndex];
@@ -860,7 +856,7 @@ public sealed class QuestManager : IQuestManager
         player.PendingQuestEndAction = () => CompleteQuest(player, quest.QuestId);
     }
 
-    private static void SendQuestAdd(Player player, QuestDefinition quest, int helperTextId, float completedPercentage = 0f, bool suppressStartBanner = false)
+    private static void SendQuestAdd(Player player, QuestDefinition quest, int helperTextId, float completedPercentage = 0f, bool suppressStartBanner = false, bool showInTracker = false)
     {
         player.SendTunneled(new QuestAddPacket
         {
@@ -874,66 +870,57 @@ public sealed class QuestManager : IQuestManager
             CompletedPercentage = completedPercentage,
             IconId = quest.IconId,
             SystemQuest = false,
-            SuppressStartBanner = suppressStartBanner
+            SuppressStartBanner = suppressStartBanner,
+            ShowInTracker = showInTracker
         });
     }
 
     private void SendActiveState(Player player, QuestDefinition quest, bool sendObjectiveTarget = true, bool suppressStartBanner = false)
     {
         int alreadyDone = player.QuestGoalProgress.TryGetValue(quest.QuestId, out var p) ? p : 0;
-        SendQuestAdd(player, quest, quest.ObjectiveDescriptionId, (float)alreadyDone / quest.Goals.Count, suppressStartBanner);
+        SendQuestAdd(player, quest, quest.ObjectiveDescriptionId, (float)alreadyDone / quest.Goals.Count, suppressStartBanner,
+            showInTracker: quest.QuestId == player.ActiveQuestId);
 
         var goals = quest.Goals;
         int done = player.QuestGoalProgress.TryGetValue(quest.QuestId, out var progress) ? progress : 0;
         int lastVisible = System.Math.Min(done, goals.Count - 1);
+
+        int collected = player.QuestCollectProgress.TryGetValue(quest.QuestId, out var count) ? count : 0;
 
         for (int i = 0; i <= lastVisible; i++)
         {
             player.SendTunneled(new QuestObjectiveAddedPacket
             {
                 QuestId = quest.QuestId,
-                Objective =
-                {
-                    ObjectiveId = goals[i].NameId,
-                    NameId = goals[i].NameId,
-                    DescriptionId = goals[i].DescriptionId != 0 ? goals[i].DescriptionId : goals[i].NameId
-                }
+                Objective = i < done
+                    ? ObjectiveFor(goals[i], ObjectiveComplete)
+                    : ObjectiveFor(goals[i], ObjectiveActive, collected)
             });
-        }
-
-        for (int i = 0; i < done && i < goals.Count; i++)
-        {
-            player.SendTunneled(new QuestObjectiveCompletePacket
-            {
-                QuestId = quest.QuestId,
-                ObjectiveId = goals[i].NameId,
-                Percent = 1f,
-                Silent = true
-            });
-        }
-
-        if (done < goals.Count)
-        {
-            var activeGoal = goals[done];
-            SendObjectiveActivated(player, quest.QuestId, activeGoal);
-
-            if (activeGoal is CollectGoal collectGoal
-                && player.QuestCollectProgress.TryGetValue(quest.QuestId, out var collected) && collected > 0)
-            {
-                int req = collectGoal.RequiredCount;
-                player.SendTunneled(new QuestObjectiveUpdatePacket
-                {
-                    QuestId = quest.QuestId,
-                    ObjectiveId = activeGoal.NameId,
-                    CurrentCount = collected,
-                    CompletedPercentage = req > 0 ? (float)collected / req : 0f
-                });
-            }
         }
 
         if (sendObjectiveTarget)
             SendObjectiveForGoal(player, quest, done);
     }
+
+    private const int ObjectiveActive = 1;
+    private const int ObjectiveComplete = 2;
+
+    private static QuestObjectiveInfo ObjectiveFor(QuestGoal goal, int state, int currentCount = 0) => new()
+    {
+        ObjectiveId = goal.NameId,
+        NameId = goal.NameId,
+        DescriptionId = goal.DescriptionId != 0 ? goal.DescriptionId : goal.NameId,
+        State = state,
+        CurrentCount = currentCount,
+        RequiredCount = RequiredCountOf(goal)
+    };
+
+    private static int RequiredCountOf(QuestGoal goal) => goal switch
+    {
+        TalkToNpcGoal talkGoal => talkGoal.RequiredCount,
+        CollectGoal collectGoal => collectGoal.RequiredCount,
+        _ => 0
+    };
 
     private static void SendObjectiveActivated(Player player, int questId, QuestGoal goal)
     {
@@ -941,12 +928,7 @@ public sealed class QuestManager : IQuestManager
         {
             QuestId = questId,
             ObjectiveId = goal.NameId,
-            RequiredCount = goal switch
-            {
-                TalkToNpcGoal talkGoal => talkGoal.RequiredCount,
-                CollectGoal collectGoal => collectGoal.RequiredCount,
-                _ => 0
-            },
+            RequiredCount = RequiredCountOf(goal),
             Unknown2 = false
         });
     }
@@ -1212,8 +1194,8 @@ public sealed class QuestManager : IQuestManager
             // Success also gates whether each entry's tail is written; only the actual
             // collection id needs one here, so only flip it when there is a collection to report.
             celebration.RewardBundle.Success = grantedCollection is not null;
-            celebration.RewardBundle.Unknown1 = coins;
-            celebration.RewardBundle.RewardKind = experience;
+            celebration.RewardBundle.Coins = coins;
+            celebration.RewardBundle.Experience = experience;
             celebration.RewardBundle.Unknown3 = 0;
             celebration.RewardBundle.Multiplier = 1f;
             celebration.RewardBundle.IconId = -1;

@@ -142,6 +142,11 @@ collect quests can skip the call entirely and it's harmless either way.
 icon) control the world badge shown above the giver/target's head. You'll rarely need to change
 these - the defaults match every existing quest.
 
+## Offer camera
+
+`CameraDistance` sets how far the dialog camera sits from the giver's head while the offer is
+open. The client clamps it to `2`-`20`. Leave it out to use the server default.
+
 ## Text ids
 
 `TitleId`, `DescriptionId`, `GiverDialogueId`, goal `NameId`/`DescriptionId`/`DialogueId`, etc. are
