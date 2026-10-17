@@ -398,6 +398,143 @@ public sealed class QuestManager : IQuestManager
         }
     }
 
+    public bool SkipGoal(Player player, int questId)
+    {
+        if (!_resourceManager.Quests.TryGet(questId, out var quest)
+            || !player.Quests.TryGetValue(questId, out var completed) || completed)
+            return false;
+
+        var goalIndex = player.QuestGoalProgress.TryGetValue(questId, out var progress) ? progress : 0;
+        if (goalIndex >= quest.Goals.Count)
+            return false;
+
+        player.QuestCollectProgress.Remove(questId);
+        ClearTalkProgress(player, quest);
+
+        CompleteGoal(player, quest, goalIndex);
+        return true;
+    }
+
+    public bool ForceCompleteQuest(Player player, int questId)
+    {
+        if (!_resourceManager.Quests.TryGet(questId, out var quest)
+            || player.Quests.TryGetValue(questId, out var completed) && completed)
+            return false;
+
+        var wasAccepted = player.Quests.ContainsKey(questId);
+
+        player.Quests[questId] = true;
+        player.QuestGoalProgress[questId] = quest.Goals.Count;
+        player.QuestCollectProgress.Remove(questId);
+        ClearTalkProgress(player, quest);
+        QuestDialogue.Clear(player);
+
+        var wasActive = player.ActiveQuestId == questId;
+        if (wasActive)
+            player.ActiveQuestId = 0;
+
+        ClearGoalProgress(player, questId);
+
+        using (var db = _dbContextFactory.CreateDbContext())
+        {
+            var dbQuest = db.CharacterQuests.FirstOrDefault(x => x.QuestId == questId && x.CharacterId == player.CharacterId);
+            if (dbQuest is null)
+            {
+                db.CharacterQuests.Add(new DbCharacterQuest
+                {
+                    QuestId = questId,
+                    CharacterId = player.CharacterId,
+                    Completed = true,
+                    CurrentGoalId = quest.Goals[^1].NameId
+                });
+            }
+            else
+            {
+                dbQuest.Completed = true;
+                dbQuest.CurrentGoalId = quest.Goals[^1].NameId;
+            }
+
+            if (wasActive)
+            {
+                var dbCharacter = db.Characters.FirstOrDefault(c => c.Id == player.CharacterId);
+                if (dbCharacter is not null)
+                    dbCharacter.ActiveQuestId = null;
+            }
+
+            db.SaveChanges();
+        }
+
+        if (wasAccepted)
+            player.SendTunneled(new QuestCompletePacket { QuestId = questId });
+
+        player.SendTunneled(new CompletedQuestCountUpdatePacket
+        {
+            Count = player.Quests.Values.Count(done => done)
+        });
+
+        SendJournalQuestStates(player);
+
+        RefreshQuestNotifications(player, quest);
+
+        if (quest.NextQuestId is { } nextQuestId && _resourceManager.Quests.TryGet(nextQuestId, out var next))
+            RefreshQuestNotifications(player, next.GiverNpcId);
+
+        RefreshObjectiveTarget(player);
+        return true;
+    }
+
+    public bool ResetQuest(Player player, int questId)
+    {
+        if (!_resourceManager.Quests.TryGet(questId, out var quest)
+            || !player.Quests.TryGetValue(questId, out var completed))
+            return false;
+
+        player.Quests.Remove(questId);
+        player.QuestGoalProgress.Remove(questId);
+        player.QuestCollectProgress.Remove(questId);
+        ClearTalkProgress(player, quest);
+        QuestDialogue.Clear(player);
+
+        var wasActive = player.ActiveQuestId == questId;
+        if (wasActive)
+            player.ActiveQuestId = 0;
+
+        ClearGoalProgress(player, questId);
+
+        using (var db = _dbContextFactory.CreateDbContext())
+        {
+            var dbQuest = db.CharacterQuests.FirstOrDefault(x => x.QuestId == questId && x.CharacterId == player.CharacterId);
+            if (dbQuest is not null)
+                db.CharacterQuests.Remove(dbQuest);
+
+            if (wasActive)
+            {
+                var dbCharacter = db.Characters.FirstOrDefault(c => c.Id == player.CharacterId);
+                if (dbCharacter is not null)
+                    dbCharacter.ActiveQuestId = null;
+            }
+
+            db.SaveChanges();
+        }
+
+        if (completed)
+        {
+            player.SendTunneled(new CompletedQuestCountUpdatePacket
+            {
+                Count = player.Quests.Values.Count(done => done)
+            });
+        }
+        else
+        {
+            player.SendTunneled(new QuestAbandonedPacket { QuestId = questId });
+        }
+
+        RefreshQuestNotifications(player, quest);
+
+        RefreshObjectiveTarget(player);
+        return true;
+    }
+
     public void RestoreJournal(Player player)
     {
         foreach (var (questId, completed) in player.Quests)

@@ -26,6 +26,12 @@ public interface IQuestManager
 
     void SetActiveQuest(Player player, int questId);
 
+    bool SkipGoal(Player player, int questId);
+
+    bool ForceCompleteQuest(Player player, int questId);
+
+    bool ResetQuest(Player player, int questId);
+
     void RestoreJournal(Player player);
 
     void RefreshQuestNotification(Player player, ulong npcGuid);
