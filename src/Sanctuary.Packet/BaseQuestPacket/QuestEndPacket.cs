@@ -33,7 +33,6 @@ public class QuestEndPacket : BaseQuestPacket, ISerializablePacket
         writer.Write(DescriptionId);
 
         RewardBundle.Serialize(writer);
-        writer.Write(0);
 
         writer.Write(Percent);
 

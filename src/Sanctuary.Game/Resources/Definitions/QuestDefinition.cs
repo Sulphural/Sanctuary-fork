@@ -17,6 +17,9 @@ public sealed class QuestDefinition
 
     public int IconId { get; set; }
 
+    // Offer camera distance from the giver's head; the client clamps it to 2-20. Null uses the server default.
+    public float? CameraDistance { get; set; }
+
     // In the order they complete. A quest with none is rejected at load.
     public List<QuestGoal> Goals { get; set; } = [];
 

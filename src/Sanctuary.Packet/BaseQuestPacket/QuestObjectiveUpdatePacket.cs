@@ -11,6 +11,8 @@ public class QuestObjectiveUpdatePacket : BaseQuestPacket, ISerializablePacket
     public int CurrentCount;
     public float CompletedPercentage;
     public bool Silent;
+
+    // 1, 3, 10, 11, 30, 40 or 51 make this update replace a queued one for the same objective.
     public int Unknown6;
 
     public QuestObjectiveUpdatePacket() : base(OpCode)

@@ -9,6 +9,8 @@ public class QuestObjectiveActivatedPacket : BaseQuestPacket, ISerializablePacke
     public int QuestId;
     public int ObjectiveId;
     public int RequiredCount;
+
+    // Never read by the client.
     public bool Unknown2;
 
     public QuestObjectiveActivatedPacket() : base(OpCode)
