@@ -100,17 +100,22 @@ public static class PacketChatHandler
                             packet.Message
                         );
 
-                        if (toPlayer.Ignores.Any(x => x.Guid == connection.Player.Guid))
-                            break;
+                        var sender = connection.Player;
 
-                        toPlayer.SendTunneled(packet);
+                        toPlayer.Invoke(() =>
+                        {
+                            if (toPlayer.Ignores.Any(x => x.Guid == sender.Guid))
+                                return;
 
-                        var tellEchoPacket = new TellEchoPacket();
+                            toPlayer.SendTunneled(packet);
 
-                        tellEchoPacket.Name = packet.ToName;
-                        tellEchoPacket.Message = packet.Message;
+                            var tellEchoPacket = new TellEchoPacket();
 
-                        connection.Player.SendTunneled(tellEchoPacket);
+                            tellEchoPacket.Name = packet.ToName;
+                            tellEchoPacket.Message = packet.Message;
+
+                            sender.SendTunneled(tellEchoPacket);
+                        });
                     }
                 }
                 break;
@@ -175,15 +180,20 @@ public static class PacketChatHandler
                         packet.Message
                     );
 
+                    var senderGuid = connection.Player.Guid;
+
                     foreach (var member in connection.Player.GuildData.Members.Values)
                     {
                         if (!_zoneManager.TryGetPlayer(member.Guid, out var guildPlayer))
                             continue;
 
-                        if (guildPlayer.Guid != connection.Player.Guid && guildPlayer.Ignores.Any(x => x.Guid == connection.Player.Guid))
-                            continue;
+                        guildPlayer.Invoke(() =>
+                        {
+                            if (guildPlayer.Guid != senderGuid && guildPlayer.Ignores.Any(x => x.Guid == senderGuid))
+                                return;
 
-                        guildPlayer.SendTunneled(packet);
+                            guildPlayer.SendTunneled(packet);
+                        });
                     }
                 }
                 break;

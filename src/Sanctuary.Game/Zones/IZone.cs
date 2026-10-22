@@ -39,6 +39,8 @@ public interface IZone : IScriptableZone, IDisposable
 
     float TickDeltaSeconds { get; }
 
+    bool IsTickThread { get; }
+
     bool TryGetNpc(ulong guid, [MaybeNullWhen(false)] out Npc npc);
     bool TryGetPlayer(ulong guid, [MaybeNullWhen(false)] out Player player);
     bool TryGetEntity(ulong guid, [MaybeNullWhen(false)] out IEntity entity);

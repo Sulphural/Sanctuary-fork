@@ -62,10 +62,16 @@ public abstract class BaseZone : IZone, IDisposable
     private readonly record struct CollectionNodePoolRefill(string PoolKey, int CollectedHardPointId);
 
     private readonly PeriodicTimer _updateEveryTickTimer = new(TimeSpan.FromMilliseconds(TickRate));
-    private readonly PeriodicTimer _updateEverySecondTimer = new(TimeSpan.FromSeconds(1));
 
     private Task _updateEveryTickTask = Task.CompletedTask;
-    private Task _updateEverySecondTask = Task.CompletedTask;
+    private int _tickCount;
+
+    private const int MaxWorkPerPlayerPerTick = 64;
+    private readonly ConcurrentQueue<Action> _work = new();
+
+    [ThreadStatic]
+    private static BaseZone? _tickingZone;
+    private bool _disposeOnTickExit;
 
     public int Id { get; init; }
     public int DefinitionId => _zoneDefinition.Id;
@@ -228,7 +234,6 @@ public abstract class BaseZone : IZone, IDisposable
         CreateNpcConversationGroups();
 
         _updateEveryTickTask = Task.Factory.StartNew(UpdateEveryTickAsync, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default).Unwrap();
-        _updateEverySecondTask = Task.Factory.StartNew(UpdateEverySecondAsync, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default).Unwrap();
     }
 
     private const float NpcConversationRadius = 6f;
@@ -439,31 +444,34 @@ public abstract class BaseZone : IZone, IDisposable
             if (!_zoneManager.TryGetPlayer(guildMember.Key, out var guildPlayer))
                 continue;
 
-            if (guildPlayer.GuildData is null)
-                continue;
+            guildPlayer.Invoke(() =>
+            {
+                if (guildPlayer.GuildData is null)
+                    return;
 
-            if (guildPlayer.GuildData.Members.TryGetValue(player.Guid, out var onlineMember))
-            {
-                onlineMember.Online = true;
-                onlineMember.WorldId = player.Zone.Id;
-                onlineMember.ProfileId = player.ActiveProfileId;
-                onlineMember.ProfileRank = player.ActiveProfile.Rank;
-            }
-            else
-            {
-                guildPlayer.GuildData.Members[player.Guid] = new GuildMember
+                if (guildPlayer.GuildData.Members.TryGetValue(player.Guid, out var onlineMember))
                 {
-                    Guid = player.Guid,
-                    Name = player.Name,
-                    Role = playerGuildMember.Role,
-                    Online = true,
-                    WorldId = player.Zone.Id,
-                    ProfileId = player.ActiveProfileId,
-                    ProfileRank = player.ActiveProfile.Rank
-                };
-            }
+                    onlineMember.Online = true;
+                    onlineMember.WorldId = player.Zone.Id;
+                    onlineMember.ProfileId = player.ActiveProfileId;
+                    onlineMember.ProfileRank = player.ActiveProfile.Rank;
+                }
+                else
+                {
+                    guildPlayer.GuildData.Members[player.Guid] = new GuildMember
+                    {
+                        Guid = player.Guid,
+                        Name = player.Name,
+                        Role = playerGuildMember.Role,
+                        Online = true,
+                        WorldId = player.Zone.Id,
+                        ProfileId = player.ActiveProfileId,
+                        ProfileRank = player.ActiveProfile.Rank
+                    };
+                }
 
-            guildPlayer.SendTunneled(guildMemberStatusUpdatePacket);
+                guildPlayer.SendTunneled(guildMemberStatusUpdatePacket);
+            });
         }
     }
 
@@ -687,15 +695,18 @@ public abstract class BaseZone : IZone, IDisposable
             if (!_zoneManager.TryGetPlayer(friend.Guid, out var friendPlayer))
                 continue;
 
-            var otherFriendPlayer = friendPlayer.Friends.FirstOrDefault(x => x.Guid == player.Guid);
+            friendPlayer.Invoke(() =>
+            {
+                var otherFriendPlayer = friendPlayer.Friends.FirstOrDefault(x => x.Guid == player.Guid);
 
-            if (otherFriendPlayer is null || otherFriendPlayer.Online)
-                continue;
+                if (otherFriendPlayer is null || otherFriendPlayer.Online)
+                    return;
 
-            otherFriendPlayer.Online = true;
+                otherFriendPlayer.Online = true;
 
-            friendPlayer.SendTunneled(friendOnlinePacket);
-            friendPlayer.SendTunneled(friendStatusPacket);
+                friendPlayer.SendTunneled(friendOnlinePacket);
+                friendPlayer.SendTunneled(friendStatusPacket);
+            });
         }
     }
 
@@ -1544,39 +1555,78 @@ public abstract class BaseZone : IZone, IDisposable
     {
         while (await _updateEveryTickTimer.WaitForNextTickAsync() && !_cancellationTokenSource.Token.IsCancellationRequested)
         {
+            _tickingZone = this;
+
             try
             {
+                ProcessWork();
+
                 ProcessCollectionNodeRefills();
 
                 foreach (var entity in _entities)
                 {
                     entity.Value.UpdateEveryTick();
                 }
+
+                if (++_tickCount % FrameRate == 0)
+                {
+                    foreach (var entity in _entities)
+                    {
+                        entity.Value.UpdateEverySecond();
+                    }
+
+                    UpdateEverySecond();
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogCritical(ex, $"{Name} ({Id}) - Zone Exception");
+            }
+            finally
+            {
+                _tickingZone = null;
+            }
+        }
+
+        if (_disposeOnTickExit)
+            ReleaseResources();
+    }
+
+    public bool IsTickThread => _tickingZone == this;
+
+    public void Post(Action work)
+    {
+        _work.Enqueue(work);
+    }
+
+    private void ProcessWork()
+    {
+        var count = _work.Count;
+
+        while (count-- > 0 && _work.TryDequeue(out var work))
+            RunWork(work);
+
+        foreach (var player in _players.Values)
+        {
+            for (var i = 0; i < MaxWorkPerPlayerPerTick; i++)
+            {
+                if (player.Zone != this || !_players.ContainsKey(player.Guid) || !player.TryTakeWork(out var playerWork))
+                    break;
+
+                RunWork(playerWork);
             }
         }
     }
 
-    private async Task UpdateEverySecondAsync()
+    private void RunWork(Action work)
     {
-        while (await _updateEverySecondTimer.WaitForNextTickAsync() && !_cancellationTokenSource.Token.IsCancellationRequested)
+        try
         {
-            try
-            {
-                foreach (var entity in _entities)
-                {
-                    entity.Value.UpdateEverySecond();
-                }
-
-                UpdateEverySecond();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogCritical(ex, $"{Name} ({Id}) - Zone Exception");
-            }
+            work();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "{name} ({id}) - Queued work failed.", Name, Id);
         }
     }
 
@@ -1632,9 +1682,21 @@ public abstract class BaseZone : IZone, IDisposable
         _cancellationTokenSource.Cancel();
 
         _updateEveryTickTimer.Dispose();
-        _updateEverySecondTimer.Dispose();
 
-        Task.WaitAll(_updateEveryTickTask, _updateEverySecondTask);
+        if (IsTickThread)
+        {
+            _disposeOnTickExit = true;
+            return;
+        }
+
+        _updateEveryTickTask.Wait();
+
+        ReleaseResources();
+    }
+
+    private void ReleaseResources()
+    {
+        _work.Clear();
 
         lock (_collectionNodeLock)
             _collectionNodeRefills.Clear();

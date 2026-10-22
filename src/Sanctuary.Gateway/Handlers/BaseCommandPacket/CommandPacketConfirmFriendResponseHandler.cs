@@ -134,13 +134,16 @@ public static class CommandPacketConfirmFriendResponseHandler
                 }
             };
 
-            inviter.Friends.Add(inviterFriendData);
+            inviter.Invoke(() =>
+            {
+                inviter.Friends.Add(inviterFriendData);
 
-            var inviterFriendAddPacket = new FriendAddPacket();
+                var inviterFriendAddPacket = new FriendAddPacket();
 
-            inviterFriendAddPacket.Data = inviterFriendData;
+                inviterFriendAddPacket.Data = inviterFriendData;
 
-            inviter.SendTunneled(inviterFriendAddPacket);
+                inviter.SendTunneled(inviterFriendAddPacket);
+            });
         }
 
         // Invitee

@@ -10,6 +10,7 @@ using Sanctuary.Core.Helpers;
 using Sanctuary.Database;
 using Sanctuary.Database.Entities;
 using Sanctuary.Game;
+using Sanctuary.Gateway.Helpers;
 using Sanctuary.Game.Entities;
 using Sanctuary.Packet;
 using Sanctuary.Packet.Common;
@@ -65,6 +66,7 @@ public static class GuildInviteAcceptPacketHandler
 
         var dbGuild = dbContext.Guilds
             .Include(x => x.Members)
+                .ThenInclude(x => x.Character)
             .SingleOrDefault(x => x.Id == guildGuid);
 
         if (dbGuild is null)
@@ -90,6 +92,8 @@ public static class GuildInviteAcceptPacketHandler
             return true;
         }
 
+        var guildData = GuildHelper.CreateGuildData(dbGuild, _zoneManager);
+
         var dbGuildMember = new DbGuildMember
         {
             Id = dbCharacter.Id,
@@ -105,8 +109,6 @@ public static class GuildInviteAcceptPacketHandler
 
         if (dbContext.SaveChanges() <= 0)
             return true;
-
-        var guildData = player.GuildData;
 
         var memberGuid = GuidHelper.GetPlayerGuid(dbGuildMember.Id);
 
@@ -171,11 +173,14 @@ public static class GuildInviteAcceptPacketHandler
             if (!_zoneManager.TryGetPlayer(member.Guid, out var onlinePlayer))
                 continue;
 
-            if (onlinePlayer.GuildData is null || onlinePlayer.GuildData.Guid != guildData.Guid)
-                continue;
+            onlinePlayer.Invoke(() =>
+            {
+                if (onlinePlayer.GuildData is null || onlinePlayer.GuildData.Guid != guildGuid)
+                    return;
 
-            onlinePlayer.GuildData.Members[memberGuid] = newGuildMember;
-            onlinePlayer.SendTunneled(guildMemberStatusUpdatePacket);
+                onlinePlayer.GuildData.Members[memberGuid] = newGuildMember;
+                onlinePlayer.SendTunneled(guildMemberStatusUpdatePacket);
+            });
         }
 
         player.SendTunneled(new GuildInviteAcceptNotificationPacket

@@ -177,28 +177,33 @@ public static class GuildQuitPacketHandler
 
         connection.SendTunneled(guildMemberStatusUpdatePacket);
 
+        var quitterGuid = connection.Player.Guid;
+
         foreach (var member in connection.Player.GuildData.Members.Values.ToList())
         {
             if (!_zoneManager.TryGetPlayer(member.Guid, out var guildPlayer))
                 continue;
 
-            if (guildPlayer.GuildData is null || guildPlayer.GuildData.Guid != packet.Guid)
-                continue;
+            guildPlayer.Invoke(() =>
+            {
+                if (guildPlayer.GuildData is null || guildPlayer.GuildData.Guid != packet.Guid)
+                    return;
 
-            guildPlayer.GuildData.Members.Remove(connection.Player.Guid);
+                guildPlayer.GuildData.Members.Remove(quitterGuid);
 
-            if (guildPlayer.Guid == connection.Player.Guid)
-                continue;
+                if (guildPlayer.Guid == quitterGuid)
+                    return;
 
-            guildPlayer.SendTunneled(guildMemberStatusUpdatePacket);
+                guildPlayer.SendTunneled(guildMemberStatusUpdatePacket);
 
-            if (promotedLeaderStatusUpdatePacket is null)
-                continue;
+                if (promotedLeaderStatusUpdatePacket is null)
+                    return;
 
-            if (guildPlayer.GuildData.Members.TryGetValue(promotedLeaderStatusUpdatePacket.MemberGuid, out var promotedMember))
-                promotedMember.Role = promotedLeaderStatusUpdatePacket.Role;
+                if (guildPlayer.GuildData.Members.TryGetValue(promotedLeaderStatusUpdatePacket.MemberGuid, out var promotedMember))
+                    promotedMember.Role = promotedLeaderStatusUpdatePacket.Role;
 
-            guildPlayer.SendTunneled(promotedLeaderStatusUpdatePacket);
+                guildPlayer.SendTunneled(promotedLeaderStatusUpdatePacket);
+            });
         }
 
         connection.Player.GuildData = null;

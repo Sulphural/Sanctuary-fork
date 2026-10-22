@@ -59,30 +59,33 @@ public static class CommandPacketAddFriendRequestHandler
         if (player.Guid == connection.Player.Guid)
             return true;
 
-        if (player.Ignores.Any(x => x.Guid == connection.Player.Guid))
-            return true;
+        player.Invoke(() =>
+        {
+            if (player.Ignores.Any(x => x.Guid == connection.Player.Guid))
+                return;
 
-        if (player.Friends.Any(x => x.Guid == connection.Player.Guid))
-            return true;
+            if (player.Friends.Any(x => x.Guid == connection.Player.Guid))
+                return;
 
-        if (!player.IncomingFriendRequests.TryAdd(connection.Player.Guid))
-            return true;
+            if (!player.IncomingFriendRequests.TryAdd(connection.Player.Guid))
+                return;
 
-        var friendMessagePacket = new FriendMessagePacket();
+            var friendMessagePacket = new FriendMessagePacket();
 
-        friendMessagePacket.Type = FriendMessageType.FriendAddRequested;
+            friendMessagePacket.Type = FriendMessageType.FriendAddRequested;
 
-        friendMessagePacket.Guid = player.Guid;
-        friendMessagePacket.Name = player.Name;
+            friendMessagePacket.Guid = player.Guid;
+            friendMessagePacket.Name = player.Name;
 
-        connection.SendTunneled(friendMessagePacket);
+            connection.SendTunneled(friendMessagePacket);
 
-        var commandPacketConfirmFriendRequest = new CommandPacketConfirmFriendRequest();
+            var commandPacketConfirmFriendRequest = new CommandPacketConfirmFriendRequest();
 
-        commandPacketConfirmFriendRequest.Guid = connection.Player.Guid;
-        commandPacketConfirmFriendRequest.Name = connection.Player.Name;
+            commandPacketConfirmFriendRequest.Guid = connection.Player.Guid;
+            commandPacketConfirmFriendRequest.Name = connection.Player.Name;
 
-        player.SendTunneled(commandPacketConfirmFriendRequest);
+            player.SendTunneled(commandPacketConfirmFriendRequest);
+        });
 
         return true;
     }

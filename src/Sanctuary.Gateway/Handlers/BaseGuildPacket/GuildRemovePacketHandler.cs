@@ -104,15 +104,18 @@ public static class GuildRemovePacketHandler
             if (!_zoneManager.TryGetPlayer(member.Guid, out var guildPlayer))
                 continue;
 
-            if (guildPlayer.GuildData is null || guildPlayer.GuildData.Guid != packet.GuildGuid)
-                continue;
+            guildPlayer.Invoke(() =>
+            {
+                if (guildPlayer.GuildData is null || guildPlayer.GuildData.Guid != packet.GuildGuid)
+                    return;
 
-            guildPlayer.GuildData.Members.Remove(packet.PlayerGuid);
+                guildPlayer.GuildData.Members.Remove(packet.PlayerGuid);
 
-            if (guildPlayer.Guid == packet.PlayerGuid)
-                continue;
+                if (guildPlayer.Guid == packet.PlayerGuid)
+                    return;
 
-            guildPlayer.SendTunneled(guildMemberStatusUpdatePacket);
+                guildPlayer.SendTunneled(guildMemberStatusUpdatePacket);
+            });
         }
 
         connection.Player.GuildData.Members.Remove(packet.PlayerGuid);
@@ -120,22 +123,25 @@ public static class GuildRemovePacketHandler
         if (!_zoneManager.TryGetPlayer(packet.PlayerGuid, out var player))
             return true;
 
-        var guildCanCreateGuildPacket = new GuildCanCreateGuildPacket
+        player.Invoke(() =>
         {
-            CanCreateGuild = player.Profiles.Any(x => x.Rank >= 15)
-        };
+            var guildCanCreateGuildPacket = new GuildCanCreateGuildPacket
+            {
+                CanCreateGuild = player.Profiles.Any(x => x.Rank >= 15)
+            };
 
-        player.SendTunneled(guildCanCreateGuildPacket);
+            player.SendTunneled(guildCanCreateGuildPacket);
 
-        var guildPlayerStatusUpdatePacket = new GuildPlayerStatusUpdatePacket
-        {
-            PlayerGuid = packet.PlayerGuid,
-            GuildGuid = packet.GuildGuid,
-            IsInGuild = false
-        };
+            var guildPlayerStatusUpdatePacket = new GuildPlayerStatusUpdatePacket
+            {
+                PlayerGuid = packet.PlayerGuid,
+                GuildGuid = packet.GuildGuid,
+                IsInGuild = false
+            };
 
-        player.SendTunneledToVisible(guildPlayerStatusUpdatePacket, true);
-        player.GuildData = null;
+            player.SendTunneledToVisible(guildPlayerStatusUpdatePacket, true);
+            player.GuildData = null;
+        });
 
         return true;
     }

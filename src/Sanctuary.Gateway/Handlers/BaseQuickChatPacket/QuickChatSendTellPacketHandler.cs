@@ -43,12 +43,17 @@ public static class QuickChatSendTellPacketHandler
         if (!_zoneManager.TryGetPlayer(packet.ToName, out var toPlayer))
             return true;
 
-        if (toPlayer.Ignores.Any(x => x.Guid == connection.Player.Guid))
-            return true;
+        var senderGuid = connection.Player.Guid;
 
         packet.Name = connection.Player.Name;
 
-        toPlayer.SendTunneled(packet);
+        toPlayer.Invoke(() =>
+        {
+            if (toPlayer.Ignores.Any(x => x.Guid == senderGuid))
+                return;
+
+            toPlayer.SendTunneled(packet);
+        });
 
         return true;
     }

@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 using Sanctuary.Core.Helpers;
 using Sanctuary.Database;
+using Sanctuary.Database.Entities;
 using Sanctuary.Game;
 using Sanctuary.Packet;
 using Sanctuary.Packet.Common;
@@ -27,6 +28,52 @@ public static class GuildHelper
 {
     public const int MinNameLength = 3;
     public const int MaxNameLength = 32;
+
+    public static GuildData CreateGuildData(DbGuild dbGuild, IZoneManager zoneManager)
+    {
+        var guildData = new GuildData
+        {
+            Guid = dbGuild.Id,
+
+            Name = dbGuild.Name,
+
+            CanRenameGuild = true,
+
+            MaxMembers = dbGuild.MaxMembers
+        };
+
+        foreach (var dbGuildMember in dbGuild.Members)
+        {
+            var memberGuid = GuidHelper.GetPlayerGuid(dbGuildMember.Id);
+
+            var guildMember = new GuildMember
+            {
+                Guid = memberGuid,
+
+                Role = dbGuildMember.Role,
+
+                Name =
+                {
+                    FirstName = dbGuildMember.Character.FirstName,
+                    LastName = dbGuildMember.Character.LastName ?? string.Empty
+                }
+            };
+
+            if (zoneManager.TryGetPlayer(memberGuid, out var memberPlayer))
+            {
+                guildMember.Online = true;
+
+                guildMember.WorldId = memberPlayer.Zone.Id;
+
+                guildMember.ProfileId = memberPlayer.ActiveProfileId;
+                guildMember.ProfileRank = memberPlayer.ActiveProfile.Rank;
+            }
+
+            guildData.Members.Add(memberGuid, guildMember);
+        }
+
+        return guildData;
+    }
 
     public static string NormalizeName(string? name)
     {
@@ -109,11 +156,14 @@ public static class GuildHelper
             if (!zoneManager.TryGetPlayer(member.Guid, out var player))
                 continue;
 
-            if (player.GuildData is null || player.GuildData.Guid != guildGuid)
-                continue;
+            player.Invoke(() =>
+            {
+                if (player.GuildData is null || player.GuildData.Guid != guildGuid)
+                    return;
 
-            player.GuildData.Name = normalizedName;
-            player.SendTunneled(guildNameUpdatePacket);
+                player.GuildData.Name = normalizedName;
+                player.SendTunneled(guildNameUpdatePacket);
+            });
             notifiedPlayers++;
         }
 

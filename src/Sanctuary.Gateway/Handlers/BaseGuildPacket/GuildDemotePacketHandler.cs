@@ -102,8 +102,13 @@ public static class GuildDemotePacketHandler
             profileId = targetPlayer.ActiveProfileId;
             profileRank = targetPlayer.ActiveProfile.Rank;
 
-            if (targetPlayer.GuildData?.Members.TryGetValue(packet.PlayerGuid, out var targetOnlineMember) == true)
-                targetOnlineMember.Role = targetGuildMember.Role;
+            var targetRole = targetGuildMember.Role;
+
+            targetPlayer.Invoke(() =>
+            {
+                if (targetPlayer.GuildData?.Members.TryGetValue(packet.PlayerGuid, out var targetOnlineMember) == true)
+                    targetOnlineMember.Role = targetRole;
+            });
         }
 
         var guildMemberStatusUpdatePacket = new GuildMemberStatusUpdatePacket
@@ -119,18 +124,23 @@ public static class GuildDemotePacketHandler
             ProfileRank = profileRank
         };
 
+        var memberRole = targetGuildMember.Role;
+
         foreach (var member in connection.Player.GuildData.Members.Values)
         {
             if (!_zoneManager.TryGetPlayer(member.Guid, out var guildPlayer))
                 continue;
 
-            if (guildPlayer.GuildData is null || guildPlayer.GuildData.Guid != packet.GuildGuid)
-                continue;
+            guildPlayer.Invoke(() =>
+            {
+                if (guildPlayer.GuildData is null || guildPlayer.GuildData.Guid != packet.GuildGuid)
+                    return;
 
-            if (guildPlayer.GuildData.Members.TryGetValue(packet.PlayerGuid, out var visibleMember))
-                visibleMember.Role = targetGuildMember.Role;
+                if (guildPlayer.GuildData.Members.TryGetValue(packet.PlayerGuid, out var visibleMember))
+                    visibleMember.Role = memberRole;
 
-            guildPlayer.SendTunneled(guildMemberStatusUpdatePacket);
+                guildPlayer.SendTunneled(guildMemberStatusUpdatePacket);
+            });
         }
 
         return true;

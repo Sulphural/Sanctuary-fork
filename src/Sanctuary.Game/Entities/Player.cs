@@ -166,6 +166,20 @@ public sealed class Player : ClientPcData, IEntity
     // Min-heap ordered by send time.
     private readonly PriorityQueue<(ISerializablePacket Packet, PacketSendType SendType), DateTimeOffset> _delayedPackets = new();
 
+    private readonly ConcurrentQueue<Action> _work = new();
+
+    public void Post(Action work) => _work.Enqueue(work);
+
+    public void Invoke(Action work)
+    {
+        if (Zone.IsTickThread)
+            work();
+        else
+            Post(work);
+    }
+
+    public bool TryTakeWork([MaybeNullWhen(false)] out Action work) => _work.TryDequeue(out work);
+
     // One scheduled personal-UI packet per action bar slot (the cooldown re-enable) - keyed, not queued,
     // so a slot that gets emptied before its cooldown naturally expires (last item consumed) can cancel
     // its own pending re-enable instead of it firing later and silently un-deleting the slot.

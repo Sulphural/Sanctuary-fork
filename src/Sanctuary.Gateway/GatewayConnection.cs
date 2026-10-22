@@ -20,6 +20,7 @@ using Sanctuary.Game;
 using Sanctuary.Game.Entities;
 using Sanctuary.Game.Helpers;
 using Sanctuary.Gateway.Handlers;
+using Sanctuary.Gateway.Helpers;
 using Sanctuary.Packet;
 using Sanctuary.Packet.Common;
 using Sanctuary.UdpLibrary;
@@ -82,6 +83,11 @@ public class GatewayConnection : UdpConnection
         if (Player is null)
             return;
 
+        Player.Post(OnLogout);
+    }
+
+    private void OnLogout()
+    {
         SendFriendOffline();
 
         SendGuildMemberOffline();
@@ -117,6 +123,13 @@ public class GatewayConnection : UdpConnection
             && (_useEncryption || !PacketUtils.UnwrapPacket(data, out finalLength, _cipher)))
         {
             _logger.LogError("{connection} failed to unwrap/decrypt packet. ( Data: {data} )", this, Convert.ToHexString(data));
+            return;
+        }
+
+        if (Player is not null)
+        {
+            var packet = data.Slice(0, finalLength).ToArray();
+            Player.Post(() => OnHandlePacket(packet));
             return;
         }
 
@@ -485,48 +498,7 @@ public class GatewayConnection : UdpConnection
 
         if (dbCharacter.GuildMember?.Guild is { } dbGuild)
         {
-            var guildData = new GuildData
-            {
-                Guid = dbGuild.Id,
-
-                Name = dbGuild.Name,
-
-                CanRenameGuild = true,
-
-                MaxMembers = dbGuild.MaxMembers
-            };
-
-            foreach (var dbGuildMember in dbGuild.Members)
-            {
-                var memberGuid = GuidHelper.GetPlayerGuid(dbGuildMember.Id);
-
-                var guildMember = new GuildMember
-                {
-                    Guid = memberGuid,
-
-                    Role = dbGuildMember.Role,
-
-                    Name =
-                    {
-                        FirstName = dbGuildMember.Character.FirstName,
-                        LastName = dbGuildMember.Character.LastName ?? string.Empty
-                    }
-                };
-
-                if (_zoneManager.TryGetPlayer(memberGuid, out var memberPlayer))
-                {
-                    guildMember.Online = true;
-
-                    guildMember.WorldId = memberPlayer.Zone.Id;
-
-                    guildMember.ProfileId = memberPlayer.ActiveProfileId;
-                    guildMember.ProfileRank = memberPlayer.ActiveProfile.Rank;
-                }
-
-                guildData.Members.Add(memberGuid, guildMember);
-            }
-
-            player.GuildData = guildData;
+            player.GuildData = GuildHelper.CreateGuildData(dbGuild, _zoneManager);
         }
 
         return true;
@@ -667,19 +639,24 @@ public class GatewayConnection : UdpConnection
 
         friendOfflinePacket.Guid = Player.Guid;
 
+        var playerGuid = Player.Guid;
+
         foreach (var friend in Player.Friends)
         {
             if (!_zoneManager.TryGetPlayer(friend.Guid, out var friendPlayer))
                 continue;
 
-            var otherFriendPlayer = friendPlayer.Friends.FirstOrDefault(x => x.Guid == Player.Guid);
+            friendPlayer.Invoke(() =>
+            {
+                var otherFriendPlayer = friendPlayer.Friends.FirstOrDefault(x => x.Guid == playerGuid);
 
-            if (otherFriendPlayer is null)
-                continue;
+                if (otherFriendPlayer is null)
+                    return;
 
-            otherFriendPlayer.Online = false;
+                otherFriendPlayer.Online = false;
 
-            friendPlayer.SendTunneled(friendOfflinePacket);
+                friendPlayer.SendTunneled(friendOfflinePacket);
+            });
         }
     }
 
@@ -705,6 +682,11 @@ public class GatewayConnection : UdpConnection
             ProfileRank = Player.ActiveProfile.Rank
         };
 
+        var playerGuid = Player.Guid;
+        var role = playerGuildMember.Role;
+        var profileId = Player.ActiveProfileId;
+        var profileRank = Player.ActiveProfile.Rank;
+
         foreach (var guildMember in Player.GuildData.Members)
         {
             if (guildMember.Key == Player.Guid)
@@ -713,19 +695,22 @@ public class GatewayConnection : UdpConnection
             if (!_zoneManager.TryGetPlayer(guildMember.Key, out var guildPlayer))
                 continue;
 
-            if (guildPlayer.GuildData is null)
-                continue;
-
-            if (guildPlayer.GuildData.Members.TryGetValue(Player.Guid, out var onlineMember))
+            guildPlayer.Invoke(() =>
             {
-                onlineMember.Online = false;
-                onlineMember.Role = playerGuildMember.Role;
-                onlineMember.WorldId = 0;
-                onlineMember.ProfileId = Player.ActiveProfileId;
-                onlineMember.ProfileRank = Player.ActiveProfile.Rank;
-            }
+                if (guildPlayer.GuildData is null)
+                    return;
 
-            guildPlayer.SendTunneled(guildMemberStatusUpdatePacket);
+                if (guildPlayer.GuildData.Members.TryGetValue(playerGuid, out var onlineMember))
+                {
+                    onlineMember.Online = false;
+                    onlineMember.Role = role;
+                    onlineMember.WorldId = 0;
+                    onlineMember.ProfileId = profileId;
+                    onlineMember.ProfileRank = profileRank;
+                }
+
+                guildPlayer.SendTunneled(guildMemberStatusUpdatePacket);
+            });
         }
     }
 

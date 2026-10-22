@@ -77,11 +77,16 @@ public static class CommandPacketRemoveFriendRequestHandler
 
         if (_zoneManager.TryGetPlayer(dbCharacterToRemoveGuid, out var player))
         {
-            player.Friends.RemoveAll(x => x.Guid == connection.Player.Guid);
+            var removerGuid = connection.Player.Guid;
 
-            player.SendTunneled(new FriendRemovePacket
+            player.Invoke(() =>
             {
-                Guid = connection.Player.Guid
+                player.Friends.RemoveAll(x => x.Guid == removerGuid);
+
+                player.SendTunneled(new FriendRemovePacket
+                {
+                    Guid = removerGuid
+                });
             });
         }
     }
