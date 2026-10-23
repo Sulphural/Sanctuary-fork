@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using Sanctuary.Core.Configuration;
 using Sanctuary.Core.Helpers;
 using Sanctuary.Database;
+using Sanctuary.Database.Entities;
 using Sanctuary.Game;
 using Sanctuary.Game.Helpers;
 using Sanctuary.Packet;
@@ -24,6 +25,7 @@ public static class PacketLoginHandler
     private static GatewayServerOptions _options = null!;
     private static IResourceManager _resourceManager = null!;
     private static IDbContextFactory<DatabaseContext> _dbContextFactory = null!;
+    private static IZoneManager _zoneManager = null!;
 
     public static void ConfigureServices(IServiceProvider serviceProvider)
     {
@@ -34,6 +36,7 @@ public static class PacketLoginHandler
 
         _resourceManager = serviceProvider.GetRequiredService<IResourceManager>();
         _dbContextFactory = serviceProvider.GetRequiredService<IDbContextFactory<DatabaseContext>>();
+        _zoneManager = serviceProvider.GetRequiredService<IZoneManager>();
 
         var options = serviceProvider.GetRequiredService<IOptionsMonitor<GatewayServerOptions>>();
         _options = options.CurrentValue;
@@ -186,18 +189,33 @@ public static class PacketLoginHandler
         }
 #endif
 
+        _zoneManager.StartingZone.Post(() => CompleteLogin(connection, character, packetLoginReply));
+
+        return true;
+    }
+
+    private static void CompleteLogin(GatewayConnection connection, DbCharacter character, PacketLoginReply packetLoginReply)
+    {
         if (!connection.CreatePlayerFromDatabase(character))
         {
             connection.Send(packetLoginReply);
 
             connection.Disconnect();
 
-            return true;
+            return;
         }
 
-        dbContext.Characters
-            .Where(x => x.Id == character.Id)
-            .ExecuteUpdate(x => x.SetProperty(x => x.LastLogin, connection.Player.LoginStartedAt));
+        var characterId = character.Id;
+        var lastLogin = connection.Player.LoginStartedAt;
+
+        connection.QueueWork(() =>
+        {
+            using var dbContext = _dbContextFactory.CreateDbContext();
+
+            dbContext.Characters
+                .Where(x => x.Id == characterId)
+                .ExecuteUpdate(x => x.SetProperty(x => x.LastLogin, lastLogin));
+        });
 
         _loginClient.SendCharacterLogin(character.Id);
 
@@ -227,7 +245,5 @@ public static class PacketLoginHandler
         connection.SendSelfToClient();
 
         _logger.LogInformation("{address} successfully logged in with character {name} ({id}).", connection.EndPoint.Address, character.FullName, character.Id);
-
-        return true;
     }
 }

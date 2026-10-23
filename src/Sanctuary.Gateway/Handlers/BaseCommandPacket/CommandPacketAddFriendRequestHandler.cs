@@ -59,7 +59,7 @@ public static class CommandPacketAddFriendRequestHandler
         if (player.Guid == connection.Player.Guid)
             return true;
 
-        player.Invoke(() =>
+        player.Post(() =>
         {
             if (player.Ignores.Any(x => x.Guid == connection.Player.Guid))
                 return;

@@ -173,7 +173,7 @@ public static class GuildInviteAcceptPacketHandler
             if (!_zoneManager.TryGetPlayer(member.Guid, out var onlinePlayer))
                 continue;
 
-            onlinePlayer.Invoke(() =>
+            onlinePlayer.Post(() =>
             {
                 if (onlinePlayer.GuildData is null || onlinePlayer.GuildData.Guid != guildGuid)
                     return;

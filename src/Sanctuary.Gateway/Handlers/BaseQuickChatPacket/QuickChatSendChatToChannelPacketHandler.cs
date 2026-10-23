@@ -56,7 +56,7 @@ public static class QuickChatSendChatToChannelPacketHandler
                         if (!_zoneManager.TryGetPlayer(member.Guid, out var guildPlayer))
                             continue;
 
-                        guildPlayer.Invoke(() =>
+                        guildPlayer.Post(() =>
                         {
                             if (guildPlayer.Guid != senderGuid && guildPlayer.Ignores.Any(x => x.Guid == senderGuid))
                                 return;

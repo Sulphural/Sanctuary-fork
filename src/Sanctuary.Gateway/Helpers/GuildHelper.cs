@@ -156,7 +156,7 @@ public static class GuildHelper
             if (!zoneManager.TryGetPlayer(member.Guid, out var player))
                 continue;
 
-            player.Invoke(() =>
+            player.Post(() =>
             {
                 if (player.GuildData is null || player.GuildData.Guid != guildGuid)
                     return;

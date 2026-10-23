@@ -131,10 +131,15 @@ public class Npc : IScriptableNpc, IEntity
 
     private PathBuilder? _pathBuilder;
 
+    private readonly EntityWorkQueue _work;
+
     public Npc(IZone zone)
     {
         Zone = zone;
+        _work = new EntityWorkQueue(() => Zone);
     }
+
+    public void Post(Action work) => _work.Post(work);
 
     #region Events
 

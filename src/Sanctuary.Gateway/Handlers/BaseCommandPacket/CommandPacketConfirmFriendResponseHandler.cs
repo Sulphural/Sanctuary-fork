@@ -134,7 +134,7 @@ public static class CommandPacketConfirmFriendResponseHandler
                 }
             };
 
-            inviter.Invoke(() =>
+            inviter.Post(() =>
             {
                 inviter.Friends.Add(inviterFriendData);
 

@@ -35,6 +35,8 @@ public interface IEntity : IEquatable<IEntity>, IDisposable
     void UpdatePosition(Vector4 position, Quaternion rotation, bool updateZoneArea = true);
     bool TeleportToZone(IZone zone, Vector4 position, Quaternion rotation);
 
+    void Post(Action work);
+
     void UpdateEveryTick();
     void UpdateEverySecond();
 

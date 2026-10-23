@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -66,8 +67,7 @@ public abstract class BaseZone : IZone, IDisposable
     private Task _updateEveryTickTask = Task.CompletedTask;
     private int _tickCount;
 
-    private const int MaxWorkPerPlayerPerTick = 64;
-    private readonly ConcurrentQueue<Action> _work = new();
+    private readonly Channel<Action> _posted = Channel.CreateUnbounded<Action>();
 
     [ThreadStatic]
     private static BaseZone? _tickingZone;
@@ -229,9 +229,19 @@ public abstract class BaseZone : IZone, IDisposable
 
         _started = true;
 
-        GetOrCreateScriptContext().FireEvent("start");
-        ActivateCollectionNodePools();
-        CreateNpcConversationGroups();
+        var previousZone = _tickingZone;
+        _tickingZone = this;
+
+        try
+        {
+            GetOrCreateScriptContext().FireEvent("start");
+            ActivateCollectionNodePools();
+            CreateNpcConversationGroups();
+        }
+        finally
+        {
+            _tickingZone = previousZone;
+        }
 
         _updateEveryTickTask = Task.Factory.StartNew(UpdateEveryTickAsync, _cancellationTokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default).Unwrap();
     }
@@ -444,7 +454,7 @@ public abstract class BaseZone : IZone, IDisposable
             if (!_zoneManager.TryGetPlayer(guildMember.Key, out var guildPlayer))
                 continue;
 
-            guildPlayer.Invoke(() =>
+            guildPlayer.Post(() =>
             {
                 if (guildPlayer.GuildData is null)
                     return;
@@ -695,7 +705,7 @@ public abstract class BaseZone : IZone, IDisposable
             if (!_zoneManager.TryGetPlayer(friend.Guid, out var friendPlayer))
                 continue;
 
-            friendPlayer.Invoke(() =>
+            friendPlayer.Post(() =>
             {
                 var otherFriendPlayer = friendPlayer.Friends.FirstOrDefault(x => x.Guid == player.Guid);
 
@@ -1306,6 +1316,8 @@ public abstract class BaseZone : IZone, IDisposable
 
     public bool TryCreatePlayer(ulong guid, UdpConnection connection, [MaybeNullWhen(false)] out Player player)
     {
+        Debug.Assert(IsTickThread, "Players must be created on their zone's loop.");
+
         player = new Player(this, connection, _resourceManager, _zoneManager)
         {
             Guid = guid
@@ -1327,6 +1339,8 @@ public abstract class BaseZone : IZone, IDisposable
 
     public bool TryRemovePlayer(ulong guid)
     {
+        Debug.Assert(IsTickThread, "Players must be removed on their zone's loop.");
+
         if (!_players.TryRemove(guid, out _))
             return false;
 
@@ -1553,80 +1567,113 @@ public abstract class BaseZone : IZone, IDisposable
 
     private async Task UpdateEveryTickAsync()
     {
-        while (await _updateEveryTickTimer.WaitForNextTickAsync() && !_cancellationTokenSource.Token.IsCancellationRequested)
+        var tick = _updateEveryTickTimer.WaitForNextTickAsync().AsTask();
+        var posted = _posted.Reader.WaitToReadAsync().AsTask();
+
+        while (!_cancellationTokenSource.Token.IsCancellationRequested)
         {
-            _tickingZone = this;
+            await Task.WhenAny(tick, posted);
 
-            try
+            if (_cancellationTokenSource.Token.IsCancellationRequested)
+                break;
+
+            var tickDue = tick.IsCompleted;
+
+            if (tickDue && !await tick)
+                break;
+
+            RunOnTickThread(ProcessPosted);
+
+            if (tickDue && !_cancellationTokenSource.Token.IsCancellationRequested)
             {
-                ProcessWork();
-
-                ProcessCollectionNodeRefills();
-
-                foreach (var entity in _entities)
-                {
-                    entity.Value.UpdateEveryTick();
-                }
-
-                if (++_tickCount % FrameRate == 0)
-                {
-                    foreach (var entity in _entities)
-                    {
-                        entity.Value.UpdateEverySecond();
-                    }
-
-                    UpdateEverySecond();
-                }
+                tick = _updateEveryTickTimer.WaitForNextTickAsync().AsTask();
+                RunOnTickThread(Tick);
             }
-            catch (Exception ex)
+
+            if (posted.IsCompleted)
             {
-                _logger.LogCritical(ex, $"{Name} ({Id}) - Zone Exception");
-            }
-            finally
-            {
-                _tickingZone = null;
+                if (!await posted)
+                    break;
+
+                posted = _posted.Reader.WaitToReadAsync().AsTask();
             }
         }
 
         if (_disposeOnTickExit)
+        {
+            RunOnTickThread(ProcessPosted);
             ReleaseResources();
+        }
+    }
+
+    private void RunOnTickThread(Action update)
+    {
+        var previousZone = _tickingZone;
+        _tickingZone = this;
+
+        try
+        {
+            update();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogCritical(ex, $"{Name} ({Id}) - Zone Exception");
+        }
+        finally
+        {
+            _tickingZone = previousZone;
+        }
+    }
+
+    private void Tick()
+    {
+        ProcessCollectionNodeRefills();
+
+        foreach (var entity in _entities)
+        {
+            entity.Value.UpdateEveryTick();
+        }
+
+        if (++_tickCount % FrameRate == 0)
+        {
+            foreach (var entity in _entities)
+            {
+                entity.Value.UpdateEverySecond();
+            }
+
+            UpdateEverySecond();
+        }
     }
 
     public bool IsTickThread => _tickingZone == this;
 
-    public void Post(Action work)
+    public void Post(Action work) => TryPost(work);
+
+    public bool TryPost(Action work)
     {
-        _work.Enqueue(work);
-    }
-
-    private void ProcessWork()
-    {
-        var count = _work.Count;
-
-        while (count-- > 0 && _work.TryDequeue(out var work))
-            RunWork(work);
-
-        foreach (var player in _players.Values)
-        {
-            for (var i = 0; i < MaxWorkPerPlayerPerTick; i++)
-            {
-                if (player.Zone != this || !_players.ContainsKey(player.Guid) || !player.TryTakeWork(out var playerWork))
-                    break;
-
-                RunWork(playerWork);
-            }
-        }
-    }
-
-    private void RunWork(Action work)
-    {
-        try
+        if (IsTickThread)
         {
             work();
+            return true;
         }
-        catch (Exception ex)
+
+        return _posted.Writer.TryWrite(work);
+    }
+
+    private void ProcessPosted()
+    {
+        var count = _posted.Reader.Count;
+
+        while (count-- > 0 && _posted.Reader.TryRead(out var work))
         {
-            _logger.LogError(ex, "{name} ({id}) - Queued work failed.", Name, Id);
+            try
+            {
+                work();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{name} ({id}) - Posted work failed.", Name, Id);
+            }
         }
     }
 
@@ -1681,6 +1728,7 @@ public abstract class BaseZone : IZone, IDisposable
     {
         _cancellationTokenSource.Cancel();
 
+        _posted.Writer.TryComplete();
         _updateEveryTickTimer.Dispose();
 
         if (IsTickThread)
@@ -1691,13 +1739,12 @@ public abstract class BaseZone : IZone, IDisposable
 
         _updateEveryTickTask.Wait();
 
+        RunOnTickThread(ProcessPosted);
         ReleaseResources();
     }
 
     private void ReleaseResources()
     {
-        _work.Clear();
-
         lock (_collectionNodeLock)
             _collectionNodeRefills.Clear();
 

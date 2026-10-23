@@ -184,7 +184,7 @@ public static class GuildQuitPacketHandler
             if (!_zoneManager.TryGetPlayer(member.Guid, out var guildPlayer))
                 continue;
 
-            guildPlayer.Invoke(() =>
+            guildPlayer.Post(() =>
             {
                 if (guildPlayer.GuildData is null || guildPlayer.GuildData.Guid != packet.Guid)
                     return;

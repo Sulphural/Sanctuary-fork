@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Numerics;
@@ -115,6 +116,8 @@ public class ZoneManager : IZoneManager
 
     public bool TryMovePlayerToZone(int zoneDefinitionId, ulong? ownerId, Player player, Vector4 position, Quaternion rotation, out IZone zone)
     {
+        Debug.Assert(player.Zone.IsTickThread, "Players must change zones on their current zone's loop.");
+
         var oldZone = player.Zone;
         bool moved;
 

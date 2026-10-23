@@ -79,7 +79,7 @@ public static class CommandPacketRemoveFriendRequestHandler
         {
             var removerGuid = connection.Player.Guid;
 
-            player.Invoke(() =>
+            player.Post(() =>
             {
                 player.Friends.RemoveAll(x => x.Guid == removerGuid);
 

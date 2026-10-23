@@ -41,6 +41,9 @@ public interface IZone : IScriptableZone, IDisposable
 
     bool IsTickThread { get; }
 
+    void Post(Action work);
+    bool TryPost(Action work);
+
     bool TryGetNpc(ulong guid, [MaybeNullWhen(false)] out Npc npc);
     bool TryGetPlayer(ulong guid, [MaybeNullWhen(false)] out Player player);
     bool TryGetEntity(ulong guid, [MaybeNullWhen(false)] out IEntity entity);

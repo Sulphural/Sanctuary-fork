@@ -104,7 +104,7 @@ public static class GuildDemotePacketHandler
 
             var targetRole = targetGuildMember.Role;
 
-            targetPlayer.Invoke(() =>
+            targetPlayer.Post(() =>
             {
                 if (targetPlayer.GuildData?.Members.TryGetValue(packet.PlayerGuid, out var targetOnlineMember) == true)
                     targetOnlineMember.Role = targetRole;
@@ -131,7 +131,7 @@ public static class GuildDemotePacketHandler
             if (!_zoneManager.TryGetPlayer(member.Guid, out var guildPlayer))
                 continue;
 
-            guildPlayer.Invoke(() =>
+            guildPlayer.Post(() =>
             {
                 if (guildPlayer.GuildData is null || guildPlayer.GuildData.Guid != packet.GuildGuid)
                     return;

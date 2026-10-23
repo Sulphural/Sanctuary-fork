@@ -79,9 +79,11 @@ public class GatewayConnection : UdpConnection
 
         _logger.LogInformation("{connection} disconnected. {reason}", this, reason);
 
-        // Just in case check if player is null.
         if (Player is null)
+        {
+            _zoneManager.StartingZone.Post(() => Player?.Post(OnLogout));
             return;
+        }
 
         Player.Post(OnLogout);
     }
@@ -126,14 +128,23 @@ public class GatewayConnection : UdpConnection
             return;
         }
 
+        var packet = data.Slice(0, finalLength);
+
         if (Player is not null)
         {
-            var packet = data.Slice(0, finalLength).ToArray();
-            Player.Post(() => OnHandlePacket(packet));
+            var playerPacket = packet.ToArray();
+            Player.Post(() => OnHandlePacket(playerPacket));
             return;
         }
 
-        OnHandlePacket(data.Slice(0, finalLength));
+        if (new PacketReader(packet).TryRead(out short opCode) && opCode != PacketLogin.OpCode)
+        {
+            var pendingPacket = packet.ToArray();
+            _zoneManager.StartingZone.Post(() => OnHandlePacket(pendingPacket));
+            return;
+        }
+
+        OnHandlePacket(packet);
     }
 
     private void OnHandlePacket(Span<byte> data)
@@ -646,7 +657,7 @@ public class GatewayConnection : UdpConnection
             if (!_zoneManager.TryGetPlayer(friend.Guid, out var friendPlayer))
                 continue;
 
-            friendPlayer.Invoke(() =>
+            friendPlayer.Post(() =>
             {
                 var otherFriendPlayer = friendPlayer.Friends.FirstOrDefault(x => x.Guid == playerGuid);
 
@@ -695,7 +706,7 @@ public class GatewayConnection : UdpConnection
             if (!_zoneManager.TryGetPlayer(guildMember.Key, out var guildPlayer))
                 continue;
 
-            guildPlayer.Invoke(() =>
+            guildPlayer.Post(() =>
             {
                 if (guildPlayer.GuildData is null)
                     return;

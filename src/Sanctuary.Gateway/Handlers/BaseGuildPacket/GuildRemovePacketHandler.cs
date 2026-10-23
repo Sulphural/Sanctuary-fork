@@ -104,7 +104,7 @@ public static class GuildRemovePacketHandler
             if (!_zoneManager.TryGetPlayer(member.Guid, out var guildPlayer))
                 continue;
 
-            guildPlayer.Invoke(() =>
+            guildPlayer.Post(() =>
             {
                 if (guildPlayer.GuildData is null || guildPlayer.GuildData.Guid != packet.GuildGuid)
                     return;
@@ -123,7 +123,7 @@ public static class GuildRemovePacketHandler
         if (!_zoneManager.TryGetPlayer(packet.PlayerGuid, out var player))
             return true;
 
-        player.Invoke(() =>
+        player.Post(() =>
         {
             var guildCanCreateGuildPacket = new GuildCanCreateGuildPacket
             {

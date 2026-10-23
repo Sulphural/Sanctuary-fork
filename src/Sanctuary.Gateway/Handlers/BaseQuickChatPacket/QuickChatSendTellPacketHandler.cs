@@ -47,7 +47,7 @@ public static class QuickChatSendTellPacketHandler
 
         packet.Name = connection.Player.Name;
 
-        toPlayer.Invoke(() =>
+        toPlayer.Post(() =>
         {
             if (toPlayer.Ignores.Any(x => x.Guid == senderGuid))
                 return;

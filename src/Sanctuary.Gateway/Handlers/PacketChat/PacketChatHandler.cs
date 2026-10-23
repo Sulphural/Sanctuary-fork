@@ -102,7 +102,7 @@ public static class PacketChatHandler
 
                         var sender = connection.Player;
 
-                        toPlayer.Invoke(() =>
+                        toPlayer.Post(() =>
                         {
                             if (toPlayer.Ignores.Any(x => x.Guid == sender.Guid))
                                 return;
@@ -187,7 +187,7 @@ public static class PacketChatHandler
                         if (!_zoneManager.TryGetPlayer(member.Guid, out var guildPlayer))
                             continue;
 
-                        guildPlayer.Invoke(() =>
+                        guildPlayer.Post(() =>
                         {
                             if (guildPlayer.Guid != senderGuid && guildPlayer.Ignores.Any(x => x.Guid == senderGuid))
                                 return;
