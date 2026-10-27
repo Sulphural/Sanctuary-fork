@@ -477,6 +477,12 @@ public sealed class QuestManager : IQuestManager
 
     public void RestoreJournal(Player player)
     {
+        foreach (var quest in _resourceManager.Quests.Quests.Values)
+        {
+            if (quest.AutoStart && quest.IsOfferableFor(player.Quests))
+                AcceptQuest(player, quest.QuestId);
+        }
+
         RefreshObjectiveTarget(player);
 
         SendJournalQuestStates(player);

@@ -2306,6 +2306,7 @@
     "GiverDialogueId": 4420041,
     "ObjectiveDescriptionId": 4420046,
     "IconId": 43278,
+    "AutoStart": true,
     "GiverNpcId": 3211,
     "TargetNpcId": 3211,
     "RewardCoins": 7,
