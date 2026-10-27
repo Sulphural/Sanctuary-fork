@@ -3644,19 +3644,59 @@
     "ObjectiveDescriptionId": 5101373,
     "IconId": 43278,
     "GiverNpcId": 3342,
-    "TargetNpcId": 3342,
+    "TargetNpcId": 40102,
     "RewardCoins": 0,
     "RewardExperience": 0,
     "RewardItems": [],
     "PrerequisiteQuestId": 2590,
+    "NextQuestId": 2592,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 5101495,
+        "ObjectiveId": 25911,
+        "DescriptionId": 5101496,
+        "Dialogue": [
+          { "TextId": 5101876 },
+          { "TextId": 442662 }
+        ],
+        "Targets": [{ "NpcId": 40102 }]
+      }
+    ]
+  },
+  {
+    "Name": "Delusions of Grandeur",
+    "QuestId": 2592,
+    "TitleId": 442627,
+    "DescriptionId": 442639,
+    "GiverDialogueId": 442651,
+    "ObjectiveDescriptionId": 5101377,
+    "IconId": 43278,
+    "GiverNpcId": 40102,
+    "TargetNpcId": 3342,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2591,
     "NextQuestId": 2593,
     "Goals": [
       {
         "Type": 0,
+        "NameId": 5101497,
+        "ObjectiveId": 25921,
+        "DescriptionId": 5101498,
+        "Dialogue": [
+          { "TextId": 5101880 },
+          { "TextId": 5101882 }
+        ],
+        "Targets": [{ "NpcId": 40103 }]
+      },
+      {
+        "Type": 0,
         "NameId": 5101378,
-        "ObjectiveId": 25911,
+        "ObjectiveId": 25922,
         "DescriptionId": 5101379,
-        "DialogueId": 442662,
+        "DialogueId": 442663,
         "Targets": [{ "NpcId": 3342 }]
       }
     ]
@@ -3674,7 +3714,7 @@
     "RewardCoins": 0,
     "RewardExperience": 0,
     "RewardItems": [],
-    "PrerequisiteQuestId": 2591,
+    "PrerequisiteQuestId": 2592,
     "NextQuestId": 2594,
     "Goals": [
       {
@@ -3831,6 +3871,7 @@
     "RewardExperience": 0,
     "RewardItems": [],
     "PrerequisiteQuestId": 2598,
+    "NextQuestId": 2576,
     "Goals": [
       {
         "Type": 0,
@@ -3871,6 +3912,556 @@
         "DescriptionId": 5101403,
         "DialogueId": 442670,
         "Targets": [{ "NpcId": 2378 }]
+      }
+    ]
+  },
+  {
+    "Name": "Tides of Change",
+    "QuestId": 2576,
+    "TitleId": 5100913,
+    "DescriptionId": 5100914,
+    "GiverDialogueId": 5100912,
+    "ObjectiveDescriptionId": 5100954,
+    "IconId": 43278,
+    "GiverNpcId": 2378,
+    "TargetNpcId": 1756,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2599,
+    "NextQuestId": 2577,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 5100954,
+        "ObjectiveId": 25761,
+        "DescriptionId": 5100955,
+        "DialogueId": 5101019,
+        "Targets": [{ "NpcId": 1878 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5101021,
+        "ObjectiveId": 25762,
+        "DescriptionId": 5101022,
+        "DialogueId": 5101031,
+        "Targets": [{ "NpcId": 1879 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5101023,
+        "ObjectiveId": 25763,
+        "DescriptionId": 5101024,
+        "DialogueId": 5101033,
+        "Targets": [{ "NpcId": 1786 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5101025,
+        "ObjectiveId": 25764,
+        "DescriptionId": 5101026,
+        "DialogueId": 5101035,
+        "Targets": [{ "NpcId": 2040 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5101027,
+        "ObjectiveId": 25765,
+        "DescriptionId": 5101028,
+        "Dialogue": [
+          { "TextId": 5101037 },
+          { "TextId": 5100915 }
+        ],
+        "Targets": [{ "NpcId": 1756 }]
+      }
+    ]
+  },
+  {
+    "Name": "Know your Enemy",
+    "QuestId": 2577,
+    "TitleId": 5100917,
+    "DescriptionId": 5100918,
+    "GiverDialogueId": 5100916,
+    "ObjectiveDescriptionId": 5100958,
+    "IconId": 43278,
+    "GiverNpcId": 1756,
+    "TargetNpcId": 1756,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2576,
+    "NextQuestId": 2578,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 5101052,
+        "ObjectiveId": 25771,
+        "DescriptionId": 5101053,
+        "DialogueId": 5100919,
+        "Targets": [{ "NpcId": 1756 }]
+      }
+    ]
+  },
+  {
+    "Name": "Meet Crabcake",
+    "QuestId": 2578,
+    "TitleId": 5100921,
+    "DescriptionId": 5100922,
+    "GiverDialogueId": 5100920,
+    "ObjectiveDescriptionId": 5100964,
+    "IconId": 43278,
+    "GiverNpcId": 1756,
+    "TargetNpcId": 1945,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2577,
+    "NextQuestId": 2579,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 5101054,
+        "ObjectiveId": 25781,
+        "DescriptionId": 5101055,
+        "Dialogue": [
+          { "TextId": 5101062 },
+          { "TextId": 5101332 }
+        ],
+        "Targets": [{ "NpcId": 4265 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5101058,
+        "ObjectiveId": 25782,
+        "DescriptionId": 5101059,
+        "DialogueId": 5100923,
+        "Targets": [{ "NpcId": 1945 }]
+      }
+    ]
+  },
+  {
+    "Name": "Cleansing the Pearls",
+    "QuestId": 2579,
+    "TitleId": 5100925,
+    "DescriptionId": 5100926,
+    "GiverDialogueId": 5100924,
+    "ObjectiveDescriptionId": 5100968,
+    "IconId": 43278,
+    "GiverNpcId": 1945,
+    "TargetNpcId": 1945,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2578,
+    "NextQuestId": 2580,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 5101414,
+        "ObjectiveId": 25791,
+        "DescriptionId": 5101415,
+        "DialogueId": 5100927,
+        "Targets": [{ "NpcId": 1945 }]
+      }
+    ]
+  },
+  {
+    "Name": "Stemming the Tide",
+    "QuestId": 2580,
+    "TitleId": 5100929,
+    "DescriptionId": 5100930,
+    "GiverDialogueId": 5100928,
+    "ObjectiveDescriptionId": 5100972,
+    "IconId": 43278,
+    "GiverNpcId": 1945,
+    "TargetNpcId": 1945,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2579,
+    "NextQuestId": 2581,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 5101568,
+        "ObjectiveId": 25801,
+        "DescriptionId": 5101569,
+        "DialogueId": 5100931,
+        "Targets": [{ "NpcId": 1945 }]
+      }
+    ]
+  },
+  {
+    "Name": "History of the Dojo",
+    "QuestId": 2581,
+    "TitleId": 5100933,
+    "DescriptionId": 5100934,
+    "GiverDialogueId": 5100932,
+    "ObjectiveDescriptionId": 5100976,
+    "IconId": 43278,
+    "GiverNpcId": 1945,
+    "TargetNpcId": 2022,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2580,
+    "NextQuestId": 2582,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 5100976,
+        "ObjectiveId": 25811,
+        "DescriptionId": 5100977,
+        "DialogueId": 5101566,
+        "Targets": [{ "NpcId": 1766 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5101535,
+        "ObjectiveId": 25812,
+        "DescriptionId": 5101536,
+        "DialogueId": 5100935,
+        "Targets": [{ "NpcId": 2022 }]
+      }
+    ]
+  },
+  {
+    "Name": "Ghosts of the Past",
+    "QuestId": 2582,
+    "TitleId": 5100937,
+    "DescriptionId": 5100938,
+    "GiverDialogueId": 5100936,
+    "ObjectiveDescriptionId": 5100980,
+    "IconId": 43278,
+    "GiverNpcId": 2022,
+    "TargetNpcId": 2022,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2581,
+    "NextQuestId": 2583,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 5101537,
+        "ObjectiveId": 25821,
+        "DescriptionId": 5101538,
+        "DialogueId": 5100939,
+        "Targets": [{ "NpcId": 2022 }]
+      }
+    ]
+  },
+  {
+    "Name": "Not the Ghosts You're Looking For",
+    "QuestId": 2583,
+    "TitleId": 5100941,
+    "DescriptionId": 5100942,
+    "GiverDialogueId": 5100940,
+    "ObjectiveDescriptionId": 5100984,
+    "IconId": 43278,
+    "GiverNpcId": 2022,
+    "TargetNpcId": 2022,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2582,
+    "NextQuestId": 2584,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 5100984,
+        "ObjectiveId": 25831,
+        "DescriptionId": 5100985,
+        "Dialogue": [
+          { "TextId": 5101580 },
+          { "TextId": 5101582 }
+        ],
+        "Targets": [{ "NpcId": 1766 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5101545,
+        "ObjectiveId": 25832,
+        "DescriptionId": 5101546,
+        "DialogueId": 5100943,
+        "Targets": [{ "NpcId": 2022 }]
+      }
+    ]
+  },
+  {
+    "Name": "Unwanted Guests",
+    "QuestId": 2584,
+    "TitleId": 5100945,
+    "DescriptionId": 5100946,
+    "GiverDialogueId": 5100944,
+    "ObjectiveDescriptionId": 5101842,
+    "IconId": 43278,
+    "GiverNpcId": 2022,
+    "TargetNpcId": 2022,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2583,
+    "NextQuestId": 2585,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 5101547,
+        "ObjectiveId": 25841,
+        "DescriptionId": 5101548,
+        "DialogueId": 5100947,
+        "Targets": [{ "NpcId": 2022 }]
+      }
+    ]
+  },
+  {
+    "Name": "Defeat the Kraken",
+    "QuestId": 2585,
+    "TitleId": 5100949,
+    "DescriptionId": 5100950,
+    "GiverDialogueId": 5100948,
+    "ObjectiveDescriptionId": 5101844,
+    "IconId": 43278,
+    "GiverNpcId": 2022,
+    "TargetNpcId": 2022,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2584,
+    "NextQuestId": 2600,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 5101549,
+        "ObjectiveId": 25851,
+        "DescriptionId": 5101550,
+        "DialogueId": 5100951,
+        "Targets": [{ "NpcId": 2022 }]
+      }
+    ]
+  },
+  {
+    "Name": "Seaside Report",
+    "QuestId": 2600,
+    "TitleId": 5101719,
+    "DescriptionId": 5101720,
+    "GiverDialogueId": 5101718,
+    "ObjectiveDescriptionId": 5101846,
+    "IconId": 43278,
+    "GiverNpcId": 2022,
+    "TargetNpcId": 2378,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2585,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 5101724,
+        "ObjectiveId": 26001,
+        "DescriptionId": 5101725,
+        "DialogueId": 5101721,
+        "Targets": [{ "NpcId": 2378 }]
+      }
+    ]
+  },
+  {
+    "Name": "Unfurling the Sails",
+    "QuestId": 2601,
+    "TitleId": 442850,
+    "DescriptionId": 442856,
+    "GiverDialogueId": 442862,
+    "ObjectiveDescriptionId": 5101738,
+    "IconId": 43278,
+    "GiverNpcId": 1915,
+    "TargetNpcId": 1915,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2576,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 5101740,
+        "ObjectiveId": 26011,
+        "DescriptionId": 5101741,
+        "DialogueId": 442868,
+        "Targets": [{ "NpcId": 1915 }]
+      }
+    ]
+  },
+  {
+    "Name": "Truth, Ore, Dare",
+    "QuestId": 2602,
+    "TitleId": 442851,
+    "DescriptionId": 442857,
+    "GiverDialogueId": 442863,
+    "ObjectiveDescriptionId": 5101744,
+    "IconId": 43278,
+    "GiverNpcId": 1879,
+    "TargetNpcId": 1879,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2576,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 5101746,
+        "ObjectiveId": 26021,
+        "DescriptionId": 5101747,
+        "DialogueId": 442869,
+        "Targets": [{ "NpcId": 1879 }]
+      }
+    ]
+  },
+  {
+    "Name": "Seaside Racing Quest",
+    "QuestId": 2603,
+    "TitleId": 442852,
+    "DescriptionId": 442858,
+    "GiverDialogueId": 442864,
+    "ObjectiveDescriptionId": 5101750,
+    "IconId": 43278,
+    "GiverNpcId": 1734,
+    "TargetNpcId": 1734,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2576,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 5101752,
+        "ObjectiveId": 26031,
+        "DescriptionId": 5101753,
+        "DialogueId": 442870,
+        "Targets": [{ "NpcId": 1734 }]
+      }
+    ]
+  },
+  {
+    "Name": "Seaside Postman Quest",
+    "QuestId": 2604,
+    "TitleId": 442853,
+    "DescriptionId": 442859,
+    "GiverDialogueId": 442865,
+    "ObjectiveDescriptionId": 5101756,
+    "IconId": 43278,
+    "GiverNpcId": 1877,
+    "TargetNpcId": 1877,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2576,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 5101758,
+        "ObjectiveId": 26041,
+        "DescriptionId": 5101759,
+        "DialogueId": 442871,
+        "Targets": [{ "NpcId": 1877 }]
+      }
+    ]
+  },
+  {
+    "Name": "Quality Ingredients",
+    "QuestId": 2605,
+    "TitleId": 442854,
+    "DescriptionId": 442860,
+    "GiverDialogueId": 442866,
+    "ObjectiveDescriptionId": 5101762,
+    "IconId": 43278,
+    "GiverNpcId": 4265,
+    "TargetNpcId": 4265,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2576,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 5101768,
+        "ObjectiveId": 26051,
+        "DescriptionId": 5101769,
+        "DialogueId": 442872,
+        "Targets": [{ "NpcId": 4265 }]
+      }
+    ]
+  },
+  {
+    "Name": "A Hop, Skip, and a Bounce",
+    "QuestId": 2606,
+    "TitleId": 442855,
+    "DescriptionId": 442861,
+    "GiverDialogueId": 442867,
+    "ObjectiveDescriptionId": 5101772,
+    "IconId": 43278,
+    "GiverNpcId": 40100,
+    "TargetNpcId": 40100,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2576,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 5101774,
+        "ObjectiveId": 26061,
+        "DescriptionId": 5101775,
+        "DialogueId": 442873,
+        "Targets": [{ "NpcId": 40100 }]
+      }
+    ]
+  },
+  {
+    "Name": "In Memoriam",
+    "QuestId": 2568,
+    "TitleId": 5100756,
+    "DescriptionId": 5100757,
+    "GiverDialogueId": 5100755,
+    "ObjectiveDescriptionId": 5100804,
+    "IconId": 43278,
+    "GiverNpcId": 2451,
+    "TargetNpcId": 2451,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2538,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 5100807,
+        "ObjectiveId": 25681,
+        "DescriptionId": 5100808,
+        "DialogueId": 5100758,
+        "Targets": [{ "NpcId": 2451 }]
+      }
+    ]
+  },
+  {
+    "Name": "Mine Your Own Business",
+    "QuestId": 2569,
+    "TitleId": 5100760,
+    "DescriptionId": 5100761,
+    "GiverDialogueId": 5100759,
+    "ObjectiveDescriptionId": 5100810,
+    "IconId": 43278,
+    "GiverNpcId": 40101,
+    "TargetNpcId": 40101,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2538,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 5100813,
+        "ObjectiveId": 25691,
+        "DescriptionId": 5100814,
+        "DialogueId": 5100762,
+        "Targets": [{ "NpcId": 40101 }]
       }
     ]
   }

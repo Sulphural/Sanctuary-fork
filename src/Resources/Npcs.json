@@ -6739,6 +6739,8 @@
   },
   {
     "Id": 2451,
+    "NameId": 442434,
+    "Name": "Diana Jones",
     "ModelId": 321,
     "ModelFileName": "human_f_diana.adr"
   },
@@ -41417,5 +41419,33 @@
     "Name": "Freewheeler",
     "ModelId": 3987,
     "ModelFileName": "dwarf_f_bikerthug.adr"
+  },
+  {
+    "Id": 40100,
+    "NameId": 442434,
+    "Name": "Diana Jones",
+    "ModelId": 321,
+    "ModelFileName": "human_f_diana.adr"
+  },
+  {
+    "Id": 40101,
+    "NameId": 442435,
+    "Name": "Gerald Gemcutter",
+    "ModelId": 382,
+    "ModelFileName": "dwarf_miner_m.adr"
+  },
+  {
+    "Id": 40102,
+    "NameId": 21275,
+    "Name": "Queen's Guard",
+    "ModelId": 218,
+    "ModelFileName": "bixie_m_elite_guard.adr"
+  },
+  {
+    "Id": 40103,
+    "NameId": 442615,
+    "Name": "Wugabug Queen",
+    "ModelId": 4472,
+    "ModelFileName": "bixie_f_bugawugqueen.adr"
   }
 ]
