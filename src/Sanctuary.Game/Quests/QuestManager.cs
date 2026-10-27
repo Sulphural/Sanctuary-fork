@@ -312,6 +312,8 @@ public sealed class QuestManager : IQuestManager
 
         SendJournalQuestStates(player);
 
+        RefreshQuestNodes(player, quest);
+
         player.SendTunneled(new CommandPacketQuestDialogComplete());
     }
 
@@ -540,6 +542,8 @@ public sealed class QuestManager : IQuestManager
 
         player.SendTunneled(new QuestAbandonedPacket { QuestId = questId });
 
+        RefreshQuestNodes(player, quest);
+
         RefreshQuestNotifications(player, quest);
 
         RefreshObjectiveTarget(player);
@@ -743,8 +747,34 @@ public sealed class QuestManager : IQuestManager
         return (0, false);
     }
 
+    public bool CanGatherQuestNode(Player player, CollectionNode node)
+        => ActiveGoals(player).Any(active => active.Goal is CollectGoal collectGoal
+            && collectGoal.CanGather(node, active.Progress.OpenGoals[active.GoalIndex]));
+
+    private void RefreshQuestNodes(Player player, QuestDefinition quest)
+    {
+        var nodeTypes = quest.Goals.OfType<CollectGoal>().Select(goal => goal.CollectNodeType).ToHashSet();
+        if (nodeTypes.Count == 0)
+            return;
+
+        foreach (var node in player.Zone.Npcs.OfType<CollectionNode>()
+            .Where(node => node.PoolDefinition.PlayerSpecific && nodeTypes.Contains(node.TypeDefinition.Key)).ToList())
+        {
+            var hidden = !CanGatherQuestNode(player, node);
+            var shown = player.VisibleNpcs.ContainsKey(node.Guid);
+
+            if (hidden && shown)
+                player.OnRemoveVisibleNpcGracefully(node, animate: true);
+            else if (!hidden && !shown && node.VisiblePlayers.ContainsKey(player.Guid))
+                player.OnAddVisibleNpcs(node);
+        }
+    }
+
     public bool IsHiddenByQuest(Player player, Npc npc)
     {
+        if (npc is CollectionNode { PoolDefinition.PlayerSpecific: true } questNode)
+            return !CanGatherQuestNode(player, questNode);
+
         var quests = _resourceManager.Quests;
 
         if (!quests.ByStateNpc.TryGetValue(npc.DefinitionId, out var questIds))
@@ -923,6 +953,7 @@ public sealed class QuestManager : IQuestManager
 
         RemoveHiddenNpcs(player, completedGoal);
         RefreshNpcEffects(player, completedGoal);
+        RefreshQuestNodes(player, quest);
         RefreshQuestNotifications(player, quest);
 
         if (isFinalGoal)
@@ -1136,14 +1167,6 @@ public sealed class QuestManager : IQuestManager
     {
         var goals = quest.Goals;
 
-        if (goalIndex >= 0 && goalIndex < goals.Count
-            && goals[goalIndex] is CollectGoal collectGoal)
-        {
-            var nearest = NearestCollectionNode(player, collectGoal.CollectNodeType);
-            if (nearest is not null)
-                return nearest.Guid;
-        }
-
         if (goalIndex >= 0 && goalIndex < goals.Count && goals[goalIndex] is TalkToNpcGoal { IsCounted: true } countedGoal
             && player.Quests.TryGetInProgress(quest.QuestId, out var progress))
         {
@@ -1155,15 +1178,11 @@ public sealed class QuestManager : IQuestManager
         return NearestNpcGuid(player, quest.GoalTargetNpcId(goalIndex));
     }
 
-    private static Npc? NearestCollectionNode(Player player, string nodeType)
-        => string.IsNullOrEmpty(nodeType)
-            ? null
-            : NearestNpc(player, npc => npc is CollectionNode node && node.TypeDefinition.Key == nodeType);
     private void SendObjectiveForGoal(Player player, QuestDefinition quest, int goalIndex)
     {
         var goals = quest.Goals;
 
-        if (quest.HideObjectiveTarget)
+        if (quest.HideObjectiveTarget || (goalIndex >= 0 && goalIndex < goals.Count && goals[goalIndex] is CollectGoal))
         {
             player.SendTunneled(new ObjectiveTargetUpdatePacket { Active = false });
             return;
@@ -1271,7 +1290,7 @@ public sealed class QuestManager : IQuestManager
         int currentGoalIndex = progress.FirstOpenGoalIndex;
         var goals = q.Goals;
 
-        if (q.HideObjectiveTarget)
+        if (q.HideObjectiveTarget || (currentGoalIndex >= 0 && currentGoalIndex < goals.Count && goals[currentGoalIndex] is CollectGoal))
             return false;
 
         if (currentGoalIndex >= 0 && currentGoalIndex < goals.Count
