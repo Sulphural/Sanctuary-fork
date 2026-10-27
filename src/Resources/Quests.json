@@ -3411,6 +3411,7 @@
     "RewardExperience": 0,
     "RewardItems": [],
     "PrerequisiteQuestId": 2508,
+    "NextQuestId": 2588,
     "Goals": [
       {
         "Type": 0,
@@ -3519,6 +3520,357 @@
         "DescriptionId": 5100850,
         "DialogueId": 5100786,
         "Targets": [{ "NpcId": 2376 }]
+      }
+    ]
+  },
+  {
+    "Name": "A Brewing Darkness",
+    "QuestId": 2588,
+    "TitleId": 442623,
+    "DescriptionId": 442635,
+    "GiverDialogueId": 442647,
+    "ObjectiveDescriptionId": 5101357,
+    "IconId": 43278,
+    "GiverNpcId": 2378,
+    "TargetNpcId": 3342,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2533,
+    "NextQuestId": 2589,
+    "Goals": [
+      {
+        "Type": 3,
+        "NameId": 5101429,
+        "ObjectiveId": 25881,
+        "DescriptionId": 5101430,
+        "ZoneAreaId": 9
+      },
+      {
+        "Type": 0,
+        "NameId": 5101431,
+        "ObjectiveId": 25882,
+        "DescriptionId": 5101432,
+        "DialogueId": 5101590,
+        "Targets": [{ "NpcId": 1611 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5101433,
+        "ObjectiveId": 25883,
+        "DescriptionId": 5101434,
+        "DialogueId": 5101592,
+        "Targets": [{ "NpcId": 1658 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5101435,
+        "ObjectiveId": 25884,
+        "DescriptionId": 5101436,
+        "DialogueId": 5101594,
+        "Targets": [{ "NpcId": 1661 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5101358,
+        "ObjectiveId": 25885,
+        "DescriptionId": 5101359,
+        "DialogueId": 442659,
+        "Targets": [{ "NpcId": 3342 }]
+      }
+    ]
+  },
+  {
+    "Name": "A Sweetwater Climb",
+    "QuestId": 2589,
+    "TitleId": 442624,
+    "DescriptionId": 442636,
+    "GiverDialogueId": 442648,
+    "ObjectiveDescriptionId": 5101365,
+    "IconId": 43278,
+    "GiverNpcId": 3342,
+    "TargetNpcId": 1634,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2588,
+    "NextQuestId": 2590,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 5101493,
+        "ObjectiveId": 25891,
+        "DescriptionId": 5101494,
+        "Dialogue": [
+          { "TextId": 5101598 },
+          { "TextId": 442660 }
+        ],
+        "Targets": [{ "NpcId": 1634 }]
+      }
+    ]
+  },
+  {
+    "Name": "Chug-a-Mug Challenge",
+    "QuestId": 2590,
+    "TitleId": 442625,
+    "DescriptionId": 442637,
+    "GiverDialogueId": 442649,
+    "ObjectiveDescriptionId": 5101361,
+    "IconId": 43278,
+    "GiverNpcId": 1634,
+    "TargetNpcId": 3342,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2589,
+    "NextQuestId": 2591,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 5101362,
+        "ObjectiveId": 25901,
+        "DescriptionId": 5101363,
+        "DialogueId": 442661,
+        "Targets": [{ "NpcId": 3342 }]
+      }
+    ]
+  },
+  {
+    "Name": "Fighting for Your Right",
+    "QuestId": 2591,
+    "TitleId": 442626,
+    "DescriptionId": 442638,
+    "GiverDialogueId": 442650,
+    "ObjectiveDescriptionId": 5101373,
+    "IconId": 43278,
+    "GiverNpcId": 3342,
+    "TargetNpcId": 3342,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2590,
+    "NextQuestId": 2593,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 5101378,
+        "ObjectiveId": 25911,
+        "DescriptionId": 5101379,
+        "DialogueId": 442662,
+        "Targets": [{ "NpcId": 3342 }]
+      }
+    ]
+  },
+  {
+    "Name": "Busy Like a Bixie",
+    "QuestId": 2593,
+    "TitleId": 442628,
+    "DescriptionId": 442640,
+    "GiverDialogueId": 442652,
+    "ObjectiveDescriptionId": 5101381,
+    "IconId": 43278,
+    "GiverNpcId": 3342,
+    "TargetNpcId": 3342,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2591,
+    "NextQuestId": 2594,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 5101362,
+        "ObjectiveId": 25931,
+        "DescriptionId": 5101363,
+        "DialogueId": 442664,
+        "Targets": [{ "NpcId": 3342 }]
+      }
+    ]
+  },
+  {
+    "Name": "If a Darkness Festers...",
+    "QuestId": 2594,
+    "TitleId": 442629,
+    "DescriptionId": 442641,
+    "GiverDialogueId": 442653,
+    "ObjectiveDescriptionId": 5101385,
+    "IconId": 43278,
+    "GiverNpcId": 3342,
+    "TargetNpcId": 3342,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2593,
+    "NextQuestId": 2595,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 5101386,
+        "ObjectiveId": 25941,
+        "DescriptionId": 5101387,
+        "DialogueId": 442665,
+        "Targets": [{ "NpcId": 3342 }]
+      }
+    ]
+  },
+  {
+    "Name": "Sour Sasparilla",
+    "QuestId": 2595,
+    "TitleId": 442630,
+    "DescriptionId": 442642,
+    "GiverDialogueId": 442654,
+    "ObjectiveDescriptionId": 5101369,
+    "IconId": 43278,
+    "GiverNpcId": 3342,
+    "TargetNpcId": 3342,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2594,
+    "NextQuestId": 2596,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 5101370,
+        "ObjectiveId": 25951,
+        "DescriptionId": 5101371,
+        "DialogueId": 442666,
+        "Targets": [{ "NpcId": 3342 }]
+      }
+    ]
+  },
+  {
+    "Name": "Countering the Cavalry",
+    "QuestId": 2596,
+    "TitleId": 442631,
+    "DescriptionId": 442643,
+    "GiverDialogueId": 442655,
+    "ObjectiveDescriptionId": 5101393,
+    "IconId": 43278,
+    "GiverNpcId": 3342,
+    "TargetNpcId": 3342,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2595,
+    "NextQuestId": 2597,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 5101394,
+        "ObjectiveId": 25961,
+        "DescriptionId": 5101395,
+        "DialogueId": 442667,
+        "Targets": [{ "NpcId": 3342 }]
+      }
+    ]
+  },
+  {
+    "Name": "Elf Ex Machina",
+    "QuestId": 2597,
+    "TitleId": 442632,
+    "DescriptionId": 442644,
+    "GiverDialogueId": 442656,
+    "ObjectiveDescriptionId": 5101389,
+    "IconId": 43278,
+    "GiverNpcId": 3342,
+    "TargetNpcId": 3342,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2596,
+    "NextQuestId": 2598,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 5101390,
+        "ObjectiveId": 25971,
+        "DescriptionId": 5101391,
+        "DialogueId": 442668,
+        "Targets": [{ "NpcId": 3342 }]
+      }
+    ]
+  },
+  {
+    "Name": "Raven, Lunatic",
+    "QuestId": 2598,
+    "TitleId": 442633,
+    "DescriptionId": 442645,
+    "GiverDialogueId": 442657,
+    "ObjectiveDescriptionId": 5101397,
+    "IconId": 43278,
+    "GiverNpcId": 3342,
+    "TargetNpcId": 3342,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2597,
+    "NextQuestId": 2599,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 5101398,
+        "ObjectiveId": 25981,
+        "DescriptionId": 5101399,
+        "DialogueId": 442669,
+        "Targets": [{ "NpcId": 3342 }]
+      }
+    ]
+  },
+  {
+    "Name": "A Light Brewing",
+    "QuestId": 2599,
+    "TitleId": 442634,
+    "DescriptionId": 442646,
+    "GiverDialogueId": 442658,
+    "ObjectiveDescriptionId": 5101401,
+    "IconId": 43278,
+    "GiverNpcId": 3342,
+    "TargetNpcId": 2378,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2598,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 5101471,
+        "ObjectiveId": 25991,
+        "DescriptionId": 5101472,
+        "DialogueId": 5102182,
+        "Targets": [{ "NpcId": 1611 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5101473,
+        "ObjectiveId": 25992,
+        "DescriptionId": 5101474,
+        "DialogueId": 5102184,
+        "Targets": [{ "NpcId": 1658 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5101475,
+        "ObjectiveId": 25993,
+        "DescriptionId": 5101476,
+        "DialogueId": 5102186,
+        "Targets": [{ "NpcId": 1661 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5101477,
+        "ObjectiveId": 25994,
+        "DescriptionId": 5101478,
+        "DialogueId": 5102188,
+        "Targets": [{ "NpcId": 3342 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5101402,
+        "ObjectiveId": 25995,
+        "DescriptionId": 5101403,
+        "DialogueId": 442670,
+        "Targets": [{ "NpcId": 2378 }]
       }
     ]
   }
