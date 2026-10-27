@@ -14,6 +14,10 @@ public abstract class QuestGoal
 {
     public int NameId { get; set; }
 
+    public int ObjectiveId { get; set; }
+
+    public int ClientObjectiveId => ObjectiveId != 0 ? ObjectiveId : NameId;
+
     // 0 = reuse NameId.
     public int DescriptionId { get; set; }
 

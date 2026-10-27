@@ -186,7 +186,7 @@ public sealed class QuestManager : IQuestManager
             player.SendTunneled(new QuestObjectiveUpdatePacket
             {
                 QuestId = quest.QuestId,
-                ObjectiveId = goal.NameId,
+                ObjectiveId = goal.ClientObjectiveId,
                 CurrentCount = goalProgress.Count,
                 CompletedPercentage = QuestCompletion(quest, progress.GoalsDone),
                 Unknown6 = RetailObjectiveUpdateUnknown6
@@ -790,7 +790,7 @@ public sealed class QuestManager : IQuestManager
         player.SendTunneled(new QuestObjectiveCompletePacket
         {
             QuestId = quest.QuestId,
-            ObjectiveId = completedGoal.NameId,
+            ObjectiveId = completedGoal.ClientObjectiveId,
             Percent = QuestCompletion(quest, progress.GoalsDone),
             Silent = isFinalGoal
         });
@@ -964,7 +964,7 @@ public sealed class QuestManager : IQuestManager
 
     private static QuestObjectiveInfo ObjectiveFor(QuestGoal goal, int state, int currentCount = 0) => new()
     {
-        ObjectiveId = goal.NameId,
+        ObjectiveId = goal.ClientObjectiveId,
         NameId = goal.NameId,
         DescriptionId = goal.DescriptionId != 0 ? goal.DescriptionId : goal.NameId,
         State = state,
@@ -977,7 +977,7 @@ public sealed class QuestManager : IQuestManager
         player.SendTunneled(new QuestObjectiveActivatedPacket
         {
             QuestId = questId,
-            ObjectiveId = goal.NameId,
+            ObjectiveId = goal.ClientObjectiveId,
             RequiredCount = restored ? goal.RequiredCount : 0,
             Unknown2 = restored
         });
