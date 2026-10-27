@@ -1,7 +1,7 @@
 [
   {
     "Name": "Introduce Yourself",
-    "QuestId": 2563,
+    "QuestId": 90563,
     "TitleId": 94247,
     "DescriptionId": 94360,
     "GiverDialogueId": 94246,
@@ -15,7 +15,7 @@
     "NextQuestId": 1801,
     "NotificationAvailable": 2,
     "NotificationActive": 6,
-    "ExcludesQuestIds": [2564],
+    "ExcludesQuestIds": [90564],
     "Goals": [
       {
         "Type": 0,
@@ -39,7 +39,7 @@
     "RewardCoins": 7,
     "RewardExperience": 70,
     "RewardItems": [],
-    "PrerequisiteQuestId": 2563,
+    "PrerequisiteQuestId": 90563,
     "NextQuestId": 3290,
     "NotificationAvailable": 2,
     "NotificationActive": 6,
@@ -62,7 +62,7 @@
   },
   {
     "Name": "Introduce Yourself",
-    "QuestId": 2564,
+    "QuestId": 90564,
     "TitleId": 94247,
     "DescriptionId": 104099,
     "GiverDialogueId": 104097,
@@ -75,7 +75,7 @@
     "RewardItems": [],
     "NotificationAvailable": 2,
     "NotificationActive": 6,
-    "ExcludesQuestIds": [2563],
+    "ExcludesQuestIds": [90563],
     "Goals": [
       {
         "Type": 0,
