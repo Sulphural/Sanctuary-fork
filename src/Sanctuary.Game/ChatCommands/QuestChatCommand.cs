@@ -17,13 +17,14 @@ public class QuestChatCommand : IChatCommand
     private static readonly Dictionary<string, int[]> HeroJournalRegions = new(StringComparer.OrdinalIgnoreCase)
     {
         ["cobblestone"] = [2521, 2522, 2523, 2524, 2525, 2526, 2527, 2528, 2529, 2530, 2566, 2563, 2564, 2565, 2572, 2573, 2587],
-        ["southernwilds"] = [2538, 2489, 2490, 2491, 2492, 2493, 2531, 2494, 2495, 2496, 2497, 2498, 2499, 2500, 2501, 2502, 2503, 2532, 2504, 2505, 2506, 2507, 2508, 2533, 2570, 2571, 2574, 2575],
-        ["wugachug"] = [2588, 2589, 2590, 2591, 2593, 2594, 2595, 2596, 2597, 2598, 2599]
+        ["southernwilds"] = [2538, 2489, 2490, 2491, 2492, 2493, 2531, 2494, 2495, 2496, 2497, 2498, 2499, 2500, 2501, 2502, 2503, 2532, 2504, 2505, 2506, 2507, 2508, 2533, 2568, 2569, 2570, 2571, 2574, 2575],
+        ["wugachug"] = [2588, 2589, 2590, 2591, 2592, 2593, 2594, 2595, 2596, 2597, 2598, 2599],
+        ["seaside"] = [2576, 2577, 2578, 2579, 2580, 2581, 2582, 2583, 2584, 2585, 2600, 2601, 2602, 2603, 2604, 2605, 2606]
     };
 
     public string KeyWord => "quest";
 
-    public string Usage => "reset <questId> [player] | back [questId] [player] | finish <questId> [player] | region <cobblestone|southernwilds|wugachug> [player]";
+    public string Usage => "reset <questId> [player] | back [questId] [player] | finish <questId> [player] | region <cobblestone|southernwilds|wugachug|seaside> [player]";
 
     public string Description => "Resets, rewinds or finishes quests, or finishes every Hero's Journal quest in a region.";
 
