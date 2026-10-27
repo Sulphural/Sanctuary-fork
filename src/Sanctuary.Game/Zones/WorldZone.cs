@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -31,6 +32,7 @@ public sealed class WorldZone : BaseZone
     private readonly Dictionary<(int Longitude, int Latitude), ZoneAreaDefinition> _tileZoneAreas = [];
     private readonly List<ZoneAreaDefinition> _shapeZoneAreas = [];
     private readonly Dictionary<int, List<ZoneAreaDefinition>> _environmentZoneAreas = [];
+    private readonly ConcurrentDictionary<int, Vector3?> _zoneAreaPositions = [];
 
     private const int ClientAreaRefreshSeconds = 3;
     private int _secondsSinceClientAreaRefresh;
@@ -234,6 +236,47 @@ public sealed class WorldZone : BaseZone
             return null;
 
         return environmentZoneAreas.FirstOrDefault(x => x.IsInEnvironmentXRange(position.X));
+    }
+
+    public bool TryGetZoneAreaPosition(int zoneAreaId, out Vector3 position)
+    {
+        var zoneAreaPosition = _zoneAreaPositions.GetOrAdd(zoneAreaId, FindZoneAreaPosition);
+
+        position = zoneAreaPosition.GetValueOrDefault();
+        return zoneAreaPosition.HasValue;
+    }
+
+    private Vector3? FindZoneAreaPosition(int zoneAreaId)
+    {
+        var areaDefinition = _zoneDefinition.AreaDefinitions.FirstOrDefault(x => x.Id == zoneAreaId);
+
+        if (areaDefinition is null)
+            return null;
+
+        var tileCenters = new List<Vector4>();
+
+        for (var longitude = _zoneDefinition.StartLongitude; longitude < _zoneDefinition.EndLongitude; longitude++)
+        {
+            for (var latitude = _zoneDefinition.StartLatitude; latitude < _zoneDefinition.EndLatitude; latitude++)
+            {
+                var tileCenter = new Vector4((latitude + 0.5f) * _zoneDefinition.TileSize, 0, (longitude + 0.5f) * _zoneDefinition.TileSize, 1);
+
+                if (GetZoneArea(tileCenter)?.Id == zoneAreaId)
+                    tileCenters.Add(tileCenter);
+            }
+        }
+
+        var height = _resourceManager.PointOfInterests.TryGetValue(areaDefinition.PointOfInterestId, out var pointOfInterest)
+            ? pointOfInterest.Position.Y
+            : 0f;
+
+        if (tileCenters.Count == 0)
+            return pointOfInterest is null ? null : pointOfInterest.Position.ToVector3();
+
+        var centroid = new Vector3(tileCenters.Average(x => x.X), 0, tileCenters.Average(x => x.Z));
+        var nearest = tileCenters.MinBy(x => x.ToVector3().DistanceSquaredXZ(centroid));
+
+        return new Vector3(nearest.X, height, nearest.Z);
     }
 
     public ZoneAreaDefinition? GetNearestZoneArea(Vector4 position)

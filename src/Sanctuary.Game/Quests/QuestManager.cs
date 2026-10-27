@@ -1194,9 +1194,33 @@ public sealed class QuestManager : IQuestManager
                 {
                     IconId = grantedCollection.IconId,
                     TintId = grantedCollection.IconTintId,
+        if (goalIndex >= 0 && goalIndex < goals.Count
+            && goals[goalIndex] is EnterAreaGoal areaGoal && TryGetAreaPosition(player, areaGoal, out var areaPosition))
+        {
+            player.SendTunneled(new ObjectiveTargetUpdatePacket
+            {
+                Active = true,
+                TaskId = player.ObjectiveTaskId,
+                Guid = 0,
+                NameId = goals[goalIndex].NameId,
+                PositionX = areaPosition.X,
+                PositionY = areaPosition.Y,
+                PositionZ = areaPosition.Z,
+                PositionW = 1f
+            });
+            return;
+        }
+
                     NameId = grantedCollection.NameId,
                     CollectionId = grantedCollection.Id
                 });
+    private static bool TryGetAreaPosition(Player player, EnterAreaGoal goal, out Vector3 position)
+    {
+        position = default;
+
+        return player.Zone is WorldZone worldZone && worldZone.TryGetZoneAreaPosition(goal.ZoneAreaId, out position);
+    }
+
             }
 
             player.SendTunneled(celebration);
@@ -1209,3 +1233,13 @@ public sealed class QuestManager : IQuestManager
         }
     }
 }
+        if (currentGoalIndex >= 0 && currentGoalIndex < goals.Count && goals[currentGoalIndex] is EnterAreaGoal areaGoal)
+        {
+            if (!TryGetAreaPosition(player, areaGoal, out _))
+                return false;
+
+            quest = q;
+            goalIndex = currentGoalIndex;
+            return true;
+        }
+

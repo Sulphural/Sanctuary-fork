@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using Sanctuary.Game.Quests;
+using Sanctuary.Game.Zones;
 using Sanctuary.Packet;
 using Sanctuary.Packet.Common.Attributes;
 
@@ -38,7 +39,8 @@ public static class PlayerUpdatePacketUpdatePositionHandler
         connection.Player.PositionState = packet.State;
         connection.Player.UpdatePosition(packet.Position, packet.Rotation);
 
-        _questManager.OnEvent(connection.Player, new PlayerMovedEvent(connection.Player.Position, connection.Player.Zone.DefinitionId, connection.Player.PointOfInterestId));
+        _questManager.OnEvent(connection.Player, new PlayerMovedEvent(connection.Player.Position, connection.Player.Zone.DefinitionId,
+            connection.Player.Zone is WorldZone worldZone ? worldZone.GetZoneArea(connection.Player.Position)?.Id ?? 0 : 0));
 
         connection.Player.RelayPosition(packet);
 
