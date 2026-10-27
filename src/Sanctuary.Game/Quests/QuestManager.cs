@@ -871,7 +871,6 @@ public sealed class QuestManager : IQuestManager
 
     private void FillRewardBundle(RewardBundleBase bundle, QuestDefinition quest)
     {
-        bundle.Success = false;
         bundle.Coins = quest.RewardCoins;
         bundle.Experience = quest.RewardExperience;
         bundle.Unknown3 = 0;
@@ -881,6 +880,8 @@ public sealed class QuestManager : IQuestManager
 
         foreach (var entry in BuildRewardEntries(quest))
             bundle.Entries.Add(entry);
+
+        bundle.Success = bundle.Entries.Any(entry => entry is RewardBundleEntryCollectionAdd);
     }
 
     private List<RewardBundleEntryBase> BuildRewardEntries(QuestDefinition quest)
