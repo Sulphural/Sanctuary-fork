@@ -41454,7 +41454,9 @@
     "Name": "Water Well",
     "ModelId": 271,
     "ModelFileName": "invisible_cube.adr",
-    "Scale": 2,
+    "Scale": 1,
+    "TerrainObjectId": 1254767909,
+    "ReplaceTerrainObject": false,
     "HasCursor": true,
     "CursorId": 17
   },

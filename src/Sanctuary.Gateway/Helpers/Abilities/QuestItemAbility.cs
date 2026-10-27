@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Numerics;
 
 using Sanctuary.Game.Entities;
 using Sanctuary.Game.Helpers;
@@ -6,6 +7,7 @@ using Sanctuary.Game.Quests;
 using Sanctuary.Game.Resources.Definitions.QuestGoals;
 using Sanctuary.Packet;
 using Sanctuary.Packet.Common;
+using Sanctuary.Packet.Common.Targets;
 
 namespace Sanctuary.Gateway.Helpers.Abilities;
 
@@ -113,6 +115,34 @@ public sealed class QuestItemAbility(AbilityServices services, IQuestManager que
         }
 
         UseOn(player, npc, goal, questManager);
+
+        if (goal.Ability is { } ability)
+        {
+            player.SendTunneledToVisible(new AbilityPacketStartCasting
+            {
+                CasterGuid = player.Guid,
+                Unused = player.Guid,
+                AbilityId = ability.Definition.Id
+            }, true);
+
+            var abilityPacketLaunchAndLand = new AbilityPacketLaunchAndLand
+            {
+                Guid = player.Guid,
+                Unknown2 = ability.Definition.Unknown19,
+                Unknown4 = ability.Definition.Unknown12,
+                Unknown6 = ability.Definition.Unknown20,
+                Unknown9 = ability.Definition.Unknown13,
+                Unknown10 = ability.Definition.CompositeEffect,
+                Unknown15 = NextEffectTagId(),
+                TargetLocation = new Vector4(0, 0, 0, 1),
+                ActionBar = packet.Data,
+                ProjectileParameters = ability.ProjectileParameters
+            };
+            abilityPacketLaunchAndLand.Targets.Add(Target.CreateTarget(unchecked((long)npc.Guid)));
+
+            player.SendTunneledToVisible(abilityPacketLaunchAndLand, true);
+        }
+
         return true;
     }
 }
