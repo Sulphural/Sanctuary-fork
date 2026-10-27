@@ -310,6 +310,8 @@ public sealed class QuestManager : IQuestManager
 
         RefreshQuestNotifications(player, quest);
 
+        SendJournalQuestStates(player);
+
         player.SendTunneled(new CommandPacketQuestDialogComplete());
     }
 
@@ -480,15 +482,20 @@ public sealed class QuestManager : IQuestManager
         SendJournalQuestStates(player);
     }
 
+    private static readonly int[] BriarwoodTutorialQuestIds = [2513, 2514];
+
     private void SendJournalQuestStates(Player player)
     {
         var states = new Dictionary<int, int>();
+
+        foreach (var questId in BriarwoodTutorialQuestIds)
+            states[questId] = 1;
+
         foreach (var progress in player.Quests.All)
             if (progress.Completed)
                 states[progress.QuestId] = 1;
 
-        if (states.Count > 0)
-            player.SendTunneled(new AdventurersJournalQuestUpdatePacket { QuestStates = states });
+        player.SendTunneled(new AdventurersJournalQuestUpdatePacket { QuestStates = states });
     }
 
     private void RefreshQuestNotifications(Player player, QuestDefinition quest)
