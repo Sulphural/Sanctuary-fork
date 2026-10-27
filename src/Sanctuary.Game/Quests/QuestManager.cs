@@ -398,6 +398,116 @@ public sealed class QuestManager : IQuestManager
         return true;
     }
 
+    public bool RewindGoal(Player player, int questId)
+    {
+        if (!_resourceManager.Quests.TryGet(questId, out var quest) || !player.Quests.TryGetInProgress(questId, out var progress))
+            return false;
+
+        var stepStart = progress.GoalIndex;
+        var stepHasProgress = progress.GoalIndex < quest.Goals.Count
+            && (progress.GoalsDone > progress.GoalIndex || progress.OpenGoals.Values.Any(goalProgress => goalProgress.Count > 0));
+
+        if (!stepHasProgress)
+        {
+            if (stepStart == 0)
+                return false;
+
+            stepStart = quest.StepStartOf(Math.Min(stepStart, quest.Goals.Count) - 1);
+        }
+
+        progress.StartStep(quest, stepStart);
+
+        if (player.Quests.PendingTurnInQuestId == questId)
+            player.Quests.PendingTurnInQuestId = 0;
+
+        QuestDialogue.Clear(player);
+
+        SaveQuestRow(player, questId, q => q.CurrentGoalId = quest.Goals[stepStart].NameId);
+        DeleteSavedGoalProgress(player, questId);
+
+        player.SendTunneled(new QuestAbandonedPacket { QuestId = questId });
+        SendActiveState(player, quest, suppressStartBanner: true);
+
+        RefreshQuestNotifications(player, quest);
+        RefreshObjectiveTarget(player);
+        return true;
+    }
+
+    public int FinishQuests(Player player, IReadOnlyCollection<int> questIds)
+    {
+        var finished = new List<QuestDefinition>();
+
+        using (var db = _dbContextFactory.CreateDbContext())
+        {
+            foreach (var questId in questIds)
+            {
+                if (!_resourceManager.Quests.TryGet(questId, out var quest) || player.Quests.IsCompleted(questId))
+                    continue;
+
+                if (player.Quests.TryGetInProgress(questId, out _))
+                {
+                    player.Quests.Complete(questId);
+                    player.SendTunneled(new QuestAbandonedPacket { QuestId = questId });
+                }
+                else
+                {
+                    player.Quests.AddCompleted(questId);
+                }
+
+                if (player.Quests.PendingTurnInQuestId == questId)
+                    player.Quests.PendingTurnInQuestId = 0;
+
+                if (player.Quests.ActiveQuestId == questId)
+                    player.Quests.ActiveQuestId = 0;
+
+                var dbQuest = db.CharacterQuests.FirstOrDefault(x => x.QuestId == questId && x.CharacterId == player.CharacterId);
+                if (dbQuest is null)
+                {
+                    dbQuest = new DbCharacterQuest { QuestId = questId, CharacterId = player.CharacterId };
+                    db.CharacterQuests.Add(dbQuest);
+                }
+
+                dbQuest.Completed = true;
+                dbQuest.CurrentGoalId = AllGoalsDoneGoalId;
+
+                db.CharacterQuestProgress
+                    .Where(p => p.CharacterId == player.CharacterId && p.QuestId == questId)
+                    .ExecuteDelete();
+
+                finished.Add(quest);
+            }
+
+            if (finished.Count > 0 && player.Quests.ActiveQuestId == 0)
+            {
+                var dbCharacter = db.Characters.FirstOrDefault(c => c.Id == player.CharacterId);
+                if (dbCharacter is not null)
+                    dbCharacter.ActiveQuestId = null;
+            }
+
+            db.SaveChanges();
+        }
+
+        if (finished.Count == 0)
+            return 0;
+
+        QuestDialogue.Clear(player);
+
+        player.SendTunneled(new CompletedQuestCountUpdatePacket { Count = player.Quests.CompletedCount });
+
+        SendJournalQuestStates(player);
+
+        foreach (var quest in finished)
+        {
+            RefreshQuestNotifications(player, quest);
+
+            if (quest.NextQuestId is { } nextQuestId && _resourceManager.Quests.TryGet(nextQuestId, out var next))
+                RefreshQuestNotifications(player, next.GiverNpcId);
+        }
+
+        RefreshObjectiveTarget(player);
+        return finished.Count;
+    }
+
     private void RemoveQuest(Player player, QuestDefinition quest)
     {
         var questId = quest.QuestId;
@@ -934,14 +1044,14 @@ public sealed class QuestManager : IQuestManager
         return clientQuest;
     }
 
-    private void SendActiveState(Player player, QuestDefinition quest)
+    private void SendActiveState(Player player, QuestDefinition quest, bool suppressStartBanner = false)
     {
         if (!player.Quests.TryGetInProgress(quest.QuestId, out var progress))
             return;
 
         player.SendTunneled(new QuestAddPacket
         {
-            Quest = NewClientQuest(player, quest, progress, suppressStartBanner: false),
+            Quest = NewClientQuest(player, quest, progress, suppressStartBanner),
             ShowInTracker = quest.QuestId == player.Quests.ActiveQuestId
         });
 
@@ -1084,7 +1194,31 @@ public sealed class QuestManager : IQuestManager
             return;
         }
 
+        if (goalIndex >= 0 && goalIndex < goals.Count
+            && goals[goalIndex] is EnterAreaGoal areaGoal && TryGetAreaPosition(player, areaGoal, out var areaPosition))
+        {
+            player.SendTunneled(new ObjectiveTargetUpdatePacket
+            {
+                Active = true,
+                TaskId = player.ObjectiveTaskId,
+                Guid = 0,
+                NameId = goals[goalIndex].NameId,
+                PositionX = areaPosition.X,
+                PositionY = areaPosition.Y,
+                PositionZ = areaPosition.Z,
+                PositionW = 1f
+            });
+            return;
+        }
+
         SendObjectiveTarget(player, ResolveGoalTargetGuid(player, quest, goalIndex));
+    }
+
+    private static bool TryGetAreaPosition(Player player, EnterAreaGoal goal, out Vector3 position)
+    {
+        position = default;
+
+        return player.Zone is WorldZone worldZone && worldZone.TryGetZoneAreaPosition(goal.ZoneAreaId, out position);
     }
 
     private void SendObjectiveTarget(Player player, ulong targetGuid)
@@ -1151,6 +1285,16 @@ public sealed class QuestManager : IQuestManager
             return true;
         }
 
+        if (currentGoalIndex >= 0 && currentGoalIndex < goals.Count && goals[currentGoalIndex] is EnterAreaGoal areaGoal)
+        {
+            if (!TryGetAreaPosition(player, areaGoal, out _))
+                return false;
+
+            quest = q;
+            goalIndex = currentGoalIndex;
+            return true;
+        }
+
         ulong guid = ResolveGoalTargetGuid(player, q, currentGoalIndex);
         if (guid != 0 && player.Zone.TryGetNpc(guid, out _))
         {
@@ -1194,33 +1338,9 @@ public sealed class QuestManager : IQuestManager
                 {
                     IconId = grantedCollection.IconId,
                     TintId = grantedCollection.IconTintId,
-        if (goalIndex >= 0 && goalIndex < goals.Count
-            && goals[goalIndex] is EnterAreaGoal areaGoal && TryGetAreaPosition(player, areaGoal, out var areaPosition))
-        {
-            player.SendTunneled(new ObjectiveTargetUpdatePacket
-            {
-                Active = true,
-                TaskId = player.ObjectiveTaskId,
-                Guid = 0,
-                NameId = goals[goalIndex].NameId,
-                PositionX = areaPosition.X,
-                PositionY = areaPosition.Y,
-                PositionZ = areaPosition.Z,
-                PositionW = 1f
-            });
-            return;
-        }
-
                     NameId = grantedCollection.NameId,
                     CollectionId = grantedCollection.Id
                 });
-    private static bool TryGetAreaPosition(Player player, EnterAreaGoal goal, out Vector3 position)
-    {
-        position = default;
-
-        return player.Zone is WorldZone worldZone && worldZone.TryGetZoneAreaPosition(goal.ZoneAreaId, out position);
-    }
-
             }
 
             player.SendTunneled(celebration);
@@ -1233,13 +1353,3 @@ public sealed class QuestManager : IQuestManager
         }
     }
 }
-        if (currentGoalIndex >= 0 && currentGoalIndex < goals.Count && goals[currentGoalIndex] is EnterAreaGoal areaGoal)
-        {
-            if (!TryGetAreaPosition(player, areaGoal, out _))
-                return false;
-
-            quest = q;
-            goalIndex = currentGoalIndex;
-            return true;
-        }
-

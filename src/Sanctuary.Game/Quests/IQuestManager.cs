@@ -24,6 +24,10 @@ public interface IQuestManager
 
     bool ResetQuest(Player player, int questId);
 
+    bool RewindGoal(Player player, int questId);
+
+    int FinishQuests(Player player, IReadOnlyCollection<int> questIds);
+
     void SetActiveQuest(Player player, int questId);
 
     ClientQuestData GetClientQuestData(Player player);
