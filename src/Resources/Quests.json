@@ -2848,9 +2848,32 @@
     "NextQuestId": 2492,
     "Goals": [
       {
+        "Type": 4,
+        "NameId": 441777,
+        "ObjectiveId": 24911,
+        "DescriptionId": 441778,
+        "ItemDefinitionId": 5200001,
+        "TargetNpcIds": [33094, 33095, 33096, 33097, 33098, 33103, 33105, 33129, 33130, 33131, 33156],
+        "RequiredCount": 5,
+        "AnimationId": 3351,
+        "TargetEffectId": 15826
+      },
+      {
+        "Type": 4,
+        "NameId": 441779,
+        "ObjectiveId": 24912,
+        "DescriptionId": 441780,
+        "WithPrevious": true,
+        "ItemDefinitionId": 5200001,
+        "TargetNpcIds": [33091, 33092, 33104, 33125, 33162],
+        "RequiredCount": 3,
+        "AnimationId": 3351,
+        "TargetEffectId": 15826
+      },
+      {
         "Type": 0,
         "NameId": 441781,
-        "ObjectiveId": 24911,
+        "ObjectiveId": 24913,
         "DescriptionId": 441782,
         "DialogueId": 441680,
         "Targets": [{ "NpcId": 33143 }]
@@ -4027,11 +4050,20 @@
     "RewardItems": [],
     "PrerequisiteQuestId": 2578,
     "NextQuestId": 2580,
+    "RewardCollectionId": 319,
     "Goals": [
+      {
+        "Type": 2,
+        "NameId": 5100968,
+        "ObjectiveId": 25791,
+        "DescriptionId": 5100969,
+        "CollectNodeType": "cray-pearls",
+        "RequiredCount": 5
+      },
       {
         "Type": 0,
         "NameId": 5101414,
-        "ObjectiveId": 25791,
+        "ObjectiveId": 25792,
         "DescriptionId": 5101415,
         "DialogueId": 5100927,
         "Targets": [{ "NpcId": 1945 }]

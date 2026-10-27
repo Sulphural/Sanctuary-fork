@@ -9,6 +9,7 @@ using Sanctuary.Database;
 using Sanctuary.Game;
 using Sanctuary.Game.Entities;
 using Sanctuary.Game.Interactions;
+using Sanctuary.Game.Quests;
 using Sanctuary.Gateway.Helpers.Abilities;
 using Sanctuary.Packet;
 using Sanctuary.Packet.Common.Attributes;
@@ -39,6 +40,7 @@ public static class AbilityPacketClientRequestStartAbilityHandler
 
         _consumableAbilities =
         [
+            new QuestItemAbility(abilityServices, serviceProvider.GetRequiredService<IQuestManager>()),
             new BoomboxAbility(abilityServices),
             new CakeAbility(abilityServices),
             new SillyStringAbility(abilityServices),

@@ -132,6 +132,46 @@ public class RewardManager : IRewardManager
         return true;
     }
 
+    public bool TryRemoveItem(Player player, int itemDefinitionId)
+    {
+        var characterId = GuidHelper.GetPlayerId(player.Guid);
+
+        using (var dbContext = _dbContextFactory.CreateDbContext())
+        {
+            var dbItems = dbContext.Items.Where(item => item.CharacterId == characterId && item.Definition == itemDefinitionId).ToList();
+
+            if (dbItems.Count > 0)
+            {
+                dbContext.Items.RemoveRange(dbItems);
+                dbContext.SaveChanges();
+            }
+        }
+
+        var clientItems = player.Items.Where(item => item.Definition == itemDefinitionId).ToList();
+
+        foreach (var clientItem in clientItems)
+        {
+            player.Items.Remove(clientItem);
+            player.SendTunneled(new ClientUpdatePacketItemDelete { ItemGuid = clientItem.Id });
+
+            foreach (var (actionBarId, slotItemGuids) in player.ActionBarItemGuids)
+            {
+                foreach (var slot in slotItemGuids.Where(entry => entry.Value == clientItem.Id).Select(entry => entry.Key).ToList())
+                {
+                    slotItemGuids.Remove(slot);
+                    player.CancelScheduledSlotPacket(actionBarId, slot);
+
+                    var slotPacket = new ClientUpdatePacketUpdateActionBarSlot { Data = { Id = actionBarId, Slot = slot } };
+                    slotPacket.Slot.IsEmpty = true;
+
+                    player.SendTunneled(slotPacket);
+                }
+            }
+        }
+
+        return clientItems.Count > 0;
+    }
+
     public bool TryGrantCurrency(Player player, CurrencyType currencyType, int amount)
     {
         if (amount <= 0)

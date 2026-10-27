@@ -192,6 +192,14 @@ public class QuestDefinitionCollection
                     if (collectGoal.RequiredCount <= 0)
                         _logger.LogWarning("Collect goal on quest {id} has no RequiredCount in \"{file}\"; it can never be completed.", quest.QuestId, filePath);
                     break;
+
+                case UseItemOnNpcGoal useItemGoal:
+                    if (useItemGoal.ItemDefinitionId == 0 || useItemGoal.TargetNpcIds.Count == 0)
+                        _logger.LogWarning("Use item goal on quest {id} has no ItemDefinitionId or TargetNpcIds in \"{file}\"; it can never be credited.", quest.QuestId, filePath);
+
+                    if (useItemGoal.RequiredCount <= 0)
+                        _logger.LogWarning("Use item goal on quest {id} has no RequiredCount in \"{file}\"; it can never be completed.", quest.QuestId, filePath);
+                    break;
             }
         }
     }

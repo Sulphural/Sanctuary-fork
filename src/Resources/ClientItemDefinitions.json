@@ -1270478,5 +1270478,25 @@
     "Rarity": 3,
     "TextureAlias": "figgypuddingman",
     "ModelName": "fruitcake_m_basic.adr"
+  },
+  {
+    "Comment": "Bixie-B-Gone Spray",
+    "Id": 5200001,
+    "Type": 1,
+    "NameId": 441990,
+    "DescriptionId": 441776,
+    "Icon": {
+      "Id": 4340
+    },
+    "Class": 9,
+    "MaxStackSize": 1,
+    "NoTrade": true,
+    "MinProfileRank": 1,
+    "TintAlias": "dyetint",
+    "MemberDiscount": 10,
+    "CategoryId": 29,
+    "ActivatableAbilityId": 4365,
+    "NoSale": true,
+    "NonMiniGame": true
   }
 ]

@@ -8170,5 +8170,13 @@
     "MaxActiveNodes": 1,
     "RespawnSeconds": 10,
     "PlayerSpecific": true
+  },
+  {
+    "Key": "seaside-cray-pearls",
+    "ZoneDefinitionId": 1,
+    "NodeType": "cray-pearls",
+    "MaxActiveNodes": 8,
+    "RespawnSeconds": 30,
+    "PlayerSpecific": true
   }
 ]

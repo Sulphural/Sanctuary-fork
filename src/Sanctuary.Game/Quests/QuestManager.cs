@@ -55,6 +55,72 @@ public sealed class QuestManager : IQuestManager
         }
     }
 
+    private static IEnumerable<int> QuestItemIds(QuestDefinition quest)
+        => quest.Goals.OfType<UseItemOnNpcGoal>().Select(goal => goal.ItemDefinitionId).Where(id => id != 0).Distinct();
+
+    private void GrantQuestItems(Player player, QuestDefinition quest)
+    {
+        foreach (var itemDefinitionId in QuestItemIds(quest))
+        {
+            if (!player.Items.Any(item => item.Definition == itemDefinitionId))
+                _rewardManager.TryGrantItem(player, itemDefinitionId, 0, 1);
+        }
+    }
+
+    private void RemoveQuestItems(Player player, QuestDefinition quest)
+    {
+        foreach (var itemDefinitionId in QuestItemIds(quest))
+            _rewardManager.TryRemoveItem(player, itemDefinitionId);
+    }
+
+    public bool IsQuestItem(int itemDefinitionId)
+        => _resourceManager.Quests.Quests.Values.Any(quest => QuestItemIds(quest).Contains(itemDefinitionId));
+
+    public bool TryFindItemTarget(Player player, int itemDefinitionId, ulong selectedGuid, out Npc npc, out UseItemOnNpcGoal goal)
+    {
+        npc = null!;
+        goal = null!;
+
+        var goals = ActiveGoals(player)
+            .Where(active => active.Goal is UseItemOnNpcGoal useItemGoal && useItemGoal.ItemDefinitionId == itemDefinitionId)
+            .Select(active => ((UseItemOnNpcGoal)active.Goal, active.Progress.OpenGoals[active.GoalIndex]))
+            .ToList();
+
+        if (goals.Count == 0)
+            return false;
+
+        var playerPosition = player.Position.ToVector3();
+        var bestDistance = float.MaxValue;
+
+        foreach (var candidate in player.VisibleNpcs.Values)
+        {
+            if (!ReferenceEquals(candidate.Zone, player.Zone))
+                continue;
+
+            foreach (var (useItemGoal, goalProgress) in goals)
+            {
+                if (!useItemGoal.CanUseOn(candidate.DefinitionId, goalProgress))
+                    continue;
+
+                var distance = Vector3.Distance(playerPosition, candidate.Position.ToVector3());
+                if (!float.IsFinite(distance) || distance > useItemGoal.UseRange)
+                    continue;
+
+                if (candidate.Guid == selectedGuid)
+                    distance = -1;
+
+                if (distance < bestDistance)
+                {
+                    bestDistance = distance;
+                    npc = candidate;
+                    goal = useItemGoal;
+                }
+            }
+        }
+
+        return npc is not null;
+    }
+
     public List<NpcInteractionOption> GetInteractionOptions(Player player, Npc npc)
     {
         var options = new List<NpcInteractionOption>();
@@ -314,6 +380,8 @@ public sealed class QuestManager : IQuestManager
 
         RefreshQuestNodes(player, quest);
 
+        GrantQuestItems(player, quest);
+
         player.SendTunneled(new CommandPacketQuestDialogComplete());
     }
 
@@ -342,6 +410,8 @@ public sealed class QuestManager : IQuestManager
         });
 
         SendJournalQuestStates(player);
+
+        RemoveQuestItems(player, quest);
 
         GrantReward(player, quest);
 
@@ -430,6 +500,8 @@ public sealed class QuestManager : IQuestManager
         player.SendTunneled(new QuestAbandonedPacket { QuestId = questId });
         SendActiveState(player, quest, suppressStartBanner: true);
 
+        RefreshQuestNodes(player, quest);
+
         RefreshQuestNotifications(player, quest);
         RefreshObjectiveTarget(player);
         return true;
@@ -500,6 +572,10 @@ public sealed class QuestManager : IQuestManager
 
         foreach (var quest in finished)
         {
+            RemoveQuestItems(player, quest);
+
+            RefreshQuestNodes(player, quest);
+
             RefreshQuestNotifications(player, quest);
 
             if (quest.NextQuestId is { } nextQuestId && _resourceManager.Quests.TryGet(nextQuestId, out var next))
@@ -543,6 +619,8 @@ public sealed class QuestManager : IQuestManager
         player.SendTunneled(new QuestAbandonedPacket { QuestId = questId });
 
         RefreshQuestNodes(player, quest);
+
+        RemoveQuestItems(player, quest);
 
         RefreshQuestNotifications(player, quest);
 
@@ -595,6 +673,12 @@ public sealed class QuestManager : IQuestManager
         {
             if (quest.AutoStart && quest.IsOfferableFor(player.Quests))
                 AcceptQuest(player, quest.QuestId);
+        }
+
+        foreach (var progress in player.Quests.InProgress.ToList())
+        {
+            if (_resourceManager.Quests.TryGet(progress.QuestId, out var quest))
+                GrantQuestItems(player, quest);
         }
 
         RefreshObjectiveTarget(player);
@@ -1167,6 +1251,19 @@ public sealed class QuestManager : IQuestManager
     private ulong ResolveGoalTargetGuid(Player player, QuestDefinition quest, int goalIndex)
     {
         var goals = quest.Goals;
+
+        if (goalIndex >= 0 && goalIndex < goals.Count && goals[goalIndex] is UseItemOnNpcGoal
+            && player.Quests.TryGetInProgress(quest.QuestId, out var useItemProgress))
+        {
+            var openGoals = useItemProgress.OpenGoals
+                .Where(open => goals[open.Key] is UseItemOnNpcGoal)
+                .Select(open => ((UseItemOnNpcGoal)goals[open.Key], open.Value))
+                .ToList();
+
+            var nearest = NearestNpc(player, npc => openGoals.Any(open => open.Item1.CanUseOn(npc.DefinitionId, open.Value)));
+            if (nearest is not null)
+                return nearest.Guid;
+        }
 
         if (goalIndex >= 0 && goalIndex < goals.Count && goals[goalIndex] is TalkToNpcGoal { IsCounted: true } countedGoal
             && player.Quests.TryGetInProgress(quest.QuestId, out var progress))

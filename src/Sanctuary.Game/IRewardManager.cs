@@ -11,5 +11,7 @@ public interface IRewardManager
 
     bool TryGrantItem(Player player, int itemDefinitionId, int tint, int quantity = 1, ulong sourceGuid = 0);
 
+    bool TryRemoveItem(Player player, int itemDefinitionId);
+
     bool TryGrantCurrency(Player player, CurrencyType currencyType, int amount);
 }

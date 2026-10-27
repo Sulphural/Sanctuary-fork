@@ -2,6 +2,7 @@
 
 using Sanctuary.Game.Entities;
 using Sanctuary.Game.Interactions;
+using Sanctuary.Game.Resources.Definitions.QuestGoals;
 using Sanctuary.Packet.Common;
 
 namespace Sanctuary.Game.Quests;
@@ -15,6 +16,10 @@ public interface IQuestManager
     void OnEvent(Player player, QuestEvent questEvent);
 
     bool CanGatherQuestNode(Player player, CollectionNode node);
+
+    bool IsQuestItem(int itemDefinitionId);
+
+    bool TryFindItemTarget(Player player, int itemDefinitionId, ulong selectedGuid, out Npc npc, out UseItemOnNpcGoal goal);
 
     void AcceptQuest(Player player, int questId);
 
