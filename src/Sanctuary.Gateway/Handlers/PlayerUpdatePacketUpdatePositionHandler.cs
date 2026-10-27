@@ -38,7 +38,7 @@ public static class PlayerUpdatePacketUpdatePositionHandler
         connection.Player.PositionState = packet.State;
         connection.Player.UpdatePosition(packet.Position, packet.Rotation);
 
-        _questManager.OnEvent(connection.Player, new PlayerMovedEvent(connection.Player.Position, connection.Player.Zone.DefinitionId));
+        _questManager.OnEvent(connection.Player, new PlayerMovedEvent(connection.Player.Position, connection.Player.Zone.DefinitionId, connection.Player.PointOfInterestId));
 
         connection.Player.RelayPosition(packet);
 

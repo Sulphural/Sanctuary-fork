@@ -180,6 +180,11 @@ public class QuestDefinitionCollection
                         _logger.LogWarning("Reach goal on quest {id} has no ReachPosition in \"{file}\"; it can never be credited.", quest.QuestId, filePath);
                     break;
 
+                case EnterAreaGoal enterAreaGoal:
+                    if (enterAreaGoal.ZoneAreaId == 0)
+                        _logger.LogWarning("Area goal on quest {id} has no ZoneAreaId in \"{file}\"; it can never be credited.", quest.QuestId, filePath);
+                    break;
+
                 case CollectGoal collectGoal:
                     if (string.IsNullOrEmpty(collectGoal.CollectNodeType))
                         _logger.LogWarning("Collect goal on quest {id} has no CollectNodeType in \"{file}\"; it can never be credited.", quest.QuestId, filePath);

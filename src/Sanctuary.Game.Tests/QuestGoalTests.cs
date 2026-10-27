@@ -88,6 +88,17 @@ public sealed class QuestGoalTests
     }
 
     [TestMethod]
+    public void AreaGoal_CompletesOnlyInsideItsArea()
+    {
+        var goal = new EnterAreaGoal { ZoneAreaId = 9 };
+        var progress = goal.CreateProgress();
+
+        Assert.AreEqual(QuestGoalResult.None, goal.Progress(Quest, Move(0f, 0f), progress));
+        Assert.AreEqual(QuestGoalResult.None, goal.Progress(Quest, Move(0f, 0f, zoneAreaId: 4), progress));
+        Assert.AreEqual(QuestGoalResult.Completed, goal.Progress(Quest, Move(0f, 0f, zoneAreaId: 9), progress));
+    }
+
+    [TestMethod]
     public void ReachGoal_IgnoresTheSameSpotInAnotherZone()
     {
         var goal = new ReachLocationGoal { ReachPosition = new Vector3(100f, 0f, 100f), ReachRadius = 10f };
@@ -172,8 +183,8 @@ public sealed class QuestGoalTests
 
     private static NpcTalkedEvent Talk(int npcId) => new(Npc(npcId));
 
-    private static PlayerMovedEvent Move(float x, float z, int zoneDefinitionId = ReachLocationGoal.FabledRealmsZoneDefinitionId)
-        => new(new Vector4(x, 0f, z, 1f), zoneDefinitionId);
+    private static PlayerMovedEvent Move(float x, float z, int zoneDefinitionId = ReachLocationGoal.FabledRealmsZoneDefinitionId, int zoneAreaId = 0)
+        => new(new Vector4(x, 0f, z, 1f), zoneDefinitionId, zoneAreaId);
 
     private static NodeGatheredEvent Gather(string nodeType) => new(new CollectionNode(null!,
         new CollectionNodeTypeDefinition { Key = nodeType, Name = nodeType },

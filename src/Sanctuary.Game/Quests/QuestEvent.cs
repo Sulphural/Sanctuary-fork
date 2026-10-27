@@ -16,4 +16,4 @@ public sealed record NodeGatheredEvent(CollectionNode Node) : QuestEvent
     public override bool CreditsOneQuest => true;
 }
 
-public sealed record PlayerMovedEvent(Vector4 Position, int ZoneDefinitionId) : QuestEvent;
+public sealed record PlayerMovedEvent(Vector4 Position, int ZoneDefinitionId, int ZoneAreaId = 0) : QuestEvent;
