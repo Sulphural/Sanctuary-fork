@@ -41447,5 +41447,48 @@
     "Name": "Wugabug Queen",
     "ModelId": 4472,
     "ModelFileName": "bixie_f_bugawugqueen.adr"
+  },
+  {
+    "Id": 40112,
+    "NameId": 5100360,
+    "Name": "Water Well",
+    "ModelId": 271,
+    "ModelFileName": "invisible_cube.adr",
+    "Scale": 2,
+    "HasCursor": true,
+    "CursorId": 17
+  },
+  {
+    "Id": 40113,
+    "NameId": 5100024,
+    "Name": "Fire",
+    "ModelId": 271,
+    "ModelFileName": "invisible_cube.adr",
+    "Scale": 1,
+    "CompositeEffectId": 5026,
+    "HasCursor": true,
+    "CursorId": 17
+  },
+  {
+    "Id": 40114,
+    "NameId": 5100024,
+    "Name": "Fire",
+    "ModelId": 271,
+    "ModelFileName": "invisible_cube.adr",
+    "Scale": 1,
+    "CompositeEffectId": 5026,
+    "HasCursor": true,
+    "CursorId": 17
+  },
+  {
+    "Id": 40115,
+    "NameId": 5100024,
+    "Name": "Fire",
+    "ModelId": 271,
+    "ModelFileName": "invisible_cube.adr",
+    "Scale": 1,
+    "CompositeEffectId": 5026,
+    "HasCursor": true,
+    "CursorId": 17
   }
 ]

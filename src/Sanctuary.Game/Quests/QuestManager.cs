@@ -60,15 +60,88 @@ public sealed class QuestManager : IQuestManager
 
     private void GrantQuestItems(Player player, QuestDefinition quest)
     {
-        foreach (var itemDefinitionId in QuestItemIds(quest))
+        if (!player.Quests.TryGetInProgress(quest.QuestId, out var progress))
+            return;
+
+        var itemDefinitionIds = progress.OpenGoals.Keys
+            .Select(goalIndex => quest.Goals[goalIndex])
+            .OfType<UseItemOnNpcGoal>()
+            .Select(goal => goal.ItemDefinitionId)
+            .Where(id => id != 0)
+            .Distinct();
+
+        foreach (var itemDefinitionId in itemDefinitionIds)
         {
             if (!player.Items.Any(item => item.Definition == itemDefinitionId))
                 _rewardManager.TryGrantItem(player, itemDefinitionId, 0, 1);
+        }
+
+        RefreshQuestAbility(player, quest);
+    }
+
+    private static void RefreshQuestAbility(Player player, QuestDefinition quest)
+    {
+        var openAbilityGoal = player.Quests.TryGetInProgress(quest.QuestId, out var progress)
+            ? progress.OpenGoals.Keys.Select(goalIndex => quest.Goals[goalIndex]).OfType<UseItemOnNpcGoal>().FirstOrDefault(goal => goal.Ability is not null)
+            : null;
+
+        if (openAbilityGoal is not null)
+        {
+            if (ReferenceEquals(player.QuestAbilityGoal, openAbilityGoal))
+                return;
+
+            var ability = openAbilityGoal.Ability!;
+            player.QuestAbilityGoal = openAbilityGoal;
+            player.SendTunneled(new AbilityPacketAbilityDefinition { Definition = ability.Definition });
+
+            var abilityPacketSetDefinition = new AbilityPacketSetDefinition { ProfileId = player.ActiveProfileId };
+            abilityPacketSetDefinition.AbilitySet.Abilities[ability.Slot] = ability.Ability;
+            player.SendTunneled(abilityPacketSetDefinition);
+            return;
+        }
+
+        if (player.QuestAbilityGoal is not null && quest.Goals.Contains(player.QuestAbilityGoal))
+        {
+            player.QuestAbilityGoal = null;
+            player.SendToolbar();
+        }
+    }
+
+    public bool TryFindQuestAbilityTarget(Player player, int actionBarId, int slot, ulong selectedGuid, out bool isQuestAbility, out Npc npc, out UseItemOnNpcGoal goal)
+    {
+        npc = null!;
+        goal = null!;
+
+        var abilityGoal = player.QuestAbilityGoal;
+        isQuestAbility = abilityGoal?.Ability is { } ability && actionBarId == QuestAbilityActionBarId && slot == ability.Slot;
+
+        return isQuestAbility && TryFindItemTarget(player, abilityGoal!.SourceId, selectedGuid, out npc, out goal);
+    }
+
+    private const int QuestAbilityActionBarId = 1;
+
+    private void RefreshUseItemTargets(Player player, QuestDefinition quest)
+    {
+        var npcIds = quest.HiddenUseItemTargetIds().ToHashSet();
+        if (npcIds.Count == 0)
+            return;
+
+        foreach (var npc in player.Zone.Npcs.Where(npc => npcIds.Contains(npc.DefinitionId)).ToList())
+        {
+            var hidden = IsHiddenByQuest(player, npc);
+            var shown = player.VisibleNpcs.ContainsKey(npc.Guid);
+
+            if (hidden && shown)
+                player.OnRemoveVisibleNpcGracefully(npc, animate: false);
+            else if (!hidden && !shown && npc.VisiblePlayers.ContainsKey(player.Guid))
+                player.OnAddVisibleNpcs(npc);
         }
     }
 
     private void RemoveQuestItems(Player player, QuestDefinition quest)
     {
+        RefreshQuestAbility(player, quest);
+
         foreach (var itemDefinitionId in QuestItemIds(quest))
             _rewardManager.TryRemoveItem(player, itemDefinitionId);
     }
@@ -82,7 +155,7 @@ public sealed class QuestManager : IQuestManager
         goal = null!;
 
         var goals = ActiveGoals(player)
-            .Where(active => active.Goal is UseItemOnNpcGoal useItemGoal && useItemGoal.ItemDefinitionId == itemDefinitionId)
+            .Where(active => active.Goal is UseItemOnNpcGoal useItemGoal && useItemGoal.SourceId == itemDefinitionId)
             .Select(active => ((UseItemOnNpcGoal)active.Goal, active.Progress.OpenGoals[active.GoalIndex]))
             .ToList();
 
@@ -380,6 +453,8 @@ public sealed class QuestManager : IQuestManager
 
         RefreshQuestNodes(player, quest);
 
+        RefreshUseItemTargets(player, quest);
+
         GrantQuestItems(player, quest);
 
         player.SendTunneled(new CommandPacketQuestDialogComplete());
@@ -502,6 +577,10 @@ public sealed class QuestManager : IQuestManager
 
         RefreshQuestNodes(player, quest);
 
+        RefreshUseItemTargets(player, quest);
+
+        GrantQuestItems(player, quest);
+
         RefreshQuestNotifications(player, quest);
         RefreshObjectiveTarget(player);
         return true;
@@ -576,6 +655,8 @@ public sealed class QuestManager : IQuestManager
 
             RefreshQuestNodes(player, quest);
 
+            RefreshUseItemTargets(player, quest);
+
             RefreshQuestNotifications(player, quest);
 
             if (quest.NextQuestId is { } nextQuestId && _resourceManager.Quests.TryGet(nextQuestId, out var next))
@@ -619,6 +700,8 @@ public sealed class QuestManager : IQuestManager
         player.SendTunneled(new QuestAbandonedPacket { QuestId = questId });
 
         RefreshQuestNodes(player, quest);
+
+        RefreshUseItemTargets(player, quest);
 
         RemoveQuestItems(player, quest);
 
@@ -1058,6 +1141,8 @@ public sealed class QuestManager : IQuestManager
                 });
                 SendObjectiveActivated(player, quest.QuestId, goals[openGoalIndex], restored: false);
             }
+
+            GrantQuestItems(player, quest);
         }
 
         SendObjectiveForGoal(player, quest, progress.FirstOpenGoalIndex);

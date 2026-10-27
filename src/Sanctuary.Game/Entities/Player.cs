@@ -20,6 +20,7 @@ using Sanctuary.Game.Helpers;
 using Sanctuary.Game.Interactions;
 using Sanctuary.Game.Quests;
 using Sanctuary.Game.Resources.Definitions.Combat;
+using Sanctuary.Game.Resources.Definitions.QuestGoals;
 using Sanctuary.Game.Resources.Definitions;
 using Sanctuary.Game.Zones;
 using Sanctuary.Packet;
@@ -410,6 +411,8 @@ public sealed class Player : ClientPcData, IEntity
     public DateTimeOffset NpcAbilityExpiresAt { get; set; }
     public DateTimeOffset NpcAbilityNextCastAt { get; set; }
     public int NpcAbilityProfileId { get; set; }
+
+    public UseItemOnNpcGoal? QuestAbilityGoal { get; set; }
 
     public void UpdateEverySecond()
     {

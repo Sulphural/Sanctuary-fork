@@ -95,7 +95,8 @@ public class QuestDefinitionCollection
                 PropertyNameCaseInsensitive = true,
                 ReadCommentHandling = JsonCommentHandling.Skip,
                 AllowTrailingCommas = true,
-                AllowOutOfOrderMetadataProperties = true
+                AllowOutOfOrderMetadataProperties = true,
+                IncludeFields = true
             };
 
             var entries = JsonSerializer.Deserialize<List<QuestDefinition>>(fileStream, jsonSerializerOptions);
@@ -194,7 +195,7 @@ public class QuestDefinitionCollection
                     break;
 
                 case UseItemOnNpcGoal useItemGoal:
-                    if (useItemGoal.ItemDefinitionId == 0 || useItemGoal.TargetNpcIds.Count == 0)
+                    if (useItemGoal.SourceId == 0 || useItemGoal.TargetNpcIds.Count == 0)
                         _logger.LogWarning("Use item goal on quest {id} has no ItemDefinitionId or TargetNpcIds in \"{file}\"; it can never be credited.", quest.QuestId, filePath);
 
                     if (useItemGoal.RequiredCount <= 0)

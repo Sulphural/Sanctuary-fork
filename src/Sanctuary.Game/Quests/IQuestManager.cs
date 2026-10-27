@@ -21,6 +21,8 @@ public interface IQuestManager
 
     bool TryFindItemTarget(Player player, int itemDefinitionId, ulong selectedGuid, out Npc npc, out UseItemOnNpcGoal goal);
 
+    bool TryFindQuestAbilityTarget(Player player, int actionBarId, int slot, ulong selectedGuid, out bool isQuestAbility, out Npc npc, out UseItemOnNpcGoal goal);
+
     void AcceptQuest(Player player, int questId);
 
     bool CompleteQuest(Player player, int questId);

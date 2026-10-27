@@ -14,9 +14,19 @@ public sealed class UseItemOnNpcGoal : QuestGoal
 
     public int AnimationId { get; set; }
 
+    public int AnimationMs { get; set; } = 1500;
+
     public int TargetEffectId { get; set; }
 
+    public int PlayerEffectId { get; set; }
+
     public float TargetEffectSeconds { get; set; } = 3f;
+
+    public bool HideUsedTargets { get; set; }
+
+    public NpcAbilityDefinition? Ability { get; set; }
+
+    public int SourceId => ItemDefinitionId != 0 ? ItemDefinitionId : Ability?.Definition.Id ?? 0;
 
     public override GoalProgress CreateProgress() => new TalkProgress();
 
@@ -24,9 +34,9 @@ public sealed class UseItemOnNpcGoal : QuestGoal
         => TargetNpcIds.Contains(npcId) && !(progress is TalkProgress talkProgress && talkProgress.HasTalkedTo(npcId));
 
     public override bool Matches(QuestDefinition quest, QuestEvent questEvent)
-        => ItemDefinitionId != 0
+        => SourceId != 0
             && questEvent is ItemUsedOnNpcEvent { Npc: var npc, ItemDefinitionId: var itemDefinitionId }
-            && itemDefinitionId == ItemDefinitionId
+            && itemDefinitionId == SourceId
             && TargetNpcIds.Contains(npc.DefinitionId);
 
     public override QuestGoalResult Progress(QuestDefinition quest, QuestEvent questEvent, GoalProgress progress)

@@ -66,7 +66,13 @@ public sealed class QuestDefinition
             : TargetNpcId;
 
     public IEnumerable<int> StateNpcIds()
-        => Goals.SelectMany(goal => goal.HideNpcIdsWhenDone.Concat(goal.NpcEffectsUntilDone.Select(effect => effect.NpcId))).Distinct();
+        => Goals.SelectMany(goal => goal.HideNpcIdsWhenDone
+                .Concat(goal.NpcEffectsUntilDone.Select(effect => effect.NpcId))
+                .Concat(goal is UseItemOnNpcGoal { HideUsedTargets: true } useItemGoal ? useItemGoal.TargetNpcIds : []))
+            .Distinct();
+
+    public IEnumerable<int> HiddenUseItemTargetIds()
+        => Goals.OfType<UseItemOnNpcGoal>().Where(goal => goal.HideUsedTargets).SelectMany(goal => goal.TargetNpcIds).Distinct();
 
     public int StepEnd(int stepStart)
     {
@@ -101,6 +107,13 @@ public sealed class QuestDefinition
         for (var i = 0; i < Goals.Count; i++)
         {
             if (Goals[i].HideNpcIdsWhenDone.Contains(npcId) && IsGoalDoneFor(playerQuests, i))
+                return true;
+
+            if (Goals[i] is UseItemOnNpcGoal { HideUsedTargets: true } useItemGoal && useItemGoal.TargetNpcIds.Contains(npcId)
+                && (IsGoalDoneFor(playerQuests, i)
+                    || (playerQuests.TryGetInProgress(QuestId, out var progress)
+                        && progress.OpenGoals.TryGetValue(i, out var goalProgress)
+                        && !useItemGoal.CanUseOn(npcId, goalProgress))))
                 return true;
         }
 

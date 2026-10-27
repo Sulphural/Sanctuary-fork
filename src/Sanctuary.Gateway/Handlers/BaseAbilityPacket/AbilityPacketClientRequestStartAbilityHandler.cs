@@ -21,6 +21,7 @@ public static class AbilityPacketClientRequestStartAbilityHandler
 {
     private static ILogger _logger = null!;
     private static IResourceManager _resourceManager = null!;
+    private static IQuestManager _questManager = null!;
 
     // Tried in order; first match handles it. The default matches anything, so it goes last.
     private static ConsumableAbility[] _consumableAbilities = [];
@@ -31,6 +32,7 @@ public static class AbilityPacketClientRequestStartAbilityHandler
 
         _logger = loggerFactory.CreateLogger(nameof(AbilityPacketClientRequestStartAbilityHandler));
         _resourceManager = serviceProvider.GetRequiredService<IResourceManager>();
+        _questManager = serviceProvider.GetRequiredService<IQuestManager>();
 
         var abilityServices = new AbilityServices(
             _logger,
@@ -40,7 +42,7 @@ public static class AbilityPacketClientRequestStartAbilityHandler
 
         _consumableAbilities =
         [
-            new QuestItemAbility(abilityServices, serviceProvider.GetRequiredService<IQuestManager>()),
+            new QuestItemAbility(abilityServices, _questManager),
             new BoomboxAbility(abilityServices),
             new CakeAbility(abilityServices),
             new SillyStringAbility(abilityServices),
@@ -60,6 +62,9 @@ public static class AbilityPacketClientRequestStartAbilityHandler
 
         _logger.LogTrace("Received ability request. Player: {guid}, action bar: {id}, slot: {slot}, target: {target}.",
             connection.Player.Guid, abilityPacketClientRequestStartAbility.Data.Id, abilityPacketClientRequestStartAbility.Data.Slot, abilityPacketClientRequestStartAbility.Guid);
+
+        if (QuestItemAbility.HandleQuestAbility(connection.Player, abilityPacketClientRequestStartAbility, _questManager))
+            return true;
 
         if (SnowballInteraction.HandleAbility(connection.Player, abilityPacketClientRequestStartAbility))
             return true;
