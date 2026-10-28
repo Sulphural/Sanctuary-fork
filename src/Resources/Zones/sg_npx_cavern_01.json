@@ -89,8 +89,7 @@
         "Heading": -1.571,
         "DelayMs": 1000,
         "BaseAnimationId": 2100,
-        "AnimationId": 2001,
-        "Preload": true
+        "AnimationId": 2001
       },
       {
         "NpcId": 40117,
@@ -102,8 +101,7 @@
         "Heading": -1.571,
         "DelayMs": 1000,
         "BaseAnimationId": 2100,
-        "AnimationId": 2001,
-        "Preload": true
+        "AnimationId": 2001
       },
       {
         "NpcId": 40117,
@@ -115,8 +113,7 @@
         "Heading": -0.041,
         "DelayMs": 1000,
         "BaseAnimationId": 2100,
-        "AnimationId": 2001,
-        "Preload": true
+        "AnimationId": 2001
       },
       {
         "NpcId": 40117,
@@ -128,8 +125,7 @@
         "Heading": -1.571,
         "DelayMs": 1000,
         "BaseAnimationId": 2100,
-        "AnimationId": 2001,
-        "Preload": true
+        "AnimationId": 2001
       },
       {
         "NpcId": 40117,
@@ -141,8 +137,7 @@
         "Heading": -1.571,
         "DelayMs": 1000,
         "BaseAnimationId": 2100,
-        "AnimationId": 2001,
-        "Preload": true
+        "AnimationId": 2001
       },
       {
         "NpcId": 40117,
@@ -154,8 +149,7 @@
         "Heading": 0.214,
         "DelayMs": 1000,
         "BaseAnimationId": 2100,
-        "AnimationId": 2001,
-        "Preload": true
+        "AnimationId": 2001
       },
       {
         "NpcId": 40117,
@@ -167,8 +161,7 @@
         "Heading": -0.025,
         "DelayMs": 1000,
         "BaseAnimationId": 2100,
-        "AnimationId": 2001,
-        "Preload": true
+        "AnimationId": 2001
       },
       {
         "NpcId": 40117,
@@ -180,8 +173,7 @@
         "Heading": -1.571,
         "DelayMs": 1000,
         "BaseAnimationId": 2100,
-        "AnimationId": 2001,
-        "Preload": true
+        "AnimationId": 2001
       },
       {
         "NpcId": 40120,
@@ -310,6 +302,20 @@
           "EffectId": 16861
         },
         {
+          "DelayMs": 7500,
+          "Type": "Spawn",
+          "NpcId": 40117,
+          "Position": [
+            359.42,
+            36.69,
+            399.74
+          ],
+          "Heading": 3.012,
+          "AnimationId": 2001,
+          "BaseAnimationId": 2100,
+          "AnimationDelayMs": 1000
+        },
+        {
           "DelayMs": 8500,
           "Type": "Spawn",
           "NpcId": 40131,
@@ -320,19 +326,6 @@
           ],
           "Heading": 0.0,
           "AnimationId": 1404
-        },
-        {
-          "DelayMs": 8500,
-          "Type": "Spawn",
-          "NpcId": 40117,
-          "Position": [
-            359.42,
-            36.69,
-            399.74
-          ],
-          "Heading": 3.012,
-          "AnimationId": 2001,
-          "BaseAnimationId": 2100
         },
         {
           "DelayMs": 9500,
@@ -423,13 +416,15 @@
           "ArrivalStringId": 5100598,
           "ArrivalColorId": 1,
           "ArrivalDelayMs": 1000,
-          "ArrivalScripts": [
+          "ArrivalSpeakerNpcId": 1451,
+          "ArrivalEmote": true,
+          "Scripts": [
             "FirstTimeEvent.FtesNpxDppHide",
             "TutorialMouse.Hide",
             "TutorialKeys.Hide"
           ],
-          "ArrivalSpeakerNpcId": 1451,
-          "ArrivalEmote": true
+          "SoundId": 18276,
+          "TeleportDelayMs": 1500
         }
       ]
     }
@@ -500,55 +495,9 @@
     37.12,
     407.32
   ],
-  "AssetPreloads": [
-    {
-      "NpcId": 40117,
-      "AnimationIds": [
-        2001,
-        2100
-      ]
-    },
-    {
-      "NpcId": 40120,
-      "AnimationIds": []
-    },
-    {
-      "NpcId": 40133,
-      "AnimationIds": [
-        1111,
-        2003,
-        2004,
-        2100
-      ]
-    },
-    {
-      "NpcId": 40131,
-      "AnimationIds": [
-        1404,
-        3101,
-        2100
-      ]
-    },
-    {
-      "NpcId": 40134,
-      "AnimationIds": [
-        1150,
-        1152
-      ]
-    },
-    {
-      "NpcId": 40121,
-      "AnimationIds": [
-        1150,
-        1152
-      ]
-    },
-    {
-      "NpcId": 40122,
-      "AnimationIds": [
-        1150,
-        1152
-      ]
-    }
+  "AssetPreloadNpcIds": [
+    40117,
+    40120,
+    40131
   ]
 }

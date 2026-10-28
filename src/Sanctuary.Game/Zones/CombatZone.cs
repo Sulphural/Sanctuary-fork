@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Threading.Tasks;
 
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -36,7 +37,6 @@ public sealed class CombatZone : BaseZone
     private int _triggerStep = -1;
 
     private readonly HashSet<Npc> _assetPreloadNpcs = [];
-    private readonly Dictionary<ZoneIntroSpawn, Npc> _preloadedSpawns = [];
     private readonly HashSet<ZoneQuestScene> _playedScenes = [];
     private readonly Dictionary<int, Npc> _sceneNpcs = [];
     private readonly Dictionary<Npc, int> _sceneEffectTags = [];
@@ -119,8 +119,7 @@ public sealed class CombatZone : BaseZone
 
         if (passedTriggers == 0)
         {
-            PreloadAssets(player);
-            PreloadSpawns(intro);
+            PreloadAssets();
             PlayIntro(player, intro);
             return;
         }
@@ -140,11 +139,11 @@ public sealed class CombatZone : BaseZone
         _triggerStep = passedTriggers;
     }
 
-    private void PreloadAssets(Player player)
+    private void PreloadAssets()
     {
-        foreach (var preload in _zoneDefinition.AssetPreloads)
+        foreach (var npcId in _zoneDefinition.AssetPreloadNpcIds)
         {
-            if (!_resourceManager.Npcs.TryGetValue(preload.NpcId, out var definition) || !TryCreateNpc(null, definition, out var npc))
+            if (!_resourceManager.Npcs.TryGetValue(npcId, out var definition) || !TryCreateNpc(null, definition, out var npc))
                 continue;
 
             _assetPreloadNpcs.Add(npc);
@@ -153,12 +152,6 @@ public sealed class CombatZone : BaseZone
             npc.IsInteractable = false;
             npc.SetCollidable(false);
             npc.UpdatePosition(_zoneDefinition.AssetPreloadPosition with { W = 1f }, Quaternion.Identity);
-
-            RunWhenVisible(player, npc, () =>
-            {
-                foreach (var animationId in preload.AnimationIds)
-                    player.SendTunneled(new PlayerUpdatePacketSetAnimation { Guid = npc.Guid, AnimationId = animationId });
-            });
         }
     }
 
@@ -171,15 +164,6 @@ public sealed class CombatZone : BaseZone
         }
 
         _assetPreloadNpcs.Clear();
-    }
-
-    private void PreloadSpawns(ZoneIntroDefinition intro)
-    {
-        foreach (var spawn in intro.FinishSpawns.Where(spawn => spawn.Preload))
-        {
-            if (SpawnNpc(spawn.NpcId, spawn.Position, spawn.Heading, spawn.Scale) is { } npc)
-                _preloadedSpawns[spawn] = npc;
-        }
     }
 
     private void PlayIntro(Player player, ZoneIntroDefinition intro)
@@ -334,10 +318,7 @@ public sealed class CombatZone : BaseZone
 
     private void RaiseSpawn(Player player, ZoneIntroSpawn spawn)
     {
-        if (!_preloadedSpawns.Remove(spawn, out var npc))
-            npc = SpawnNpc(spawn.NpcId, spawn.Position, spawn.Heading, spawn.Scale);
-
-        if (npc is null)
+        if (SpawnNpc(spawn.NpcId, spawn.Position, spawn.Heading, spawn.Scale) is not { } npc)
             return;
 
         RunWhenVisible(player, npc, () => RunAfter(spawn.DelayMs, () =>
@@ -403,13 +384,16 @@ public sealed class CombatZone : BaseZone
                 if (SpawnNpc(step.NpcId, step.Position, step.Heading, step.Scale) is { } spawned)
                 {
                     _sceneNpcs[step.NpcId] = spawned;
-                    RunWhenVisible(player, spawned, () =>
+                    RunWhenVisible(player, spawned, () => RunAfter(step.AnimationDelayMs, () =>
                     {
+                        if (!HasPlayer(player))
+                            return;
+
                         AnimateNpc(player, spawned, step.BaseAnimationId, step.AnimationId);
 
                         if (step.EffectId != 0)
                             _sceneEffectTags[spawned] = spawned.AddEffectTag(step.EffectId);
-                    });
+                    }));
                 }
                 break;
 
@@ -491,14 +475,26 @@ public sealed class CombatZone : BaseZone
 
         RunScript(player, step.Script);
 
+        player.SendTunneled(new EncounterPlayerEnterPacket { NpxTutorial = false });
+        RunScript(player, "HUD.showMain");
+
+        foreach (var script in step.Scripts)
+            RunScript(player, script);
+
+        RunAfter(step.TeleportDelayMs, () => Task.Run(() =>
+        {
+            if (HasPlayer(player))
+                TeleportToArrival(player, step);
+        }));
+    }
+
+    private static void TeleportToArrival(Player player, ZoneSceneStep step)
+    {
         if (!player.TeleportToZone(step.ZoneDefinitionId, null, step.TeleportPosition, QuaternionExtensions.FromHeading(step.TeleportHeading)))
             return;
 
         player.RunWhenZoneLoaded(() =>
         {
-            foreach (var script in step.ArrivalScripts)
-                RunScript(player, script);
-
             var zone = player.Zone;
 
             if (step.ArrivalStringId == 0

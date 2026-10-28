@@ -19,14 +19,7 @@ public sealed class CombatZoneDefinition : BaseZoneDefinition
     [JsonConverter(typeof(Vector4JsonConverter))]
     public Vector4 AssetPreloadPosition { get; set; }
 
-    public List<ZoneAssetPreload> AssetPreloads { get; set; } = [];
-}
-
-public sealed class ZoneAssetPreload
-{
-    public int NpcId { get; set; }
-
-    public List<int> AnimationIds { get; set; } = [];
+    public List<int> AssetPreloadNpcIds { get; set; } = [];
 }
 
 public sealed class ZoneQuestScene
@@ -59,6 +52,8 @@ public sealed class ZoneSceneStep
 
     public int BaseAnimationId { get; set; }
 
+    public int AnimationDelayMs { get; set; }
+
     public int StringId { get; set; }
 
     public int ColorId { get; set; }
@@ -73,9 +68,11 @@ public sealed class ZoneSceneStep
 
     public string? Script { get; set; }
 
+    public List<string> Scripts { get; set; } = [];
+
     public int ZoneDefinitionId { get; set; }
 
-    public List<string> ArrivalScripts { get; set; } = [];
+    public int TeleportDelayMs { get; set; }
 
     public int ArrivalSpeakerNpcId { get; set; }
 
@@ -219,8 +216,6 @@ public sealed class ZoneIntroSpawn
     public int BaseAnimationId { get; set; }
 
     public int AnimationId { get; set; }
-
-    public bool Preload { get; set; }
 }
 
 public sealed class ZoneIntroLookAtStep
