@@ -41548,7 +41548,9 @@
     "Name": "Gloamling",
     "ModelId": 4201,
     "ModelFileName": "gloamling_m_default.adr",
-    "Disposition": 0
+    "Disposition": 0,
+    "NameColor": -65536,
+    "ActiveProfile": 2001
   },
   {
     "Id": 40124,
@@ -41556,7 +41558,9 @@
     "Name": "Gloamling",
     "ModelId": 4201,
     "ModelFileName": "gloamling_m_default.adr",
-    "Disposition": 0
+    "Disposition": 0,
+    "NameColor": -65536,
+    "ActiveProfile": 2001
   },
   {
     "Id": 40125,
@@ -41564,7 +41568,9 @@
     "Name": "Gloamling",
     "ModelId": 4201,
     "ModelFileName": "gloamling_m_default.adr",
-    "Disposition": 0
+    "Disposition": 0,
+    "NameColor": -65536,
+    "ActiveProfile": 2001
   },
   {
     "Id": 40126,
@@ -41572,7 +41578,9 @@
     "Name": "Gloamling",
     "ModelId": 4201,
     "ModelFileName": "gloamling_m_default.adr",
-    "Disposition": 0
+    "Disposition": 0,
+    "NameColor": -65536,
+    "ActiveProfile": 2001
   },
   {
     "Id": 40127,
@@ -41581,7 +41589,9 @@
     "ModelId": 4201,
     "ModelFileName": "gloamling_m_default.adr",
     "Scale": 1.5,
-    "Disposition": 0
+    "Disposition": 0,
+    "NameColor": -65536,
+    "ActiveProfile": 2001
   },
   {
     "Id": 40128,
@@ -41589,7 +41599,9 @@
     "Name": "Gloamling",
     "ModelId": 4201,
     "ModelFileName": "gloamling_m_default.adr",
-    "Disposition": 0
+    "Disposition": 0,
+    "NameColor": -65536,
+    "ActiveProfile": 2001
   },
   {
     "Id": 40129,
@@ -41628,7 +41640,9 @@
     "Name": "Gloamling",
     "ModelId": 4201,
     "ModelFileName": "gloamling_m_default.adr",
-    "Disposition": 0
+    "Disposition": 0,
+    "NameColor": -65536,
+    "ActiveProfile": 2001
   },
   {
     "Id": 40135,

@@ -71,6 +71,10 @@ public class Npc : IScriptableNpc, IEntity
     /// </summary>
     public int Disposition { get; set; } = 1;
 
+    public int NameColor { get; set; }
+
+    public int ActiveProfile { get; set; }
+
     public Action<Player>? InteractAction { get; set; }
     public Action? UpdateEverySecondAction { get; set; }
     public Action? UpdateEveryTickAction { get; set; }
@@ -421,7 +425,7 @@ public class Npc : IScriptableNpc, IEntity
 
             Tilt = Tilt ?? default,
 
-            NameColor = default,
+            NameColor = NameColor,
 
             AreaDefinitionId = AreaDefinitionId,
 
@@ -458,7 +462,7 @@ public class Npc : IScriptableNpc, IEntity
 
             FlyByEffectId = default,
 
-            ActiveProfile = default,
+            ActiveProfile = ActiveProfile,
 
             NotificationImageSetId = default,
             Unknown68 = default,

@@ -917,6 +917,8 @@ public abstract class BaseZone : IZone, IDisposable
         npc.TintId = definition.TintId;
         npc.HideNamePlate = definition.HideNamePlate;
         npc.Disposition = definition.Disposition;
+        npc.NameColor = definition.NameColor;
+        npc.ActiveProfile = definition.ActiveProfile;
         npc.Animation = definition.Animation;
         npc.CompositeEffectId = definition.CompositeEffectId;
         npc.VerticalOffset = definition.VerticalOffset;

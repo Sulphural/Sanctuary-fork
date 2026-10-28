@@ -25,6 +25,8 @@ public class NpcDefinition
     public float? Scale { get; set; }
     public bool HideNamePlate { get; set; }
     public int Disposition { get; set; } = 1;
+    public int NameColor { get; set; }
+    public int ActiveProfile { get; set; }
     public int Animation { get; set; } = 1;
     public int CompositeEffectId { get; set; }
     public float VerticalOffset { get; set; }
