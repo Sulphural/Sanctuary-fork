@@ -1295,7 +1295,7 @@ public sealed class QuestManager : IQuestManager
         {
             QuestId = questId,
             ObjectiveId = goal.ClientObjectiveId,
-            RequiredCount = restored ? goal.RequiredCount : 0,
+            RequiredCount = restored || goal.RequiredCount > 1 ? goal.RequiredCount : 0,
             Unknown2 = restored
         });
     }
