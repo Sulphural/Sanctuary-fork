@@ -79,10 +79,20 @@ public sealed class WorldZone : BaseZone
         _questManager = serviceProvider.GetRequiredService<IQuestManager>();
     }
 
-    private bool NeedsTutorial(Player player)
-        => _zoneDefinition.TutorialZoneDefinitionId != 0
-            && (player.Quests.All.Count == 0 || _zoneDefinition.TutorialQuestIds.Any(questId => player.Quests.TryGetInProgress(questId, out var progress)
-                && (!_zoneDefinition.TutorialQuestGoalEnds.TryGetValue(questId, out var goalEnd) || progress.FirstOpenGoalIndex < goalEnd)));
+    private bool IsNewCharacter(Player player)
+        => _zoneDefinition.TutorialZoneDefinitionId != 0 && player.Quests.All.Count == 0;
+
+    private bool LeftTutorial(Player player)
+        => _zoneDefinition.TutorialQuestIds.Any(questId => player.Quests.TryGetInProgress(questId, out var progress)
+            && (!_zoneDefinition.TutorialQuestGoalEnds.TryGetValue(questId, out var goalEnd) || progress.FirstOpenGoalIndex < goalEnd));
+
+    private void SkipTutorial(Player player)
+    {
+        _questManager.FinishQuests(player, _zoneDefinition.TutorialQuestIds);
+
+        if (_resourceManager.Quests.TryGet(_zoneDefinition.TutorialQuestIds[^1], out var lastQuest) && lastQuest.NextQuestId is { } nextQuestId)
+            _questManager.AcceptQuest(player, nextQuestId);
+    }
 
     private bool SendToTutorial(Player player)
         => _resourceManager.Zones.TryGetValue(_zoneDefinition.TutorialZoneDefinitionId, out var tutorialZone)
@@ -95,7 +105,10 @@ public sealed class WorldZone : BaseZone
         SendPointOfInterests(player);
         SendAdventurersJournalInfo(player);
 
-        if (!NeedsTutorial(player))
+        if (LeftTutorial(player))
+            SkipTutorial(player);
+
+        if (!IsNewCharacter(player))
             SendWorldState(player);
     }
 
@@ -138,7 +151,7 @@ public sealed class WorldZone : BaseZone
     {
         base.OnClientFinishedLoading(player);
 
-        if (NeedsTutorial(player))
+        if (IsNewCharacter(player))
         {
             if (SendToTutorial(player))
                 return;

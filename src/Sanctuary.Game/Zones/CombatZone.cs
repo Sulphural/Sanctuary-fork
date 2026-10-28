@@ -115,28 +115,8 @@ public sealed class CombatZone : BaseZone
         if (_zoneDefinition.Intro is not { } intro)
             return;
 
-        var passedTriggers = intro.PositionTriggers.FindLastIndex(trigger => trigger.QuestId != 0 && player.Quests.Contains(trigger.QuestId)) + 1;
-
-        if (passedTriggers == 0)
-        {
-            PreloadAssets();
-            PlayIntro(player, intro);
-            return;
-        }
-
-        foreach (var spawn in intro.FinishSpawns)
-        {
-            if (SpawnNpc(spawn.NpcId, spawn.Position, spawn.Heading, spawn.Scale, spawn.BaseAnimationId) is { } npc)
-                RunWhenVisible(player, npc, () => PlayAnimations(player, npc, spawn.BaseAnimationId, 0));
-        }
-
-        foreach (var trigger in intro.PositionTriggers.Take(passedTriggers))
-        {
-            if (FindNpc(trigger.NpcId) is { } npc)
-                RunWhenVisible(player, npc, () => AnimateNpc(player, npc, trigger.BaseAnimationId, 0));
-        }
-
-        _triggerStep = passedTriggers;
+        PreloadAssets();
+        PlayIntro(player, intro);
     }
 
     private void PreloadAssets()
@@ -599,16 +579,13 @@ public sealed class CombatZone : BaseZone
         RunAfter(VisibleCheckMs, () => RunWhenVisible(player, npc, action, waitedMs + VisibleCheckMs));
     }
 
-    private Npc? SpawnNpc(int npcId, Vector4 position, float heading, float scale, int animationId = 0)
+    private Npc? SpawnNpc(int npcId, Vector4 position, float heading, float scale)
     {
         if (!_resourceManager.Npcs.TryGetValue(npcId, out var definition) || !TryCreateNpc(null, definition, out var npc))
             return null;
 
         if (scale > 0f)
             npc.Scale = scale;
-
-        if (animationId != 0)
-            npc.Animation = animationId;
 
         npc.UpdatePosition(new Vector4(position.X, position.Y, position.Z, 1f), QuaternionExtensions.FromHeading(heading));
 
