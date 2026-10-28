@@ -1,0 +1,554 @@
+{
+  "$type": "Dungeon",
+  "Id": 2,
+  "Name": "sg_npx_cavern_01",
+  "Type": "Dungeon",
+  "TileSize": 64,
+  "StartLatitude": 0,
+  "StartLongitude": 0,
+  "EndLatitude": 16,
+  "EndLongitude": 16,
+  "SpawnPosition": [
+    275.74,
+    27.92,
+    290.68
+  ],
+  "SpawnRotation": [
+    0.9735,
+    -0.2288
+  ],
+  "Scripts": [
+    "sg_npx_cavern_01"
+  ],
+  "Tutorial": true,
+  "Intro": {
+    "CameraPosition": [
+      261.1,
+      38.0,
+      294.0
+    ],
+    "CameraLookAt": [
+      284.0,
+      29.0,
+      288.8
+    ],
+    "CameraPullBack": 0.0,
+    "ProfileId": 43,
+    "NpcId": 6445,
+    "DialogueTextId": 441293,
+    "ResponseTextId": 441435,
+    "DialogueSoundId": 18261,
+    "DialogueAnimationId": 2002,
+    "DialogueDelayMs": 4000,
+    "NpcAnimationId": 1111,
+    "NpcEffectId": 15212,
+    "LookAtDelayMs": 1500,
+    "CinematicEndDelayMs": 3000,
+    "StartScript": "FirstTimeEvent.FtesNpxDppStart",
+    "LookAtNpcId": 40116,
+    "LookAtSpawnEffectId": 15194,
+    "LookAtRemoveEffectId": 46,
+    "LookAtConeAngle": 6,
+    "LookAtArmDelayMs": 4000,
+    "LookAtCompleteSoundId": 15384,
+    "LookAtSteps": [
+      {
+        "Position": [
+          290.41,
+          36.63,
+          280.47
+        ],
+        "Script": "FirstTimeEvent.FtesNpxDppCamera1"
+      },
+      {
+        "Position": [
+          291.98,
+          36.48,
+          290.73
+        ],
+        "Script": "FirstTimeEvent.FtesNpxDppCamera2"
+      },
+      {
+        "Position": [
+          290.47,
+          34.82,
+          301.25
+        ],
+        "Script": "FirstTimeEvent.FtesNpxDppCamera3"
+      }
+    ],
+    "FinishScript": "FirstTimeEvent.FtesNpxDppMovement1",
+    "FinishSpawns": [
+      {
+        "NpcId": 40117,
+        "Position": [
+          297.3,
+          28.0,
+          286.93
+        ],
+        "Heading": -1.571,
+        "DelayMs": 1000,
+        "BaseAnimationId": 2100,
+        "AnimationId": 2001,
+        "Preload": true
+      },
+      {
+        "NpcId": 40117,
+        "Position": [
+          296.77,
+          28.0,
+          296.08
+        ],
+        "Heading": -1.571,
+        "DelayMs": 1000,
+        "BaseAnimationId": 2100,
+        "AnimationId": 2001,
+        "Preload": true
+      },
+      {
+        "NpcId": 40117,
+        "Position": [
+          305.8,
+          28.0,
+          294.2
+        ],
+        "Heading": -0.041,
+        "DelayMs": 1000,
+        "BaseAnimationId": 2100,
+        "AnimationId": 2001,
+        "Preload": true
+      },
+      {
+        "NpcId": 40117,
+        "Position": [
+          311.63,
+          28.0,
+          276.71
+        ],
+        "Heading": -1.571,
+        "DelayMs": 1000,
+        "BaseAnimationId": 2100,
+        "AnimationId": 2001,
+        "Preload": true
+      },
+      {
+        "NpcId": 40117,
+        "Position": [
+          308.47,
+          28.0,
+          276.71
+        ],
+        "Heading": -1.571,
+        "DelayMs": 1000,
+        "BaseAnimationId": 2100,
+        "AnimationId": 2001,
+        "Preload": true
+      },
+      {
+        "NpcId": 40117,
+        "Position": [
+          303.11,
+          28.0,
+          270.0
+        ],
+        "Heading": 0.214,
+        "DelayMs": 1000,
+        "BaseAnimationId": 2100,
+        "AnimationId": 2001,
+        "Preload": true
+      },
+      {
+        "NpcId": 40117,
+        "Position": [
+          295.8,
+          25.67,
+          272.31
+        ],
+        "Heading": -0.025,
+        "DelayMs": 1000,
+        "BaseAnimationId": 2100,
+        "AnimationId": 2001,
+        "Preload": true
+      },
+      {
+        "NpcId": 40117,
+        "Position": [
+          306.7,
+          28.0,
+          281.09
+        ],
+        "Heading": -1.571,
+        "DelayMs": 1000,
+        "BaseAnimationId": 2100,
+        "AnimationId": 2001,
+        "Preload": true
+      },
+      {
+        "NpcId": 40120,
+        "Position": [
+          303.66,
+          27.92,
+          285.26
+        ],
+        "Heading": -3.018,
+        "DelayMs": 1000,
+        "Scale": 3.15
+      },
+      {
+        "NpcId": 40120,
+        "Position": [
+          306.35,
+          28.02,
+          287.4
+        ],
+        "Heading": -1.783,
+        "DelayMs": 1000,
+        "Scale": 3.15
+      },
+      {
+        "NpcId": 40120,
+        "Position": [
+          305.87,
+          28.02,
+          289.79
+        ],
+        "Heading": 1.299,
+        "DelayMs": 1000,
+        "Scale": 3.15
+      },
+      {
+        "NpcId": 40120,
+        "Position": [
+          301.86,
+          27.86,
+          285.4
+        ],
+        "Heading": -0.075,
+        "DelayMs": 1000,
+        "Scale": 3.15
+      }
+    ],
+    "PositionTriggers": [
+      {
+        "Position": [
+          302.45,
+          28.13,
+          283.39
+        ],
+        "Radius": 4.0,
+        "Scripts": [
+          "FirstTimeEvent.FtesNpxDppMovement2"
+        ]
+      },
+      {
+        "Position": [
+          309.78,
+          28.91,
+          288.9
+        ],
+        "Radius": 4.0,
+        "NpcId": 40119,
+        "BaseAnimationId": 2901,
+        "AnimationId": 2801,
+        "QuestId": 2511,
+        "Scripts": [
+          "FirstTimeEvent.FtesNpxDppEnemies",
+          "FirstTimeEvent.FtesNpxDppReturnHud"
+        ]
+      },
+      {
+        "Position": [
+          360.06,
+          33.38,
+          338.0
+        ],
+        "Radius": 6.0,
+        "NpcId": 40130,
+        "BaseAnimationId": 2901,
+        "AnimationId": 2801
+      }
+    ]
+  },
+  "QuestScenes": [
+    {
+      "QuestId": 2514,
+      "GoalIndex": 0,
+      "Steps": [
+        {
+          "DelayMs": 0,
+          "Type": "Move",
+          "NpcId": 40133,
+          "Position": [
+            360.59,
+            37.01,
+            415.45
+          ]
+        },
+        {
+          "DelayMs": 7000,
+          "Type": "Say",
+          "NpcId": 40133,
+          "StringId": 4419673,
+          "ColorId": 2
+        },
+        {
+          "DelayMs": 7000,
+          "Type": "Animate",
+          "NpcId": 40133,
+          "AnimationId": 2003
+        },
+        {
+          "DelayMs": 7000,
+          "Type": "Spawn",
+          "NpcId": 40135,
+          "Position": [
+            360.46,
+            37.12,
+            407.32
+          ],
+          "Heading": 0.0,
+          "EffectId": 16861
+        },
+        {
+          "DelayMs": 8500,
+          "Type": "Spawn",
+          "NpcId": 40131,
+          "Position": [
+            360.46,
+            37.12,
+            407.32
+          ],
+          "Heading": 0.0,
+          "AnimationId": 1404
+        },
+        {
+          "DelayMs": 8500,
+          "Type": "Spawn",
+          "NpcId": 40117,
+          "Position": [
+            359.42,
+            36.69,
+            399.74
+          ],
+          "Heading": 3.012,
+          "AnimationId": 2001,
+          "BaseAnimationId": 2100
+        },
+        {
+          "DelayMs": 9500,
+          "Type": "Despawn",
+          "NpcId": 40135
+        },
+        {
+          "DelayMs": 11500,
+          "Type": "Say",
+          "NpcId": 40131,
+          "StringId": 4419671,
+          "ColorId": 1,
+          "Emote": true
+        },
+        {
+          "DelayMs": 11500,
+          "Type": "Animate",
+          "NpcId": 40131,
+          "AnimationId": 3101
+        },
+        {
+          "DelayMs": 12000,
+          "Type": "Say",
+          "NpcId": 40131,
+          "StringId": 4419672,
+          "ColorId": 1,
+          "Emote": true
+        },
+        {
+          "DelayMs": 13500,
+          "Type": "Say",
+          "NpcId": 40133,
+          "StringId": 4419674,
+          "ColorId": 2
+        },
+        {
+          "DelayMs": 13500,
+          "Type": "Animate",
+          "NpcId": 40133,
+          "AnimationId": 2004
+        },
+        {
+          "DelayMs": 20000,
+          "Type": "Animate",
+          "NpcId": 40131,
+          "BaseAnimationId": 2100,
+          "AnimationId": 2100
+        },
+        {
+          "DelayMs": 20500,
+          "Type": "Animate",
+          "NpcId": 40133,
+          "BaseAnimationId": 2100,
+          "AnimationId": 2100
+        },
+        {
+          "DelayMs": 20500,
+          "Type": "Effect",
+          "NpcId": 40133,
+          "TargetNpcId": 40131,
+          "EffectId": 15193
+        },
+        {
+          "DelayMs": 25500,
+          "Type": "Waves"
+        }
+      ]
+    },
+    {
+      "QuestId": 2514,
+      "GoalIndex": 1,
+      "Steps": [
+        {
+          "DelayMs": 500,
+          "Type": "Dialogue",
+          "NpcId": 40133,
+          "StringId": 5100101,
+          "ResponseTextId": 423585,
+          "Script": "FirstTimeEvent.FtesNpxDppEnd",
+          "ZoneDefinitionId": 1,
+          "TeleportPosition": [
+            -2191.66,
+            -31.01,
+            345.55
+          ],
+          "TeleportHeading": 2.752,
+          "AnimationId": 1111,
+          "ArrivalStringId": 5100598,
+          "ArrivalColorId": 1,
+          "ArrivalDelayMs": 1000,
+          "ArrivalScripts": [
+            "FirstTimeEvent.FtesNpxDppHide",
+            "TutorialMouse.Hide",
+            "TutorialKeys.Hide"
+          ],
+          "ArrivalSpeakerNpcId": 1451,
+          "ArrivalEmote": true
+        }
+      ]
+    }
+  ],
+  "Waves": {
+    "QuestId": 2514,
+    "GoalIndex": 0,
+    "EventName": "defend",
+    "NpcId": 40134,
+    "DelayBetweenMs": 3000,
+    "Radius": 5,
+    "DeathAnimationId": 1150,
+    "DeathBaseAnimationId": 1152,
+    "RemoveDelayMs": 3000,
+    "Spawns": [
+      {
+        "Position": [
+          346.05,
+          36.99,
+          419.09
+        ],
+        "Heading": -2.838
+      },
+      {
+        "Position": [
+          343.48,
+          37.3,
+          419.9
+        ],
+        "Heading": -2.838
+      },
+      {
+        "Position": [
+          341.07,
+          37.3,
+          420.66
+        ],
+        "Heading": -2.838
+      },
+      {
+        "Position": [
+          375.34,
+          37.32,
+          409.91
+        ],
+        "Heading": -2.838
+      },
+      {
+        "Position": [
+          372.77,
+          37.32,
+          410.72
+        ],
+        "Heading": -2.838
+      },
+      {
+        "Position": [
+          370.36,
+          37.32,
+          411.48
+        ],
+        "Heading": -2.838
+      }
+    ]
+  },
+  "AssetPreloadPosition": [
+    360.46,
+    37.12,
+    407.32
+  ],
+  "AssetPreloads": [
+    {
+      "NpcId": 40117,
+      "AnimationIds": [
+        2001,
+        2100
+      ]
+    },
+    {
+      "NpcId": 40120,
+      "AnimationIds": []
+    },
+    {
+      "NpcId": 40133,
+      "AnimationIds": [
+        1111,
+        2003,
+        2004,
+        2100
+      ]
+    },
+    {
+      "NpcId": 40131,
+      "AnimationIds": [
+        1404,
+        3101,
+        2100
+      ]
+    },
+    {
+      "NpcId": 40134,
+      "AnimationIds": [
+        1150,
+        1152
+      ]
+    },
+    {
+      "NpcId": 40121,
+      "AnimationIds": [
+        1150,
+        1152
+      ]
+    },
+    {
+      "NpcId": 40122,
+      "AnimationIds": [
+        1150,
+        1152
+      ]
+    }
+  ]
+}

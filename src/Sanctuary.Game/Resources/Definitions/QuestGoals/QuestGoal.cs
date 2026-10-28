@@ -12,6 +12,9 @@ namespace Sanctuary.Game.Resources.Definitions.QuestGoals;
 [JsonDerivedType(typeof(CollectGoal), 2)]
 [JsonDerivedType(typeof(EnterAreaGoal), 3)]
 [JsonDerivedType(typeof(UseItemOnNpcGoal), 4)]
+[JsonDerivedType(typeof(AutoCompleteGoal), 5)]
+[JsonDerivedType(typeof(UiEventGoal), 6)]
+[JsonDerivedType(typeof(ZoneEventGoal), 7)]
 public abstract class QuestGoal
 {
     public int NameId { get; set; }
@@ -39,7 +42,15 @@ public abstract class QuestGoal
     public List<int> HideNpcIdsWhenDone { get; set; } = [];
     public int HideEffectId { get; set; }
     public int HideDelayMs { get; set; }
+    public int HideAnimationId { get; set; }
+    public int HideBaseAnimationId { get; set; }
     public List<QuestNpcEffect> NpcEffectsUntilDone { get; set; } = [];
+
+    public string? ActivateScript { get; set; }
+
+    public virtual IEnumerable<int> UsedTargetNpcIds => [];
+
+    public virtual bool HasUsed(int npcId, GoalProgress progress) => false;
 
     public virtual GoalProgress CreateProgress() => new();
 

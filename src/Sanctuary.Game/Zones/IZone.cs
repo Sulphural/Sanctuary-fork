@@ -39,6 +39,10 @@ public interface IZone : IScriptableZone, IDisposable
 
     bool IsEmpty { get; }
 
+    bool HasPlayer(Player player);
+
+    void RunAfter(int delayMs, Action action);
+
     float TickDeltaSeconds { get; }
 
     bool TryGetNpc(ulong guid, [MaybeNullWhen(false)] out Npc npc);
@@ -98,6 +102,8 @@ public interface IZone : IScriptableZone, IDisposable
     bool HasNavMesh { get; }
 
     bool TryFindNavMeshPath(Vector3 start, Vector3 goal, Queue<Vector3> waypoints);
+
+    bool HasClientNavMesh { get; }
 
     bool TryFindClientNavMeshPath(Vector3 start, Vector3 goal, Queue<Vector3> waypoints);
 

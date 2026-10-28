@@ -22,6 +22,9 @@
     "BruceConcert",
     "HalloweenDanceOff"
   ],
+  "TutorialZoneDefinitionId": 2,
+  "TutorialQuestIds": [2511, 2512, 2513, 2514],
+  "TutorialQuestGoalEnds": { "2514": 1 },
   "EnabledClientAreaIds": [
     4173
   ],

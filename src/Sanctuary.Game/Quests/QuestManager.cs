@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Threading.Tasks;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -122,7 +123,7 @@ public sealed class QuestManager : IQuestManager
 
     private void RefreshUseItemTargets(Player player, QuestDefinition quest)
     {
-        var npcIds = quest.HiddenUseItemTargetIds().ToHashSet();
+        var npcIds = quest.HiddenUsedTargetIds().ToHashSet();
         if (npcIds.Count == 0)
             return;
 
@@ -335,6 +336,8 @@ public sealed class QuestManager : IQuestManager
 
             if (npc is not null)
                 RefreshQuestNotification(player, npc.Guid);
+
+            RefreshUseItemTargets(player, quest);
         }
 
         RefreshObjectiveTarget(player);
@@ -490,10 +493,18 @@ public sealed class QuestManager : IQuestManager
 
         GrantReward(player, quest);
 
+        if (!string.IsNullOrEmpty(quest.CompleteScript))
+            player.SendTunneled(new ExecuteScriptPacket { Script = quest.CompleteScript });
+
         RefreshQuestNotifications(player, quest);
 
         if (quest.NextQuestId is { } nextQuestId && _resourceManager.Quests.TryGet(nextQuestId, out var next))
+        {
             RefreshQuestNotifications(player, next.GiverNpcId);
+
+            if (next.AutoStart && next.IsOfferableFor(player.Quests))
+                AcceptQuest(player, nextQuestId);
+        }
 
         RefreshObjectiveTarget(player);
         return true;
@@ -746,8 +757,11 @@ public sealed class QuestManager : IQuestManager
 
     public void SendActiveObjectives(Player player)
     {
-        foreach (var (quest, _, _, goal) in ActiveGoals(player))
+        foreach (var (quest, _, _, goal) in ActiveGoals(player).ToList())
+        {
             SendObjectiveActivated(player, quest.QuestId, goal);
+            OnGoalActivated(player, goal);
+        }
     }
 
     public void RestoreJournal(Player player)
@@ -769,14 +783,17 @@ public sealed class QuestManager : IQuestManager
         SendJournalQuestStates(player);
     }
 
-    private static readonly int[] BriarwoodTutorialQuestIds = [2513, 2514];
+    private static readonly int[] BriarwoodTutorialQuestIds = [2511, 2512, 2513, 2514];
 
     private void SendJournalQuestStates(Player player)
     {
         var states = new Dictionary<int, int>();
 
         foreach (var questId in BriarwoodTutorialQuestIds)
-            states[questId] = 1;
+        {
+            if (!player.Quests.TryGetInProgress(questId, out _))
+                states[questId] = 1;
+        }
 
         foreach (var progress in player.Quests.All)
             if (progress.Completed)
@@ -813,6 +830,12 @@ public sealed class QuestManager : IQuestManager
         {
             foreach (var npc in player.VisibleNpcs.Values.Where(npc => npc.DefinitionId == npcId).ToList())
             {
+                if (goal.HideBaseAnimationId != 0)
+                    player.SendTunneled(new PlayerUpdatePacketSetAnimation { Guid = npc.Guid, AnimationId = goal.HideBaseAnimationId, Flags = 1 });
+
+                if (goal.HideAnimationId != 0)
+                    player.SendTunneled(new PlayerUpdatePacketSetAnimation { Guid = npc.Guid, AnimationId = goal.HideAnimationId });
+
                 player.SendTunneled(EntityHelper.GetRemovePlayerGracefullyPacket(npc.Guid, animate: goal.HideEffectId != 0,
                     delay: goal.HideDelayMs, effectDelay: goal.HideDelayMs, compositeEffectId: goal.HideEffectId));
                 player.VisibleNpcs.TryRemove(npc.Guid, out _);
@@ -1140,6 +1163,7 @@ public sealed class QuestManager : IQuestManager
                     Objective = ObjectiveFor(goals[openGoalIndex], ObjectiveActive)
                 });
                 SendObjectiveActivated(player, quest.QuestId, goals[openGoalIndex], restored: false);
+                OnGoalActivated(player, goals[openGoalIndex]);
             }
 
             GrantQuestItems(player, quest);
@@ -1164,6 +1188,12 @@ public sealed class QuestManager : IQuestManager
 
     private void TurnIn(Player player, QuestDefinition quest)
     {
+        if (quest.AutoTurnIn)
+        {
+            CompleteQuest(player, quest.QuestId);
+            return;
+        }
+
         var end = new QuestEndPacket
         {
             NpcGuid = NearestNpcGuid(player, quest.GoalTargetNpcId(quest.Goals.Count - 1)),
@@ -1270,7 +1300,10 @@ public sealed class QuestManager : IQuestManager
         }
 
         foreach (var goalIndex in progress.OpenGoals.Keys.Order())
+        {
             SendObjectiveActivated(player, quest.QuestId, goals[goalIndex], restored: false);
+            OnGoalActivated(player, goals[goalIndex]);
+        }
 
         SendObjectiveForGoal(player, quest, progress.FirstOpenGoalIndex);
     }
@@ -1288,6 +1321,26 @@ public sealed class QuestManager : IQuestManager
         CurrentCount = state == ObjectiveComplete ? goal.RequiredCount : currentCount,
         RequiredCount = goal.RequiredCount
     };
+
+    private void OnGoalActivated(Player player, QuestGoal goal)
+    {
+        if (goal is UiEventGoal uiEventGoal)
+            player.SendTunneled(new ObjectiveUIEventPacket { ObjectiveId = goal.ClientObjectiveId, Name = uiEventGoal.EventName });
+
+        if (!string.IsNullOrEmpty(goal.ActivateScript))
+            player.SendTunneled(new ExecuteScriptPacket { Script = goal.ActivateScript });
+
+        if (goal is AutoCompleteGoal autoCompleteGoal)
+        {
+            var zone = player.Zone;
+
+            zone.RunAfter(autoCompleteGoal.DelayMs, () =>
+            {
+                if (zone.HasPlayer(player))
+                    OnEvent(player, new GoalTimerEvent(goal.ClientObjectiveId));
+            });
+        }
+    }
 
     private static void SendObjectiveActivated(Player player, int questId, QuestGoal goal, bool restored = true)
     {

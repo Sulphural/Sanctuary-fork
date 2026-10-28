@@ -27,6 +27,8 @@ public sealed class QuestDefinition
 
     public int GiverNpcId { get; set; }
 
+    public bool OfferedByGiver { get; set; } = true;
+
     // The turn-in NPC, and the fallback for a goal that names no NPC of its own.
     public int TargetNpcId { get; set; }
 
@@ -47,9 +49,15 @@ public sealed class QuestDefinition
 
     public bool AutoStart { get; set; }
 
+    public bool AutoTurnIn { get; set; }
+
+    public string? CompleteScript { get; set; }
+
     // Quests that block this one while active or completed, for mutually exclusive quests such as the
     // two race-specific introductions. Each lists the other so the check is symmetric.
     public List<int> ExcludesQuestIds { get; set; } = [];
+
+    public List<int> NpcIdsWhileActive { get; set; } = [];
 
     // Badge on the giver: "!" while available, "?" while in progress.
     public int NotificationAvailable { get; set; } = 2;
@@ -68,11 +76,12 @@ public sealed class QuestDefinition
     public IEnumerable<int> StateNpcIds()
         => Goals.SelectMany(goal => goal.HideNpcIdsWhenDone
                 .Concat(goal.NpcEffectsUntilDone.Select(effect => effect.NpcId))
-                .Concat(goal is UseItemOnNpcGoal { HideUsedTargets: true } useItemGoal ? useItemGoal.TargetNpcIds : []))
+                .Concat(goal.UsedTargetNpcIds))
+            .Concat(NpcIdsWhileActive)
             .Distinct();
 
-    public IEnumerable<int> HiddenUseItemTargetIds()
-        => Goals.OfType<UseItemOnNpcGoal>().Where(goal => goal.HideUsedTargets).SelectMany(goal => goal.TargetNpcIds).Distinct();
+    public IEnumerable<int> HiddenUsedTargetIds()
+        => Goals.SelectMany(goal => goal.UsedTargetNpcIds).Concat(NpcIdsWhileActive).Distinct();
 
     public int StepEnd(int stepStart)
     {
@@ -104,16 +113,19 @@ public sealed class QuestDefinition
 
     public bool HidesNpcFor(QuestLog playerQuests, int npcId)
     {
+        if (NpcIdsWhileActive.Contains(npcId) && !playerQuests.TryGetInProgress(QuestId, out _))
+            return true;
+
         for (var i = 0; i < Goals.Count; i++)
         {
             if (Goals[i].HideNpcIdsWhenDone.Contains(npcId) && IsGoalDoneFor(playerQuests, i))
                 return true;
 
-            if (Goals[i] is UseItemOnNpcGoal { HideUsedTargets: true } useItemGoal && useItemGoal.TargetNpcIds.Contains(npcId)
+            if (Goals[i].UsedTargetNpcIds.Contains(npcId)
                 && (IsGoalDoneFor(playerQuests, i)
                     || (playerQuests.TryGetInProgress(QuestId, out var progress)
                         && progress.OpenGoals.TryGetValue(i, out var goalProgress)
-                        && !useItemGoal.CanUseOn(npcId, goalProgress))))
+                        && Goals[i].HasUsed(npcId, goalProgress))))
                 return true;
         }
 

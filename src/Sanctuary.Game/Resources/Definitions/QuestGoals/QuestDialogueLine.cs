@@ -11,5 +11,9 @@ public sealed class QuestDialogueLine
 
     public bool Closable { get; set; } = true;
 
+    public int SoundId { get; set; }
+
+    public int AnimationId { get; set; }
+
     public List<QuestDialogueChoice> Choices { get; set; } = [];
 }

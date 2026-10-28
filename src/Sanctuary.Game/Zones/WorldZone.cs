@@ -79,6 +79,15 @@ public sealed class WorldZone : BaseZone
         _questManager = serviceProvider.GetRequiredService<IQuestManager>();
     }
 
+    private bool NeedsTutorial(Player player)
+        => _zoneDefinition.TutorialZoneDefinitionId != 0
+            && (player.Quests.All.Count == 0 || _zoneDefinition.TutorialQuestIds.Any(questId => player.Quests.TryGetInProgress(questId, out var progress)
+                && (!_zoneDefinition.TutorialQuestGoalEnds.TryGetValue(questId, out var goalEnd) || progress.FirstOpenGoalIndex < goalEnd)));
+
+    private bool SendToTutorial(Player player)
+        => _resourceManager.Zones.TryGetValue(_zoneDefinition.TutorialZoneDefinitionId, out var tutorialZone)
+            && player.TeleportToZone(tutorialZone.Id, player.Guid, tutorialZone.SpawnPosition, tutorialZone.SpawnRotation);
+
     public override void OnClientIsReady(Player player)
     {
         base.OnClientIsReady(player);
@@ -86,6 +95,12 @@ public sealed class WorldZone : BaseZone
         SendPointOfInterests(player);
         SendAdventurersJournalInfo(player);
 
+        if (!NeedsTutorial(player))
+            SendWorldState(player);
+    }
+
+    private void SendWorldState(Player player)
+    {
         SendShopData(player);
         player.SendTunneled(WelcomeScreenHelper.GetAnnouncementsPacket());
 
@@ -122,6 +137,14 @@ public sealed class WorldZone : BaseZone
     public override void OnClientFinishedLoading(Player player)
     {
         base.OnClientFinishedLoading(player);
+
+        if (NeedsTutorial(player))
+        {
+            if (SendToTutorial(player))
+                return;
+
+            SendWorldState(player);
+        }
 
         SendEnabledClientAreas(player);
 
@@ -519,14 +542,26 @@ public sealed class WorldZone : BaseZone
             new()
             {
                 HubId = 1,
-                Id = 2514,
+                Id = 2511,
+                Unknown = 1
+            },
+            new()
+            {
+                HubId = 1,
+                Id = 2512,
                 Unknown = 2
             },
             new()
             {
                 HubId = 1,
+                Id = 2514,
+                Unknown = 4
+            },
+            new()
+            {
+                HubId = 1,
                 Id = 2513,
-                Unknown = 1
+                Unknown = 3
             },
             new()
             {

@@ -2279,7 +2279,7 @@
     "GiverDialogueId": 4420041,
     "ObjectiveDescriptionId": 4420046,
     "IconId": 43278,
-    "AutoStart": true,
+    "PrerequisiteQuestId": 2514,
     "GiverNpcId": 3211,
     "TargetNpcId": 3211,
     "RewardCoins": 7,
@@ -4552,6 +4552,242 @@
         "DescriptionId": 5100814,
         "DialogueId": 5100762,
         "Targets": [{ "NpcId": 40101 }]
+      }
+    ]
+  },
+  {
+    "Name": "Basic Combat Tutorial",
+    "QuestId": 2511,
+    "AutoTurnIn": true,
+    "TitleId": 4419551,
+    "DescriptionId": 10264,
+    "ObjectiveDescriptionId": 4419584,
+    "IconId": 43278,
+    "GiverNpcId": 6445,
+    "OfferedByGiver": false,
+    "TargetNpcId": 6445,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "NextQuestId": 2512,
+    "Goals": [
+      {
+        "Type": 1,
+        "NameId": 4419584,
+        "ObjectiveId": 25111,
+        "DescriptionId": 4419584,
+        "ReachPosition": [
+          355.4,
+          29.19,
+          275.24
+        ],
+        "ReachRadius": 8,
+        "ZoneDefinitionId": 2,
+        "HideNpcIdsWhenDone": [
+          40121,
+          40122
+        ],
+        "HideAnimationId": 1150,
+        "HideBaseAnimationId": 1152,
+        "HideDelayMs": 3000
+      },
+      {
+        "Type": 1,
+        "NameId": 4419586,
+        "ObjectiveId": 25112,
+        "DescriptionId": 4419586,
+        "ActivateScript": "FirstTimeEvent.FtesNpxDppCombat1",
+        "ReachPosition": [
+          359.26,
+          29.35,
+          271.16
+        ],
+        "ReachRadius": 6,
+        "ZoneDefinitionId": 2,
+        "HideNpcIdsWhenDone": [
+          40123,
+          40124,
+          40125,
+          40126
+        ],
+        "HideAnimationId": 1150,
+        "HideBaseAnimationId": 1152,
+        "HideDelayMs": 3000
+      },
+      {
+        "Type": 5,
+        "NameId": 4419588,
+        "ObjectiveId": 25113,
+        "DescriptionId": 4419588,
+        "DelayMs": 7000,
+        "ActivateScript": "FirstTimeEvent.FtesNpxDppPotions"
+      }
+    ]
+  },
+  {
+    "Name": "Advanced Combat Tutorial",
+    "QuestId": 2512,
+    "AutoTurnIn": true,
+    "TitleId": 4419555,
+    "DescriptionId": 10267,
+    "ObjectiveDescriptionId": 4419592,
+    "IconId": 43278,
+    "AutoStart": true,
+    "GiverNpcId": 6445,
+    "OfferedByGiver": false,
+    "TargetNpcId": 6445,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2511,
+    "NextQuestId": 2513,
+    "Goals": [
+      {
+        "Type": 5,
+        "NameId": 4419592,
+        "ObjectiveId": 25121,
+        "DescriptionId": 4419592,
+        "DelayMs": 7000,
+        "ActivateScript": "FirstTimeEvent.FtesNpxDppAbilities"
+      },
+      {
+        "Type": 5,
+        "NameId": 4419594,
+        "ObjectiveId": 25122,
+        "DescriptionId": 4419594,
+        "DelayMs": 7000,
+        "ActivateScript": "FirstTimeEvent.FtesNpxDppCombat2",
+        "HideNpcIdsWhenDone": [
+          40127
+        ],
+        "HideAnimationId": 1150,
+        "HideBaseAnimationId": 1152,
+        "HideDelayMs": 3000
+      },
+      {
+        "Type": 1,
+        "NameId": 4419596,
+        "ObjectiveId": 25123,
+        "DescriptionId": 4419596,
+        "ReachPosition": [
+          360.2,
+          29.72,
+          318.3
+        ],
+        "ReachRadius": 8,
+        "ZoneDefinitionId": 2,
+        "HideNpcIdsWhenDone": [
+          40128
+        ],
+        "HideAnimationId": 1150,
+        "HideBaseAnimationId": 1152,
+        "HideDelayMs": 3000
+      },
+      {
+        "Type": 5,
+        "NameId": 4419645,
+        "ObjectiveId": 25124,
+        "DescriptionId": 4419645,
+        "DelayMs": 3000
+      }
+    ],
+    "NpcIdsWhileActive": [
+      40128
+    ]
+  },
+  {
+    "Name": "Hero's Journal",
+    "QuestId": 2513,
+    "AutoTurnIn": true,
+    "TitleId": 4419559,
+    "DescriptionId": 4419601,
+    "ObjectiveDescriptionId": 4419598,
+    "IconId": 43278,
+    "AutoStart": true,
+    "GiverNpcId": 6445,
+    "OfferedByGiver": false,
+    "TargetNpcId": 6445,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2512,
+    "NextQuestId": 2514,
+    "CompleteScript": "FirstTimeEvent.FtesNpxDppReturnHud",
+    "Goals": [
+      {
+        "Type": 5,
+        "NameId": 5100520,
+        "ObjectiveId": 25131,
+        "DescriptionId": 5100520,
+        "DelayMs": 1000,
+        "ActivateScript": "FirstTimeEvent.FtesNpxDppInteract"
+      },
+      {
+        "Type": 1,
+        "NameId": 4419598,
+        "ObjectiveId": 25132,
+        "DescriptionId": 4419598,
+        "ReachPosition": [363.78, 42.93, 439.84],
+        "ReachRadius": 10,
+        "ZoneDefinitionId": 2
+      },
+      {
+        "Type": 0,
+        "NameId": 4419602,
+        "ObjectiveId": 25133,
+        "DescriptionId": 4419602,
+        "Targets": [
+          {
+            "NpcId": 40129
+          }
+        ]
+      },
+      {
+        "Type": 6,
+        "NameId": 4419604,
+        "ObjectiveId": 25134,
+        "DescriptionId": 4419604,
+        "EventName": "onStoryBookClose",
+        "ActivateScript": "FirstTimeEvent.FtesNpxDppTome"
+      }
+    ]
+  },
+  {
+    "Name": "The Last Best Hope",
+    "QuestId": 2514,
+    "TitleId": 4419563,
+    "DescriptionId": 4419564,
+    "ObjectiveDescriptionId": 4419607,
+    "IconId": 43278,
+    "AutoStart": true,
+    "GiverNpcId": 6445,
+    "OfferedByGiver": false,
+    "TargetNpcId": 3211,
+    "RewardCoins": 3,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "PrerequisiteQuestId": 2513,
+    "NextQuestId": 2521,
+    "Goals": [
+      {
+        "Type": 7,
+        "NameId": 4419610,
+        "ObjectiveId": 25141,
+        "DescriptionId": 4419610,
+        "EventName": "defend",
+        "RequiredCount": 3
+      },
+      {
+        "Type": 0,
+        "NameId": 4419612,
+        "ObjectiveId": 25142,
+        "DescriptionId": 4419612,
+        "DialogueId": 4420036,
+        "Targets": [
+          {
+            "NpcId": 3211
+          }
+        ]
       }
     ]
   }

@@ -121,7 +121,7 @@ public class QuestDefinitionCollection
                     continue;
                 }
 
-                if (entry.GiverNpcId != 0)
+                if (entry.GiverNpcId != 0 && entry.OfferedByGiver)
                     ByGiver.GetOrAdd(entry.GiverNpcId, _ => []).Add(entry.QuestId);
 
                 if (entry.TargetNpcId != 0)

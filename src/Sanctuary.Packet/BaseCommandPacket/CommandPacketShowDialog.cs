@@ -24,6 +24,8 @@ public class CommandPacketShowDialog : BaseCommandPacket, ISerializablePacket
 
     public float CameraFocusParam = 1f;
 
+    public int SoundId;
+
     public readonly List<Response> Responses = new();
 
     public CommandPacketShowDialog() : base(OpCode)
@@ -61,7 +63,7 @@ public class CommandPacketShowDialog : BaseCommandPacket, ISerializablePacket
         writer.Write(false);
         writer.Write(false);
         writer.Write(0f);
-        writer.Write(0);
+        writer.Write(SoundId);
 
         return writer.Buffer;
     }

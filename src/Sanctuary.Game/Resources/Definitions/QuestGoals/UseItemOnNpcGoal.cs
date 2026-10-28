@@ -30,6 +30,10 @@ public sealed class UseItemOnNpcGoal : QuestGoal
 
     public override GoalProgress CreateProgress() => new TalkProgress();
 
+    public override IEnumerable<int> UsedTargetNpcIds => HideUsedTargets ? TargetNpcIds : [];
+
+    public override bool HasUsed(int npcId, GoalProgress progress) => !CanUseOn(npcId, progress);
+
     public bool CanUseOn(int npcId, GoalProgress progress)
         => TargetNpcIds.Contains(npcId) && !(progress is TalkProgress talkProgress && talkProgress.HasTalkedTo(npcId));
 

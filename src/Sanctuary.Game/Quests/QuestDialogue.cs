@@ -115,6 +115,7 @@ public static class QuestDialogue
             NpcGuid = conversation.NpcGuid,
             Closable = line.Closable,
             CameraFocusParam = 1f,
+            SoundId = line.SoundId,
         };
 
         if (line.Choices.Count > 0)
@@ -141,7 +142,10 @@ public static class QuestDialogue
             });
         }
 
-        PlayTalkAnimation(player, conversation.NpcGuid);
+        if (line.AnimationId != 0)
+            player.SendTunneled(new PlayerUpdatePacketSetAnimation { Guid = conversation.NpcGuid, AnimationId = line.AnimationId });
+        else
+            PlayTalkAnimation(player, conversation.NpcGuid);
 
         player.SendTunneled(dialog);
     }

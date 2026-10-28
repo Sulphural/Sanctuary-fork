@@ -62,6 +62,11 @@ public static class ClientPathRequestPacketHandler
                     : new Vector4(waypoint, 1f));
             }
         }
+        else if (!connection.Player.Zone.HasClientNavMesh)
+        {
+            clientPathReplyPacket.Points.Add(Raise(start));
+            clientPathReplyPacket.Points.Add(Raise(clientPathRequestPacket.ToPosition.ToVector3()));
+        }
 
         connection.SendTunneled(clientPathReplyPacket);
 

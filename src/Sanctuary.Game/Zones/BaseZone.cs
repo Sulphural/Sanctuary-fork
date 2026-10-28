@@ -71,6 +71,10 @@ public abstract class BaseZone : IZone, IDisposable
     private Task _updateEveryTickTask = Task.CompletedTask;
     private Task _updateEverySecondTask = Task.CompletedTask;
 
+    private readonly object _scheduledLock = new();
+    private readonly PriorityQueue<Action, (long DueAt, long Order)> _scheduled = new();
+    private long _scheduledOrder;
+
     public int Id { get; init; }
     public int DefinitionId => _zoneDefinition.Id;
     public string Name => _zoneDefinition.Name;
@@ -186,6 +190,8 @@ public abstract class BaseZone : IZone, IDisposable
 
     public bool TryFindNavMeshPath(Vector3 start, Vector3 goal, Queue<Vector3> waypoints) =>
         _navMeshPathfinder is not null && _navMeshPathfinder.TryFindPath(start, goal, waypoints);
+
+    public bool HasClientNavMesh => _clientNavMeshPathfinder is not null;
 
     public bool TryFindClientNavMeshPath(Vector3 start, Vector3 goal, Queue<Vector3> waypoints) =>
         _clientNavMeshPathfinder is not null && _clientNavMeshPathfinder.TryFindPath(start, goal, waypoints);
@@ -354,6 +360,7 @@ public abstract class BaseZone : IZone, IDisposable
 
     public virtual void OnClientFinishedLoading(Player player)
     {
+        player.OnZoneLoaded();
     }
 
     private void SendQuickChatData(Player player)
@@ -819,6 +826,8 @@ public abstract class BaseZone : IZone, IDisposable
     {
         return _npcs.TryGetValue(guid, out npc);
     }
+
+    public bool HasPlayer(Player player) => _players.TryGetValue(player.Guid, out var current) && ReferenceEquals(current, player);
 
     public bool TryGetPlayer(ulong guid, [MaybeNullWhen(false)] out Player player)
     {
@@ -1580,10 +1589,14 @@ public abstract class BaseZone : IZone, IDisposable
             {
                 ProcessCollectionNodeRefills();
 
+                RunScheduled();
+
                 foreach (var entity in _entities)
                 {
                     entity.Value.UpdateEveryTick();
                 }
+
+                UpdateEveryTick();
             }
             catch (Exception ex)
             {
@@ -1615,6 +1628,43 @@ public abstract class BaseZone : IZone, IDisposable
     protected virtual void UpdateEverySecond()
     {
         GetOrCreateScriptContext().FireEvent("second");
+    }
+
+    protected virtual void UpdateEveryTick()
+    {
+    }
+
+    public void RunAfter(int delayMs, Action action)
+    {
+        lock (_scheduledLock)
+            _scheduled.Enqueue(action, (Environment.TickCount64 + delayMs, _scheduledOrder++));
+    }
+
+    private void RunScheduled()
+    {
+        var now = Environment.TickCount64;
+
+        while (true)
+        {
+            Action? action;
+
+            lock (_scheduledLock)
+            {
+                if (!_scheduled.TryPeek(out action, out var priority) || priority.DueAt > now)
+                    return;
+
+                _scheduled.Dequeue();
+            }
+
+            try
+            {
+                action();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{name} ({id}) - Scheduled action failed", Name, Id);
+            }
+        }
     }
 
     public virtual void SetClientAreaEnabled(int areaId, bool enabled)
@@ -1670,6 +1720,9 @@ public abstract class BaseZone : IZone, IDisposable
 
         lock (_collectionNodeLock)
             _collectionNodeRefills.Clear();
+
+        lock (_scheduledLock)
+            _scheduled.Clear();
 
         _tiles.Clear();
 

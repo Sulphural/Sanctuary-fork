@@ -1,6 +1,8 @@
+using System;
 using System.Linq;
 using System.Numerics;
 
+using Sanctuary.Core.Extensions;
 using Sanctuary.Game.Entities;
 using Sanctuary.Game.Helpers;
 
@@ -13,7 +15,7 @@ public class NpcChatCommand : IChatCommand
 
     public string KeyWord => "npc";
 
-    public string Usage => "spawn <definitionId> | despawn [guid]";
+    public string Usage => "spawn <definitionId> | model <modelId> [scale] | despawn [guid]";
 
     public string Description => "Spawn an NPC from a definition at your location, or despawn the nearest (or specified) NPC.";
 
@@ -41,6 +43,8 @@ public class NpcChatCommand : IChatCommand
                 return Spawn(invoker, args[1..]);
             case "despawn":
                 return Despawn(invoker, args[1..]);
+            case "model":
+                return SpawnModel(invoker, args[1..]);
             default:
                 return false;
         }
@@ -66,7 +70,40 @@ public class NpcChatCommand : IChatCommand
         npc.UpdatePosition(invoker.Position, invoker.Rotation);
 
         LogAction(invoker, "Spawn NPC", $"#{definitionId}", $"guid={npc.Guid}, position={npc.Position}");
-        ChatHelper.SendSystemMessage(invoker, $"Spawned NPC {npc.Name} (def #{definitionId} guid {npc.Guid}).");
+        var facing = npc.Rotation.GetFacing();
+        ChatHelper.SendSystemMessage(invoker, $"Spawned NPC {npc.Name} (def #{definitionId} guid {npc.Guid}) at ({npc.Position.X:F2}, {npc.Position.Y:F2}, {npc.Position.Z:F2}) heading {MathF.Atan2(facing.X, facing.Z):F3}.");
+        return true;
+    }
+
+    private bool SpawnModel(Player invoker, string[] args)
+    {
+        if (args.Length is < 1 or > 2 || !int.TryParse(args[0], out var modelId))
+            return false;
+
+        var scale = 1f;
+        if (args.Length == 2 && !float.TryParse(args[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out scale))
+            return false;
+
+        if (!_resourceManager.Models.TryGetValue(modelId, out var model))
+        {
+            ChatHelper.SendSystemMessage(invoker, $"No model with id {modelId} was found.");
+            return true;
+        }
+
+        if (!invoker.Zone.TryCreateNpc(null, out var npc))
+        {
+            ChatHelper.SendSystemMessage(invoker, "The model could not be spawned.");
+            return true;
+        }
+
+        npc.ModelId = modelId;
+        npc.Name = $"Model {modelId}";
+        npc.Scale = scale;
+        npc.Visible = true;
+        npc.UpdatePosition(invoker.Position, invoker.Rotation);
+
+        LogAction(invoker, "Spawn Model", $"#{modelId}", $"guid={npc.Guid}, position={npc.Position}");
+        ChatHelper.SendSystemMessage(invoker, $"Spawned model {modelId} ({model.ModelFileName}) guid {npc.Guid}.");
         return true;
     }
 

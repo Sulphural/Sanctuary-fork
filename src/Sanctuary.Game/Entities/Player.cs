@@ -175,6 +175,8 @@ public sealed class Player : ClientPcData, IEntity
 
     private readonly ConcurrentDictionary<int, int> _lastRandomTransformIndex = new();
 
+    private readonly ConcurrentQueue<Action> _zoneLoadedActions = new();
+
     public int LastRandomTransformIndex(int itemDefinitionId) =>
         _lastRandomTransformIndex.TryGetValue(itemDefinitionId, out var index) ? index : -1;
 
@@ -676,13 +678,21 @@ public sealed class Player : ClientPcData, IEntity
         if (Zone == destinationZone)
             return true;
 
+        return TeleportToZone(destinationZone.DefinitionId, destinationZone.OwnerId, position, rotation);
+    }
+
+    public bool TeleportToZone(int zoneDefinitionId, ulong? ownerId, Vector4 position, Quaternion rotation)
+    {
+        if (Zone.DefinitionId == zoneDefinitionId && Zone.OwnerId == ownerId)
+            return true;
+
         if (Zone is WorldZone)
         {
             StartingZonePosition = Position;
             StartingZoneRotation = Rotation;
         }
 
-        if (!_zoneManager.TryMovePlayerToZone(destinationZone.DefinitionId, destinationZone.OwnerId, this, position, rotation, out var zone))
+        if (!_zoneManager.TryMovePlayerToZone(zoneDefinitionId, ownerId, this, position, rotation, out var zone))
             return false;
 
         PointOfInterestId = 0;
@@ -1052,6 +1062,74 @@ public sealed class Player : ClientPcData, IEntity
 
     public PlayerUpdatePacketSlotCompositeEffectOverride GetWeaponFlairOverridePacket() =>
         GetSlotCompositeEffectOverridePacket(WeaponSlot, GetEquippedCompositeEffectId(FlairShardSlot));
+
+    public void RunWhenZoneLoaded(Action action) => _zoneLoadedActions.Enqueue(action);
+
+    public void OnZoneLoaded()
+    {
+        while (_zoneLoadedActions.TryDequeue(out var action))
+            action();
+    }
+
+    public bool ActivateProfile(int profileId)
+    {
+        var profile = Profiles.FirstOrDefault(x => x.Id == profileId);
+
+        if (profile is null)
+            return false;
+
+        // Let each weapon use its own attachment effect during the job transition.
+        ClearWeaponFlairOverride();
+        ActiveProfileId = profileId;
+
+        var clientUpdatePacketActivateProfile = new ClientUpdatePacketActivateProfile();
+
+        using var packetWriter = new PacketWriter();
+
+        profile.Serialize(packetWriter);
+
+        clientUpdatePacketActivateProfile.Payload = packetWriter.Buffer;
+
+        clientUpdatePacketActivateProfile.Attachments = GetAttachments();
+
+        clientUpdatePacketActivateProfile.Animation = 3001; // emo_outfit_all
+        clientUpdatePacketActivateProfile.CompositeEffect = 4005; // PFX_Job_Swirl
+
+        SendTunneled(clientUpdatePacketActivateProfile);
+
+        var playerUpdatePacketEquippedItemsChange = new PlayerUpdatePacketEquippedItemsChange();
+
+        playerUpdatePacketEquippedItemsChange.Guid = Guid;
+
+        playerUpdatePacketEquippedItemsChange.Attachments = clientUpdatePacketActivateProfile.Attachments;
+
+        SendTunneledToVisible(playerUpdatePacketEquippedItemsChange);
+
+        SendToolbar();
+
+        var friendStatusPacket = new FriendStatusPacket
+        {
+            Guid = Guid,
+            Status =
+            {
+                ProfileId = ActiveProfile.Id,
+                ProfileRank = ActiveProfile.Rank,
+                ProfileIconId = ActiveProfile.Icon,
+                ProfileNameId = ActiveProfile.NameId,
+                ProfileBackgroundImageId = ActiveProfile.BadgeImageSet
+            }
+        };
+
+        foreach (var friend in Friends)
+        {
+            if (!_zoneManager.TryGetPlayer(friend.Guid, out var friendPlayer))
+                continue;
+
+            friendPlayer.SendTunneled(friendStatusPacket);
+        }
+
+        return true;
+    }
 
     public void ClearWeaponFlairOverride() =>
         SendTunneledToVisible(GetSlotCompositeEffectOverridePacket(WeaponSlot, 0), true);

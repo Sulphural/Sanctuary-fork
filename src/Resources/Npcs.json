@@ -41492,5 +41492,151 @@
     "CompositeEffectId": 5026,
     "HasCursor": true,
     "CursorId": 17
+  },
+  {
+    "Id": 40116,
+    "Name": "Magic Sphere",
+    "ModelId": 875,
+    "ModelFileName": "invisible_cube_orb_purple.adr",
+    "Scale": 1,
+    "CompositeEffectId": 5567,
+    "HideNamePlate": true
+  },
+  {
+    "Id": 40117,
+    "Name": "Rock Barrier",
+    "ModelId": 4198,
+    "ModelFileName": "sg_npx_cavern_01_rockbarrier_01.adr",
+    "Scale": 1,
+    "HideNamePlate": true
+  },
+  {
+    "Id": 40119,
+    "Name": "Cavern Door",
+    "ModelId": 271,
+    "ModelFileName": "invisible_cube.adr",
+    "Scale": 1,
+    "TerrainObjectId": 1358893701,
+    "ReplaceTerrainObject": false,
+    "HideNamePlate": true
+  },
+  {
+    "Id": 40120,
+    "Name": "Cave Boulder",
+    "ModelId": 4187,
+    "ModelFileName": "cave_boulder_naturalcool_03.adr",
+    "Scale": 1,
+    "HideNamePlate": true
+  },
+  {
+    "Id": 40121,
+    "NameId": 441445,
+    "Name": "Chugawug Guard",
+    "ModelId": 65,
+    "ModelFileName": "chugawug_m_greenwood_soldier.adr"
+  },
+  {
+    "Id": 40122,
+    "NameId": 441445,
+    "Name": "Chugawug Guard",
+    "ModelId": 64,
+    "ModelFileName": "chugawug_f_greenwood_soldier.adr"
+  },
+  {
+    "Id": 40123,
+    "NameId": 441457,
+    "Name": "Gloamling",
+    "ModelId": 4201,
+    "ModelFileName": "gloamling_m_default.adr",
+    "Disposition": 0
+  },
+  {
+    "Id": 40124,
+    "NameId": 441457,
+    "Name": "Gloamling",
+    "ModelId": 4201,
+    "ModelFileName": "gloamling_m_default.adr",
+    "Disposition": 0
+  },
+  {
+    "Id": 40125,
+    "NameId": 441457,
+    "Name": "Gloamling",
+    "ModelId": 4201,
+    "ModelFileName": "gloamling_m_default.adr",
+    "Disposition": 0
+  },
+  {
+    "Id": 40126,
+    "NameId": 441457,
+    "Name": "Gloamling",
+    "ModelId": 4201,
+    "ModelFileName": "gloamling_m_default.adr",
+    "Disposition": 0
+  },
+  {
+    "Id": 40127,
+    "NameId": 441462,
+    "Name": "Tough Gloamling",
+    "ModelId": 4201,
+    "ModelFileName": "gloamling_m_default.adr",
+    "Scale": 1.5,
+    "Disposition": 0
+  },
+  {
+    "Id": 40128,
+    "NameId": 441457,
+    "Name": "Gloamling",
+    "ModelId": 4201,
+    "ModelFileName": "gloamling_m_default.adr",
+    "Disposition": 0
+  },
+  {
+    "Id": 40129,
+    "NameId": 4419559,
+    "Name": "Hero's Journal",
+    "ModelId": 1679,
+    "ModelFileName": "gw_precursor_artifact_02_pedestal.adr"
+  },
+  {
+    "Id": 40130,
+    "Name": "Cavern Door",
+    "ModelId": 271,
+    "ModelFileName": "invisible_cube.adr",
+    "Scale": 1,
+    "TerrainObjectId": 1362704680,
+    "ReplaceTerrainObject": false,
+    "HideNamePlate": true
+  },
+  {
+    "Id": 40131,
+    "NameId": 5101505,
+    "Name": "Gloam Overlord",
+    "ModelId": 4200,
+    "ModelFileName": "eos_m.adr"
+  },
+  {
+    "Id": 40133,
+    "NameId": 441292,
+    "Name": "Darkthorne",
+    "ModelId": 353,
+    "ModelFileName": "fairy_darkthorne_f.adr"
+  },
+  {
+    "Id": 40134,
+    "NameId": 441457,
+    "Name": "Gloamling",
+    "ModelId": 4201,
+    "ModelFileName": "gloamling_m_default.adr",
+    "Disposition": 0
+  },
+  {
+    "Id": 40135,
+    "Name": "Gloam Fountain",
+    "ModelId": 271,
+    "ModelFileName": "invisible_cube.adr",
+    "Scale": 1,
+    "HideNamePlate": true,
+    "IsInteractable": false
   }
 ]
