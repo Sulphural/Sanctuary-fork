@@ -14,6 +14,7 @@ using Microsoft.Extensions.Logging;
 
 using Sanctuary.Core.Collections;
 using Sanctuary.Core.Extensions;
+using Sanctuary.Core.Helpers;
 using Sanctuary.Core.IO;
 using Sanctuary.Game.Entities;
 using Sanctuary.Game.Helpers;
@@ -21,6 +22,7 @@ using Sanctuary.Game.Interactions;
 using Sanctuary.Game.Quests;
 using Sanctuary.Game.Resources.Definitions;
 using Sanctuary.Game.Resources.Definitions.Zones;
+using Sanctuary.Game.Routines;
 using Sanctuary.Packet;
 using Sanctuary.Packet.Common;
 using Sanctuary.Scripting;
@@ -47,7 +49,7 @@ public abstract class BaseZone : IZone, IDisposable
     protected readonly ZoneEnvironmentDefinition? _zoneEnvironment;
 
     private readonly object _npcGuidLock = new();
-    private ulong _nextNpcGuid = NpcBaseGuid;
+    private ulong _nextNpcCounter = FirstNpcCounter;
 
     private readonly ConcurrentDictionary<ulong, Npc> _npcs = new();
     private readonly ConcurrentDictionary<ulong, Player> _players = new();
@@ -60,8 +62,9 @@ public abstract class BaseZone : IZone, IDisposable
     private const float TickRate = 1000f / FrameRate;
 
     public float TickDeltaSeconds => 1f / FrameRate;
+    public TimeSpan TickDelta => TimeSpan.FromMilliseconds(TickRate);
 
-    private const ulong NpcBaseGuid = 100_000_000_000u;
+    private const ulong FirstNpcCounter = GuidHelper.MaxFixedNpcCounter + 1;
 
     private readonly record struct CollectionNodePoolRefill(string PoolKey, int CollectedHardPointId);
 
@@ -79,6 +82,8 @@ public abstract class BaseZone : IZone, IDisposable
     public int DefinitionId => _zoneDefinition.Id;
     public string Name => _zoneDefinition.Name;
     public ILogger Logger => _logger;
+
+    public RoutineManager Routines { get; }
 
     public Vector4 SpawnPosition => _zoneDefinition.SpawnPosition;
     public Quaternion SpawnRotation => _zoneDefinition.SpawnRotation;
@@ -115,6 +120,8 @@ public abstract class BaseZone : IZone, IDisposable
         var loggerFactory = serviceProvider.GetRequiredService<ILoggerFactory>();
 
         _logger = loggerFactory.CreateLogger($"Zone {Name} ({Id})");
+
+        Routines = new RoutineManager(_logger, TickDelta);
 
         _scriptManager = serviceProvider.GetRequiredService<IScriptManager>();
         _questManager = serviceProvider.GetRequiredService<IQuestManager>();
@@ -776,6 +783,14 @@ public abstract class BaseZone : IZone, IDisposable
 
         if (npcGuid.HasValue)
         {
+            if (!GuidHelper.IsFixedNpcGuid(npcGuid.Value))
+            {
+                _logger.LogWarning("Failed to spawn NPC {NpcId} with GUID {NpcGuid}: not a fixed NPC GUID.", npcId, npcGuid.Value);
+                return false;
+            }
+
+            npcGuid = GetNpcGuid(npcGuid);
+
             if (_npcs.ContainsKey(npcGuid.Value))
             {
                 _logger.LogWarning("Failed to spawn NPC {NpcId} with GUID {NpcGuid}: GUID already exists.", npcId, npcGuid.Value);
@@ -804,7 +819,7 @@ public abstract class BaseZone : IZone, IDisposable
 
         spawnedNpc.UpdatePosition(position, rotation);
 
-        if (_resourceManager.NpcMovements.TryGetForNpc(spawnedNpc.Guid, definition.ModelFileName, out var npcMovementDefinition))
+        if (_resourceManager.NpcMovements.TryGetForNpc(definition.Id, definition.ModelFileName, out var npcMovementDefinition))
             spawnedNpc.MovementController = new NpcMovementController(spawnedNpc, npcMovementDefinition);
 
         if (_resourceManager.NpcAmbient.TryGetForModel(definition.ModelFileName, out var npcAmbientDefinition))
@@ -1592,6 +1607,7 @@ public abstract class BaseZone : IZone, IDisposable
                 ProcessCollectionNodeRefills();
 
                 RunScheduled();
+                Routines.OnTick();
 
                 foreach (var entity in _entities)
                 {
@@ -1699,15 +1715,14 @@ public abstract class BaseZone : IZone, IDisposable
 
     private ulong GetNpcGuid(ulong? guid)
     {
+        var instanceId = OwnerId is null ? GuidHelper.OpenWorldInstanceId : GuidHelper.GetNpcInstanceId((ulong)Id);
+
+        if (guid.HasValue)
+            return GuidHelper.GetNpcGuid(GuidHelper.GetNpcCounter(guid.Value), instanceId);
+
         lock (_npcGuidLock)
         {
-            if (guid.HasValue)
-            {
-                _nextNpcGuid = Math.Max(_nextNpcGuid, guid.Value + 1);
-                return guid.Value;
-            }
-
-            return _nextNpcGuid++;
+            return GuidHelper.GetNpcGuid(_nextNpcCounter++, instanceId);
         }
     }
 
@@ -1719,6 +1734,8 @@ public abstract class BaseZone : IZone, IDisposable
         _updateEverySecondTimer.Dispose();
 
         Task.WaitAll(_updateEveryTickTask, _updateEverySecondTask);
+
+        Routines.CancelAll();
 
         lock (_collectionNodeLock)
             _collectionNodeRefills.Clear();

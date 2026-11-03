@@ -7,6 +7,7 @@ using Sanctuary.Game.Entities;
 using Sanctuary.Game.Interactions;
 using Sanctuary.Packet.Common;
 using Sanctuary.Game.Resources.Definitions;
+using Sanctuary.Game.Routines;
 using Sanctuary.Scripting;
 using Sanctuary.UdpLibrary;
 using Sanctuary.Game.Pathfinding;
@@ -23,6 +24,8 @@ public interface IZone : IScriptableZone, IDisposable
     Quaternion SpawnRotation { get; }
 
     string? Sky { get; }
+
+    RoutineManager Routines { get; }
 
     #region Events
 
@@ -44,6 +47,7 @@ public interface IZone : IScriptableZone, IDisposable
     void RunAfter(int delayMs, Action action);
 
     float TickDeltaSeconds { get; }
+    TimeSpan TickDelta { get; }
 
     bool TryGetNpc(ulong guid, [MaybeNullWhen(false)] out Npc npc);
     bool TryGetPlayer(ulong guid, [MaybeNullWhen(false)] out Player player);
