@@ -74,9 +74,8 @@ public abstract class BaseZone : IZone, IDisposable
     private Task _updateEveryTickTask = Task.CompletedTask;
     private Task _updateEverySecondTask = Task.CompletedTask;
 
-    private readonly object _scheduledLock = new();
-    private readonly PriorityQueue<Action, (long DueAt, long Order)> _scheduled = new();
-    private long _scheduledOrder;
+    protected const double MillisecondsPerSecond = 1000d;
+    private long _runAfterCounter;
 
     public int Id { get; init; }
     public int DefinitionId => _zoneDefinition.Id;
@@ -208,6 +207,8 @@ public abstract class BaseZone : IZone, IDisposable
         }
     }
 
+    protected virtual IEnumerable<Npc> GetPreloadNpcs(Player player) => [];
+
     public virtual void OnClientIsReady(Player player)
     {
         SendQuickChatData(player);
@@ -261,7 +262,15 @@ public abstract class BaseZone : IZone, IDisposable
 
         player.SendTunneled(packetZoneDoneSendingInitialData);
 
-        var clientUpdatePacketDoneSendingPreloadCharacters = new ClientUpdatePacketDoneSendingPreloadCharacters();
+        var preloadNpcs = GetPreloadNpcs(player).ToList();
+
+        if (preloadNpcs.Count > 0)
+            player.OnAddVisibleNpcs(preloadNpcs);
+
+        var clientUpdatePacketDoneSendingPreloadCharacters = new ClientUpdatePacketDoneSendingPreloadCharacters
+        {
+            Preload = preloadNpcs.Count > 0
+        };
 
         player.SendTunneled(clientUpdatePacketDoneSendingPreloadCharacters);
 
@@ -1526,7 +1535,6 @@ public abstract class BaseZone : IZone, IDisposable
             {
                 ProcessCollectionNodeRefills();
 
-                RunScheduled();
                 Routines.OnTick();
 
                 foreach (var entity in _entities)
@@ -1574,35 +1582,9 @@ public abstract class BaseZone : IZone, IDisposable
 
     public void RunAfter(int delayMs, Action action)
     {
-        lock (_scheduledLock)
-            _scheduled.Enqueue(action, (Environment.TickCount64 + delayMs, _scheduledOrder++));
-    }
+        var name = $"run-after-{Interlocked.Increment(ref _runAfterCounter)}";
 
-    private void RunScheduled()
-    {
-        var now = Environment.TickCount64;
-
-        while (true)
-        {
-            Action? action;
-
-            lock (_scheduledLock)
-            {
-                if (!_scheduled.TryPeek(out action, out var priority) || priority.DueAt > now)
-                    return;
-
-                _scheduled.Dequeue();
-            }
-
-            try
-            {
-                action();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "{name} ({id}) - Scheduled action failed", Name, Id);
-            }
-        }
+        Routines.SetRoutine(name, new DelayedRoutine(new InstantRoutine(action), delayMs / MillisecondsPerSecond));
     }
 
     public virtual void SetClientAreaEnabled(int areaId, bool enabled)
@@ -1659,9 +1641,6 @@ public abstract class BaseZone : IZone, IDisposable
 
         lock (_collectionNodeLock)
             _collectionNodeRefills.Clear();
-
-        lock (_scheduledLock)
-            _scheduled.Clear();
 
         _tiles.Clear();
 

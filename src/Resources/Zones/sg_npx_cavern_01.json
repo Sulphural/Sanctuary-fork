@@ -246,6 +246,18 @@
         "Scripts": [
           "FirstTimeEvent.FtesNpxDppEnemies",
           "FirstTimeEvent.FtesNpxDppReturnHud"
+        ],
+        "Spawns": [
+          {
+            "NpcId": 40136,
+            "Position": [
+              322.94,
+              29.76,
+              288.65
+            ],
+            "Heading": -1.543,
+            "Scale": 1.0
+          }
         ]
       },
       {
@@ -277,6 +289,20 @@
           ]
         },
         {
+          "DelayMs": 6000,
+          "Type": "Spawn",
+          "NpcId": 40117,
+          "Position": [
+            359.42,
+            36.69,
+            399.74
+          ],
+          "Heading": 3.012,
+          "AnimationId": 2001,
+          "BaseAnimationId": 2100,
+          "AnimationDelayMs": 1000
+        },
+        {
           "DelayMs": 7000,
           "Type": "Say",
           "NpcId": 40133,
@@ -302,21 +328,7 @@
           "EffectId": 16861
         },
         {
-          "DelayMs": 7500,
-          "Type": "Spawn",
-          "NpcId": 40117,
-          "Position": [
-            359.42,
-            36.69,
-            399.74
-          ],
-          "Heading": 3.012,
-          "AnimationId": 2001,
-          "BaseAnimationId": 2100,
-          "AnimationDelayMs": 1000
-        },
-        {
-          "DelayMs": 8500,
+          "DelayMs": 9500,
           "Type": "Spawn",
           "NpcId": 40131,
           "Position": [
@@ -328,7 +340,7 @@
           "AnimationId": 1404
         },
         {
-          "DelayMs": 9500,
+          "DelayMs": 11000,
           "Type": "Despawn",
           "NpcId": 40135
         },
@@ -344,7 +356,7 @@
           "DelayMs": 11500,
           "Type": "Animate",
           "NpcId": 40131,
-          "AnimationId": 3101
+          "AnimationId": 3112
         },
         {
           "DelayMs": 12000,
@@ -355,41 +367,41 @@
           "Emote": true
         },
         {
-          "DelayMs": 13500,
-          "Type": "Say",
-          "NpcId": 40133,
-          "StringId": 4419674,
-          "ColorId": 2
-        },
-        {
-          "DelayMs": 13500,
-          "Type": "Animate",
-          "NpcId": 40133,
-          "AnimationId": 2004
-        },
-        {
-          "DelayMs": 20000,
+          "DelayMs": 18200,
           "Type": "Animate",
           "NpcId": 40131,
           "BaseAnimationId": 2100,
           "AnimationId": 2100
         },
         {
-          "DelayMs": 20500,
+          "DelayMs": 18500,
+          "Type": "Say",
+          "NpcId": 40133,
+          "StringId": 4419674,
+          "ColorId": 2
+        },
+        {
+          "DelayMs": 18500,
+          "Type": "Animate",
+          "NpcId": 40133,
+          "AnimationId": 2004
+        },
+        {
+          "DelayMs": 21500,
           "Type": "Animate",
           "NpcId": 40133,
           "BaseAnimationId": 2100,
           "AnimationId": 2100
         },
         {
-          "DelayMs": 20500,
+          "DelayMs": 21500,
           "Type": "Effect",
           "NpcId": 40133,
           "TargetNpcId": 40131,
           "EffectId": 15193
         },
         {
-          "DelayMs": 25500,
+          "DelayMs": 22500,
           "Type": "Waves"
         }
       ]
@@ -412,7 +424,7 @@
             345.55
           ],
           "TeleportHeading": 2.752,
-          "AnimationId": 1111,
+          "AnimationId": 2001,
           "ArrivalStringId": 5100598,
           "ArrivalColorId": 1,
           "ArrivalDelayMs": 1000,
@@ -423,7 +435,6 @@
             "TutorialMouse.Hide",
             "TutorialKeys.Hide"
           ],
-          "SoundId": 18276,
           "TeleportDelayMs": 1500
         }
       ]
@@ -439,38 +450,45 @@
     "DeathAnimationId": 1150,
     "DeathBaseAnimationId": 1152,
     "RemoveDelayMs": 3000,
-    "Spawns": [
-      {
-        "Position": [
-          346.05,
-          36.99,
-          419.09
-        ],
-        "Heading": -2.838
-      },
+    "PoolNpcId": 40135,
+    "PoolEffectId": 16860,
+    "PoolLeadMs": 1000,
+    "SpawnIntervalMs": 1500,
+    "SpawnAnimationId": 1404,
+    "SpawnAnimationMs": 1300,
+    "Groups": [
       {
         "Position": [
           343.48,
           37.3,
           419.9
         ],
-        "Heading": -2.838
-      },
-      {
-        "Position": [
-          341.07,
-          37.3,
-          420.66
-        ],
-        "Heading": -2.838
-      },
-      {
-        "Position": [
-          375.34,
-          37.32,
-          409.91
-        ],
-        "Heading": -2.838
+        "Spawns": [
+          {
+            "Position": [
+              346.05,
+              36.99,
+              419.09
+            ],
+            "Heading": -2.838
+          },
+          {
+            "Position": [
+              343.48,
+              37.3,
+              419.9
+            ],
+            "Heading": -2.838
+          },
+          {
+            "Position": [
+              341.07,
+              37.3,
+              420.66
+            ],
+            "Heading": -2.838
+          }
+        ]
       },
       {
         "Position": [
@@ -478,15 +496,32 @@
           37.32,
           410.72
         ],
-        "Heading": -2.838
-      },
-      {
-        "Position": [
-          370.36,
-          37.32,
-          411.48
-        ],
-        "Heading": -2.838
+        "Spawns": [
+          {
+            "Position": [
+              375.34,
+              37.32,
+              409.91
+            ],
+            "Heading": -2.838
+          },
+          {
+            "Position": [
+              372.77,
+              37.32,
+              410.72
+            ],
+            "Heading": -2.838
+          },
+          {
+            "Position": [
+              370.36,
+              37.32,
+              411.48
+            ],
+            "Heading": -2.838
+          }
+        ]
       }
     ]
   },

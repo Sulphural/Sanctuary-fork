@@ -2363,7 +2363,7 @@
         "TargetNpcIds": [40113, 40114, 40115],
         "RequiredCount": 3,
         "UseRange": 12,
-        "AnimationId": 3900004,
+        "AnimationId": 3900007,
         "AnimationMs": 3000,
         "PlayerEffectId": 16718,
         "TargetEffectId": 4013,
@@ -2383,9 +2383,9 @@
     ]
   },
   {
-    "Name": "Cooking 101",
+    "Name": "Farming 101",
     "QuestId": 2522,
-    "TitleId": 4420050,
+    "TitleId": 4420053,
     "DescriptionId": 4420051,
     "GiverDialogueId": 4420049,
     "ObjectiveDescriptionId": 4420054,
@@ -2404,7 +2404,40 @@
         "ObjectiveId": 25221,
         "DescriptionId": 4420056,
         "Dialogue": [
-          { "TextId": 5100059 },
+          { "TextId": 5100059 }
+        ],
+        "Targets": [{ "NpcId": 2538 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5100033,
+        "ObjectiveId": 25222,
+        "DescriptionId": 5100034,
+        "Targets": [{ "NpcId": 2540 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5100037,
+        "ObjectiveId": 25223,
+        "DescriptionId": 5100038,
+        "Dialogue": [
+          { "TextId": 5100062 }
+        ],
+        "Targets": [{ "NpcId": 2538 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5100039,
+        "ObjectiveId": 25224,
+        "DescriptionId": 5100040,
+        "Targets": [{ "NpcId": 2537 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5100041,
+        "ObjectiveId": 25225,
+        "DescriptionId": 5100042,
+        "Dialogue": [
           { "TextId": 4420052 }
         ],
         "Targets": [{ "NpcId": 2538 }]
@@ -2412,9 +2445,9 @@
     ]
   },
   {
-    "Name": "Gear Up!",
+    "Name": "Mine and Smelt",
     "QuestId": 2523,
-    "TitleId": 4420058,
+    "TitleId": 4420061,
     "DescriptionId": 4420059,
     "GiverDialogueId": 4420057,
     "ObjectiveDescriptionId": 4420062,
@@ -2433,7 +2466,40 @@
         "ObjectiveId": 25231,
         "DescriptionId": 4420064,
         "Dialogue": [
-          { "TextId": 5100125 },
+          { "TextId": 5100125 }
+        ],
+        "Targets": [{ "NpcId": 3232 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5100117,
+        "ObjectiveId": 25232,
+        "DescriptionId": 5100118,
+        "Targets": [{ "NpcId": 3232 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5100119,
+        "ObjectiveId": 25233,
+        "DescriptionId": 5100120,
+        "Dialogue": [
+          { "TextId": 5100127 }
+        ],
+        "Targets": [{ "NpcId": 3232 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5100121,
+        "ObjectiveId": 25234,
+        "DescriptionId": 5100122,
+        "Targets": [{ "NpcId": 3232 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5100123,
+        "ObjectiveId": 25235,
+        "DescriptionId": 5100124,
+        "Dialogue": [
           { "TextId": 4420060 }
         ],
         "Targets": [{ "NpcId": 3232 }]
@@ -2458,18 +2524,27 @@
     "Goals": [
       {
         "Type": 0,
-        "NameId": 5100209,
+        "NameId": 4420071,
         "ObjectiveId": 25241,
+        "DescriptionId": 4420072,
+        "Targets": [{ "NpcId": 3232 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5100209,
+        "ObjectiveId": 25242,
         "DescriptionId": 5100210,
-        "DialogueId": 4420068,
+        "Dialogue": [
+          { "TextId": 4420068 }
+        ],
         "Targets": [{ "NpcId": 3232 }]
       }
     ]
   },
   {
-    "Name": "Fighting the Pack",
+    "Name": "Fighting off the Pack",
     "QuestId": 2525,
-    "TitleId": 4420074,
+    "TitleId": 4420077,
     "DescriptionId": 4420075,
     "GiverDialogueId": 4420073,
     "ObjectiveDescriptionId": 4420078,
@@ -2484,18 +2559,35 @@
     "Goals": [
       {
         "Type": 0,
-        "NameId": 5100123,
+        "NameId": 5101325,
         "ObjectiveId": 25251,
-        "DescriptionId": 5100124,
-        "DialogueId": 4420076,
+        "DescriptionId": 5101326,
+        "Targets": [{ "NpcId": 3232 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5100203,
+        "ObjectiveId": 25252,
+        "DescriptionId": 5100204,
+        "RequiredCount": 5,
+        "Targets": [{ "NpcId": 3156 }, { "NpcId": 3157 }, { "NpcId": 3158 }, { "NpcId": 4164 }, { "NpcId": 4165 }, { "NpcId": 4166 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5100133,
+        "ObjectiveId": 25253,
+        "DescriptionId": 5100134,
+        "Dialogue": [
+          { "TextId": 4420076 }
+        ],
         "Targets": [{ "NpcId": 3232 }]
       }
     ]
   },
   {
-    "Name": "One More Gloam",
+    "Name": "Eviction Notice",
     "QuestId": 2526,
-    "TitleId": 4420082,
+    "TitleId": 419094,
     "DescriptionId": 4420083,
     "GiverDialogueId": 4420081,
     "ObjectiveDescriptionId": 4420086,
@@ -2514,7 +2606,23 @@
         "ObjectiveId": 25261,
         "DescriptionId": 4420088,
         "Dialogue": [
-          { "TextId": 5100272 },
+          { "TextId": 5100272 }
+        ],
+        "Targets": [{ "NpcId": 3211 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5100268,
+        "ObjectiveId": 25262,
+        "DescriptionId": 5100269,
+        "Targets": [{ "NpcId": 3211 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5100270,
+        "ObjectiveId": 25263,
+        "DescriptionId": 5100271,
+        "Dialogue": [
           { "TextId": 4420084 }
         ],
         "Targets": [{ "NpcId": 3211 }]
@@ -2548,9 +2656,9 @@
     ]
   },
   {
-    "Name": "Pull the Plug",
+    "Name": "Find and Pull the Plug",
     "QuestId": 2528,
-    "TitleId": 4420098,
+    "TitleId": 4420101,
     "DescriptionId": 4420099,
     "GiverDialogueId": 4420097,
     "ObjectiveDescriptionId": 4420102,
@@ -2565,10 +2673,19 @@
     "Goals": [
       {
         "Type": 0,
-        "NameId": 5100286,
+        "NameId": 5100332,
         "ObjectiveId": 25281,
+        "DescriptionId": 5100333,
+        "Targets": [{ "NpcId": 2087 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5100286,
+        "ObjectiveId": 25282,
         "DescriptionId": 5100287,
-        "DialogueId": 4420100,
+        "Dialogue": [
+          { "TextId": 4420100 }
+        ],
         "Targets": [{ "NpcId": 2087 }]
       }
     ]
@@ -2591,10 +2708,19 @@
     "Goals": [
       {
         "Type": 0,
-        "NameId": 5100292,
+        "NameId": 4420111,
         "ObjectiveId": 25291,
+        "DescriptionId": 4420112,
+        "Targets": [{ "NpcId": 2087 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5100292,
+        "ObjectiveId": 25292,
         "DescriptionId": 5100293,
-        "DialogueId": 4420108,
+        "Dialogue": [
+          { "TextId": 4420108 }
+        ],
         "Targets": [{ "NpcId": 2087 }]
       }
     ]
@@ -2616,11 +2742,22 @@
     "NextQuestId": 2566,
     "Goals": [
       {
+        "Type": 1,
+        "NameId": 4420119,
+        "ObjectiveId": 25301,
+        "DescriptionId": 4420120,
+        "ReachPosition": [-1054.1, 4.6, 305.7],
+        "ReachRadius": 25,
+        "ZoneDefinitionId": 1
+      },
+      {
         "Type": 0,
         "NameId": 5100330,
-        "ObjectiveId": 25301,
+        "ObjectiveId": 25302,
         "DescriptionId": 5100331,
-        "DialogueId": 4420116,
+        "Dialogue": [
+          { "TextId": 4420116 }
+        ],
         "Targets": [{ "NpcId": 31331 }]
       }
     ]
@@ -2680,7 +2817,30 @@
         "ObjectiveId": 25664,
         "DescriptionId": 5100593,
         "Dialogue": [
-          { "TextId": 5100617 },
+          { "TextId": 5100617 }
+        ],
+        "Targets": [{ "NpcId": 2378 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5100611,
+        "ObjectiveId": 25665,
+        "DescriptionId": 5100612,
+        "Targets": [{ "NpcId": 2378 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5100613,
+        "ObjectiveId": 25666,
+        "DescriptionId": 5100614,
+        "Targets": [{ "NpcId": 2378 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5100615,
+        "ObjectiveId": 25667,
+        "DescriptionId": 5100616,
+        "Dialogue": [
           { "TextId": 5100619 },
           { "TextId": 5100583 }
         ],
@@ -2699,14 +2859,21 @@
     "GiverNpcId": 2538,
     "TargetNpcId": 2538,
     "RewardCoins": 10,
-    "RewardExperience": 0,
+    "RewardExperience": 50,
     "RewardItems": [],
     "PrerequisiteQuestId": 2522,
     "Goals": [
       {
         "Type": 0,
-        "NameId": 5100041,
+        "NameId": 5100039,
         "ObjectiveId": 25631,
+        "DescriptionId": 5100040,
+        "Targets": [{ "NpcId": 2537 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5100041,
+        "ObjectiveId": 25632,
         "DescriptionId": 5100042,
         "DialogueId": 5100481,
         "Targets": [{ "NpcId": 2538 }]
@@ -2723,15 +2890,22 @@
     "IconId": 43278,
     "GiverNpcId": 3232,
     "TargetNpcId": 3232,
-    "RewardCoins": 0,
-    "RewardExperience": 0,
+    "RewardCoins": 10,
+    "RewardExperience": 50,
     "RewardItems": [],
     "PrerequisiteQuestId": 2524,
     "Goals": [
       {
         "Type": 0,
-        "NameId": 5100494,
+        "NameId": 5100492,
         "ObjectiveId": 25641,
+        "DescriptionId": 5100493,
+        "Targets": [{ "NpcId": 3232 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5100494,
+        "ObjectiveId": 25642,
         "DescriptionId": 5100495,
         "DialogueId": 5100485,
         "Targets": [{ "NpcId": 3232 }]
@@ -2748,15 +2922,22 @@
     "IconId": 43278,
     "GiverNpcId": 3232,
     "TargetNpcId": 3232,
-    "RewardCoins": 0,
-    "RewardExperience": 0,
+    "RewardCoins": 10,
+    "RewardExperience": 50,
     "RewardItems": [],
     "PrerequisiteQuestId": 2524,
     "Goals": [
       {
         "Type": 0,
-        "NameId": 5100506,
+        "NameId": 5100504,
         "ObjectiveId": 25651,
+        "DescriptionId": 5100505,
+        "Targets": [{ "NpcId": 3232 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 5100506,
+        "ObjectiveId": 25652,
         "DescriptionId": 5100507,
         "DialogueId": 5100489,
         "Targets": [{ "NpcId": 3232 }]
@@ -4763,7 +4944,7 @@
     "GiverNpcId": 6445,
     "OfferedByGiver": false,
     "TargetNpcId": 3211,
-    "RewardCoins": 3,
+    "RewardCoins": 5,
     "RewardExperience": 0,
     "RewardItems": [],
     "PrerequisiteQuestId": 2513,

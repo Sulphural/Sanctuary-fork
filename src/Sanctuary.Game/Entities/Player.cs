@@ -860,7 +860,7 @@ public sealed class Player : ClientPcData, IEntity
 
     public void OnAddVisibleNpcs(params IEnumerable<Npc> npcs)
     {
-        var visibleNpcs = npcs.Where(npc => npc.IsVisibleTo(this) && !Zone.IsHiddenByQuest(this, npc)).ToArray();
+        var visibleNpcs = npcs.Where(npc => !VisibleNpcs.ContainsKey(npc.Guid) && npc.IsVisibleTo(this) && !Zone.IsHiddenByQuest(this, npc)).ToArray();
 
         foreach (var npc in visibleNpcs)
         {

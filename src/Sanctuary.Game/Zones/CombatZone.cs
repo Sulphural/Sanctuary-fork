@@ -14,6 +14,7 @@ using Sanctuary.Game.Interactions;
 using Sanctuary.Game.Quests;
 using Sanctuary.Game.Resources.Definitions.QuestGoals;
 using Sanctuary.Game.Resources.Definitions.Zones;
+using Sanctuary.Game.Routines;
 using Sanctuary.Packet;
 using Sanctuary.Packet.Common;
 
@@ -42,6 +43,7 @@ public sealed class CombatZone : BaseZone
     private readonly Dictionary<Npc, int> _sceneEffectTags = [];
     private readonly List<Npc> _waveNpcs = [];
     private bool _waveActive;
+    private int _wavePending;
 
     public CombatZone(CombatZoneDefinition zoneDefinition, IServiceProvider serviceProvider)
         : base(zoneDefinition, serviceProvider)
@@ -62,21 +64,21 @@ public sealed class CombatZone : BaseZone
 
     public override void OnClientIsReady(Player player)
     {
-        base.OnClientIsReady(player);
+        var questNpcs = Npcs.Where(npc => _questManager.IsQuestNpc(npc.DefinitionId)).ToList();
 
-        foreach (var npc in Npcs)
+        foreach (var npc in questNpcs)
         {
-            if (!_questManager.IsQuestNpc(npc.DefinitionId))
-                continue;
-
             if (_resourceManager.Quests.TryGetNpcCursorId(npc.DefinitionId, out var cursorId))
                 npc.CursorId = cursorId;
 
             if (_resourceManager.Quests.TryGetNpcInteractRange(npc.DefinitionId, out var interactRange))
                 npc.QuestInteractRange = interactRange;
-
-            _questManager.RefreshQuestNotification(player, npc.Guid);
         }
+
+        base.OnClientIsReady(player);
+
+        foreach (var npc in questNpcs)
+            _questManager.RefreshQuestNotification(player, npc.Guid);
 
         if (!_zoneDefinition.Tutorial)
             return;
@@ -115,12 +117,24 @@ public sealed class CombatZone : BaseZone
         if (_zoneDefinition.Intro is not { } intro)
             return;
 
-        PreloadAssets();
         PlayIntro(player, intro);
+    }
+
+    protected override IEnumerable<Npc> GetPreloadNpcs(Player player)
+    {
+        if (!_zoneDefinition.Tutorial)
+            return [];
+
+        PreloadAssets();
+
+        return Npcs.Where(npc => npc.Visible || _assetPreloadNpcs.Contains(npc));
     }
 
     private void PreloadAssets()
     {
+        if (_assetPreloadNpcs.Count > 0)
+            return;
+
         foreach (var npcId in _zoneDefinition.AssetPreloadNpcIds)
         {
             if (!_resourceManager.Npcs.TryGetValue(npcId, out var definition) || !TryCreateNpc(null, definition, out var npc))
@@ -328,6 +342,9 @@ public sealed class CombatZone : BaseZone
 
         if (FindNpc(trigger.NpcId) is { } npc)
             AnimateNpc(player, npc, trigger.BaseAnimationId, trigger.AnimationId);
+
+        foreach (var spawn in trigger.Spawns)
+            RaiseSpawn(player, spawn);
     }
 
     private void UpdateScenes(Player player)
@@ -339,14 +356,22 @@ public sealed class CombatZone : BaseZone
 
             _playedScenes.Add(scene);
 
-            foreach (var step in scene.Steps)
+            var sceneRoutines = new List<Routine>();
+            var scheduledMs = 0;
+
+            foreach (var step in scene.Steps.OrderBy(step => step.DelayMs))
             {
-                RunAfter(step.DelayMs, () =>
+                sceneRoutines.Add(new WaitRoutine((step.DelayMs - scheduledMs) / MillisecondsPerSecond));
+                sceneRoutines.Add(new InstantRoutine(() =>
                 {
                     if (HasPlayer(player))
                         RunSceneStep(player, step);
-                });
+                }));
+
+                scheduledMs = step.DelayMs;
             }
+
+            Routines.SetRoutine($"quest-scene-{_zoneDefinition.QuestScenes.IndexOf(scene)}", new SequentialRoutine(sceneRoutines));
         }
     }
 
@@ -426,7 +451,7 @@ public sealed class CombatZone : BaseZone
                 break;
 
             case ZoneSceneStepType.Waves:
-                SpawnWave();
+                SpawnWave(player);
                 break;
 
             case ZoneSceneStepType.Dialogue:
@@ -496,21 +521,73 @@ public sealed class CombatZone : BaseZone
         });
     }
 
-    private void SpawnWave()
+    private void SpawnWave(Player player)
     {
-        if (_zoneDefinition.Waves is not { } waves)
+        if (_zoneDefinition.Waves is not { } waves || waves.Groups.Count == 0)
             return;
 
-        foreach (var spawn in waves.Spawns)
+        _waveActive = true;
+
+        foreach (var group in waves.Groups)
+            SpawnWaveGroup(player, waves, group);
+    }
+
+    private void SpawnWaveGroup(Player player, ZoneWaveDefinition waves, ZoneWaveGroup group)
+    {
+        var pool = waves.PoolEffectId != 0 ? SpawnNpc(waves.PoolNpcId, group.Position, 0f, 0f) : null;
+        var poolTagId = 0;
+
+        if (pool is not null)
+            RunWhenVisible(player, pool, () => poolTagId = pool.AddEffectTag(waves.PoolEffectId));
+
+        _wavePending += group.Spawns.Count;
+
+        for (var i = 0; i < group.Spawns.Count; i++)
         {
-            if (SpawnNpc(waves.NpcId, spawn.Position, spawn.Heading, spawn.Scale) is { } npc)
+            var spawn = group.Spawns[i];
+
+            RunAfter(waves.PoolLeadMs + i * waves.SpawnIntervalMs, () =>
+            {
+                _wavePending--;
+
+                if (!HasPlayer(player) || !IsGoalOpen(player, waves.QuestId, waves.GoalIndex))
+                    return;
+
+                if (SpawnNpc(waves.NpcId, group.Position, spawn.Heading, spawn.Scale) is not { } npc)
+                {
+                    Logger.LogWarning("{name} ({id}) - Wave NPC could not be spawned from NPC definition {npcId}", Name, Id, waves.NpcId);
+                    return;
+                }
+
                 _waveNpcs.Add(npc);
+
+                RunWhenVisible(player, npc, () =>
+                {
+                    AnimateNpc(player, npc, 0, waves.SpawnAnimationId);
+                    RunAfter(waves.SpawnAnimationMs, () => npc.TryMoveTo(new Vector3(spawn.Position.X, spawn.Position.Y, spawn.Position.Z), true));
+                });
+            });
         }
 
-        _waveActive = _waveNpcs.Count > 0;
+        if (pool is null)
+            return;
 
-        if (!_waveActive)
-            Logger.LogWarning("{name} ({id}) - No wave NPCs could be spawned from NPC definition {npcId}", Name, Id, waves.NpcId);
+        RunAfter(waves.PoolLeadMs + group.Spawns.Count * waves.SpawnIntervalMs, () =>
+        {
+            var removeDelayMs = 0;
+
+            if (poolTagId != 0)
+            {
+                pool.RemoveEffectTag(poolTagId);
+                removeDelayMs = EffectFadeMs;
+            }
+
+            RunAfter(removeDelayMs, () =>
+            {
+                pool.Remove(0);
+                RunAfter(RemoveNpcDelayMs, pool.Dispose);
+            });
+        });
     }
 
     private void UpdateWaves(Player player)
@@ -537,7 +614,7 @@ public sealed class CombatZone : BaseZone
             Defeat(player, npc, waves);
         }
 
-        if (_waveNpcs.Count > 0)
+        if (_waveNpcs.Count > 0 || _wavePending > 0)
             return;
 
         _waveActive = false;
@@ -550,7 +627,7 @@ public sealed class CombatZone : BaseZone
         RunAfter(waves.DelayBetweenMs, () =>
         {
             if (HasPlayer(player) && IsGoalOpen(player, waves.QuestId, waves.GoalIndex))
-                SpawnWave();
+                SpawnWave(player);
         });
     }
 

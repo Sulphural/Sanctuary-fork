@@ -40963,9 +40963,8 @@
     "ModelId": 271,
     "ModelFileName": "invisible_cube.adr",
     "Scale": 1,
-    "CompositeEffectId": 5026,
-    "HasCursor": true,
-    "CursorId": 17
+    "CompositeEffectId": 16893,
+    "IsInteractable": false
   },
   {
     "Id": 40114,
@@ -40974,9 +40973,8 @@
     "ModelId": 271,
     "ModelFileName": "invisible_cube.adr",
     "Scale": 1,
-    "CompositeEffectId": 5026,
-    "HasCursor": true,
-    "CursorId": 17
+    "CompositeEffectId": 16893,
+    "IsInteractable": false
   },
   {
     "Id": 40115,
@@ -40985,9 +40983,8 @@
     "ModelId": 271,
     "ModelFileName": "invisible_cube.adr",
     "Scale": 1,
-    "CompositeEffectId": 5026,
-    "HasCursor": true,
-    "CursorId": 17
+    "CompositeEffectId": 16893,
+    "IsInteractable": false
   },
   {
     "Id": 40116,
@@ -41121,7 +41118,10 @@
     "NameId": 5101505,
     "Name": "Gloam Overlord",
     "ModelId": 4200,
-    "ModelFileName": "eos_m.adr"
+    "ModelFileName": "eos_m.adr",
+    "Disposition": 0,
+    "NameColor": -65536,
+    "ActiveProfile": 2001
   },
   {
     "Id": 40133,
@@ -41148,5 +41148,12 @@
     "Scale": 1,
     "HideNamePlate": true,
     "IsInteractable": false
+  },
+  {
+    "Id": 40136,
+    "NameId": 441292,
+    "Name": "Darkthorne",
+    "ModelId": 353,
+    "ModelFileName": "fairy_darkthorne_f.adr"
   }
 ]

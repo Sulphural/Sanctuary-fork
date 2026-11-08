@@ -124,6 +124,26 @@ public sealed class ZoneWaveDefinition
 
     public int RemoveDelayMs { get; set; }
 
+    public int PoolNpcId { get; set; }
+
+    public int PoolEffectId { get; set; }
+
+    public int PoolLeadMs { get; set; }
+
+    public int SpawnIntervalMs { get; set; }
+
+    public int SpawnAnimationId { get; set; }
+
+    public int SpawnAnimationMs { get; set; }
+
+    public List<ZoneWaveGroup> Groups { get; set; } = [];
+}
+
+public sealed class ZoneWaveGroup
+{
+    [JsonConverter(typeof(Vector4JsonConverter))]
+    public Vector4 Position { get; set; }
+
     public List<ZoneIntroSpawn> Spawns { get; set; } = [];
 }
 
@@ -198,6 +218,8 @@ public sealed class ZoneIntroTrigger
     public int BaseAnimationId { get; set; }
 
     public int AnimationId { get; set; }
+
+    public List<ZoneIntroSpawn> Spawns { get; set; } = [];
 }
 
 public sealed class ZoneIntroSpawn
