@@ -357,7 +357,7 @@ public sealed class CombatZone : BaseZone
         switch (step.Type)
         {
             case ZoneSceneStepType.Move:
-                npc?.MoveTo(new Vector3(step.Position.X, step.Position.Y, step.Position.Z), true);
+                npc?.TryMoveTo(new Vector3(step.Position.X, step.Position.Y, step.Position.Z), true);
                 break;
 
             case ZoneSceneStepType.Spawn:
