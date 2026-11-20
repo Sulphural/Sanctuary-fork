@@ -25,4 +25,6 @@ public sealed class LoginServerOptions : ServerOptions
 
     public bool UnlockAllTitles { get; set; }
     public bool UnlockAllProfiles { get; set; }
+
+    public string? LocalGatewayAddress { get; set; }
 }

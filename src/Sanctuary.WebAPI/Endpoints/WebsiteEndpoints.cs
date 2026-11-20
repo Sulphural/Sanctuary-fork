@@ -235,11 +235,9 @@ public static class WebsiteEndpoints
         return Results.Ok(new { url = $"freerealms://login/?site={site}&session={dbUser.Session}" });
     }
 
-    private static async Task<IResult> LogoutAsync(HttpContext httpContext)
+    private static async Task LogoutAsync(HttpContext httpContext)
     {
         await httpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-
-        return Results.Ok();
     }
 
     private static IResult GetNames(string? gender, CharacterNames names)

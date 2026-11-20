@@ -10,6 +10,10 @@ public class PluginOptions
 
     public string LoginAddress { get; set; } = "127.0.0.1:20042";
 
+    public string? LocalGatewayAddress { get; set; }
+
+    public string? LocalLoginAddress { get; set; }
+
     public string ClientManifestUrl { get; set; } = "https://opensourcefreerealms.com/clientmanifest.xml";
 
     public string ClientBaseUrl { get; set; } = "https://opensourcefreerealms.com/client";

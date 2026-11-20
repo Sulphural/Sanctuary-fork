@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -36,19 +39,88 @@ public static class PluginEndpoints
         return $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
     }
 
-    private static IResult GetConfig(IOptionsSnapshot<PluginOptions> pluginOptions, IOptionsSnapshot<WebAPIOptions> webAPIOptions)
+    private static IResult GetConfig(HttpContext httpContext, IOptionsSnapshot<PluginOptions> pluginOptions, IOptionsSnapshot<WebAPIOptions> webAPIOptions)
     {
         var options = pluginOptions.Value;
         var arguments = (webAPIOptions.Value.LaunchArguments ?? string.Empty).Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var local = IsSameNetwork(httpContext, options);
 
         return Results.Ok(new
         {
-            gateway = options.GatewayAddress,
-            login = options.LoginAddress,
+            gateway = local && !string.IsNullOrWhiteSpace(options.LocalGatewayAddress) ? options.LocalGatewayAddress : options.GatewayAddress,
+            login = local && !string.IsNullOrWhiteSpace(options.LocalLoginAddress) ? options.LocalLoginAddress : options.LoginAddress,
             arguments,
             clientManifestUrl = options.ClientManifestUrl,
             clientBaseUrl = options.ClientBaseUrl
         });
+    }
+
+    private static bool IsSameNetwork(HttpContext httpContext, PluginOptions options)
+    {
+        var remote = httpContext.Connection.RemoteIpAddress;
+
+        if (remote is null)
+            return false;
+
+        if (remote.IsIPv4MappedToIPv6)
+            remote = remote.MapToIPv4();
+
+        if (IPAddress.IsLoopback(remote) && httpContext.Request.Headers.TryGetValue("CF-Connecting-IP", out var forwarded))
+        {
+            if (!IPAddress.TryParse(forwarded.ToString(), out var client))
+                return false;
+
+            remote = client.IsIPv4MappedToIPv6 ? client.MapToIPv4() : client;
+        }
+
+        if (IsPrivate(remote))
+            return true;
+
+        if (remote.AddressFamily == AddressFamily.InterNetworkV6)
+            return SharesLocalIPv6Prefix(remote);
+
+        var publicHost = options.GatewayAddress.Split(':')[0];
+
+        return IPAddress.TryParse(publicHost, out var publicAddress) && publicAddress.Equals(remote);
+    }
+
+    private static bool SharesLocalIPv6Prefix(IPAddress remote)
+    {
+        var remoteBytes = remote.GetAddressBytes();
+
+        foreach (var networkInterface in NetworkInterface.GetAllNetworkInterfaces())
+        {
+            if (networkInterface.OperationalStatus != OperationalStatus.Up)
+                continue;
+
+            foreach (var unicast in networkInterface.GetIPProperties().UnicastAddresses)
+            {
+                var address = unicast.Address;
+
+                if (address.AddressFamily != AddressFamily.InterNetworkV6 || address.IsIPv6LinkLocal || IPAddress.IsLoopback(address))
+                    continue;
+
+                if (address.GetAddressBytes().AsSpan(0, 8).SequenceEqual(remoteBytes.AsSpan(0, 8)))
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsPrivate(IPAddress address)
+    {
+        if (IPAddress.IsLoopback(address))
+            return true;
+
+        if (address.AddressFamily == AddressFamily.InterNetworkV6)
+            return address.IsIPv6LinkLocal || address.IsIPv6UniqueLocal;
+
+        var bytes = address.GetAddressBytes();
+
+        return bytes[0] == 10
+            || (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31)
+            || (bytes[0] == 192 && bytes[1] == 168);
     }
 
     private static IResult GetDownloads(IOptionsSnapshot<PluginOptions> pluginOptions)

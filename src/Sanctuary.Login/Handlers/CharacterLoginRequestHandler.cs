@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -251,7 +253,7 @@ public static class CharacterLoginRequestHandler
             Status = 1,
             Payload = new ClientCharacterData
             {
-                ServerAddress = gateway.ServerAddress,
+                ServerAddress = GetGatewayAddress(connection, gateway),
                 ServerTicket = serverTicket,
                 CryptoKey = serverTicket, // Use ticket as key.
                 Guid = GuidHelper.GetPlayerGuid(characterId)
@@ -259,5 +261,31 @@ public static class CharacterLoginRequestHandler
         };
 
         connection.Send(characterLoginReply);
+    }
+
+    private static string GetGatewayAddress(LoginConnection connection, GatewayConnection gateway)
+    {
+        if (string.IsNullOrWhiteSpace(_options.LocalGatewayAddress) || !IsPrivate(connection.EndPoint.Address))
+            return gateway.ServerAddress;
+
+        return _options.LocalGatewayAddress;
+    }
+
+    private static bool IsPrivate(IPAddress address)
+    {
+        if (address.IsIPv4MappedToIPv6)
+            address = address.MapToIPv4();
+
+        if (IPAddress.IsLoopback(address))
+            return true;
+
+        if (address.AddressFamily == AddressFamily.InterNetworkV6)
+            return address.IsIPv6LinkLocal || address.IsIPv6UniqueLocal;
+
+        var bytes = address.GetAddressBytes();
+
+        return bytes[0] == 10
+            || (bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31)
+            || (bytes[0] == 192 && bytes[1] == 168);
     }
 }
