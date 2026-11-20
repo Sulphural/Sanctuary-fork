@@ -70,7 +70,10 @@ public static class WebsiteEndpoints
         group.MapGet("/account", GetAccountAsync).RequireAuthorization();
         group.MapPost("/characters", CreateCharacterAsync).RequireAuthorization();
         group.MapPost("/characters/{id}/play", PlayAsync).RequireAuthorization();
+        group.MapPost("/characters/{id}/delete", DeleteCharacterAsync).RequireAuthorization();
         group.MapPost("/customize", CustomizeAsync).RequireAuthorization();
+
+        group.MapSocialEndpoints();
     }
 
     public sealed record CreateCharacterRequest(int Preset, string FirstName, string LastNamePrefix, string LastNameSuffix, CharacterCustomizationModel? Customization = null);
@@ -401,12 +404,19 @@ public static class WebsiteEndpoints
 
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
+        var escaped = query.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_");
+        var anywhere = $"%{escaped}%";
+        var prefix = $"{escaped}%";
+
         var results = await dbContext.Characters
             .AsNoTracking()
-            .Where(x => x.FirstName.StartsWith(query) || (x.FullName != null && x.FullName.StartsWith(query)))
-            .OrderBy(x => x.FirstName)
+            .Where(x => EF.Functions.Like(x.FirstName, anywhere, "\\")
+                || (x.LastName != null && EF.Functions.Like(x.LastName, anywhere, "\\"))
+                || (x.FullName != null && EF.Functions.Like(x.FullName, anywhere, "\\")))
+            .OrderByDescending(x => EF.Functions.Like(x.FirstName, prefix, "\\"))
+            .ThenBy(x => x.FirstName)
             .ThenBy(x => x.LastName)
-            .Take(10)
+            .Take(15)
             .Select(x => new { id = x.Id, firstName = x.FirstName, lastName = x.LastName })
             .ToListAsync(cancellationToken);
 
@@ -436,7 +446,7 @@ public static class WebsiteEndpoints
         return File.Exists(path) ? File.GetLastWriteTimeUtc(path).Ticks / TimeSpan.TicksPerSecond : 0;
     }
 
-    private const string PortraitRenderVersion = "web3";
+    private const string PortraitRenderVersion = "web4";
 
     private static async Task<(int CharacterType, Dictionary<string, int> Choices, string Fingerprint)?> DescribeAppearanceAsync(
         ulong id,
@@ -725,6 +735,54 @@ public static class WebsiteEndpoints
             CharacterCreateResult.MaxCharacters => Results.Json(new { error = "maxCharacters" }, statusCode: StatusCodes.Status409Conflict),
             _ => Results.Json(new { error = "failed" }, statusCode: StatusCodes.Status500InternalServerError)
         };
+    }
+
+    private static async Task<IResult> DeleteCharacterAsync(
+        ulong id,
+        ClaimsPrincipal principal,
+        IDbContextFactory<DatabaseContext> dbContextFactory,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(principal, out var userId))
+            return Results.Unauthorized();
+
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        var dbUser = await dbContext.Users.AsNoTracking().SingleOrDefaultAsync(x => x.Id == userId, cancellationToken);
+
+        if (dbUser is null)
+            return Results.Unauthorized();
+
+        if (IsLocked(dbUser))
+            return Results.Json(new { error = "locked" }, statusCode: StatusCodes.Status403Forbidden);
+
+        var character = await dbContext.Characters.SingleOrDefaultAsync(x => x.Id == id && x.UserId == userId, cancellationToken);
+
+        if (character is null)
+            return Results.NotFound();
+
+        if (!CharacterDeleter.Delete(dbContext, character, _logger))
+            return Results.Json(new { error = "failed" }, statusCode: StatusCodes.Status500InternalServerError);
+
+        _logger.LogInformation("User {userId} deleted character {characterId} from the website.", userId, id);
+
+        var directory = PortraitStorage.GetCharacterDirectory(GuidHelper.GetPlayerGuid(id));
+
+        foreach (var fileName in new[] { "portrait.png", "headshot.png", "portrait.appearance" })
+        {
+            try
+            {
+                File.Delete(Path.Combine(directory, fileName));
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+
+        return Results.Ok(new { deleted = id });
     }
 
     private static async Task<IResult> PlayAsync(
