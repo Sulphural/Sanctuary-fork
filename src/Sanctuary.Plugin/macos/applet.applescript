@@ -7,8 +7,8 @@ on open location theURL
 end open location
 
 on runPlugin(theURL)
-	set machine to do shell script "uname -m"
-	if machine is "arm64" then
+	set cpuKind to do shell script "uname -m"
+	if cpuKind is "arm64" then
 		set binaryName to "FreeRealmsPlugin-arm64"
 	else
 		set binaryName to "FreeRealmsPlugin-x64"
