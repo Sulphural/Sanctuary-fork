@@ -57,6 +57,7 @@ builder.Services.AddDatabase(builder.Configuration);
 // Game Resources
 builder.Services.AddSingleton<IResourceManager, ResourceManager>();
 builder.Services.AddSingleton<CharacterNames>();
+builder.Services.AddSingleton<CreatorCatalog>();
 
 // Website Authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -128,7 +129,17 @@ if (!string.IsNullOrWhiteSpace(websiteRoot))
         var websiteFiles = new PhysicalFileProvider(Path.GetFullPath(websiteRoot));
 
         app.UseDefaultFiles(new DefaultFilesOptions { FileProvider = websiteFiles });
-        app.UseStaticFiles(new StaticFileOptions { FileProvider = websiteFiles });
+        app.UseStaticFiles(new StaticFileOptions
+        {
+            FileProvider = websiteFiles,
+            OnPrepareResponse = context =>
+            {
+                var extension = Path.GetExtension(context.File.Name);
+
+                if (extension is ".html" or ".js" or ".css" or ".json")
+                    context.Context.Response.Headers.CacheControl = "no-cache";
+            }
+        });
     }
     else
     {

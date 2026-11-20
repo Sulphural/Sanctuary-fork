@@ -1,8 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,6 +19,11 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 using MiniValidation;
+
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats;
+using SixLabors.ImageSharp.Formats.Png;
+using SixLabors.ImageSharp.PixelFormats;
 
 using Sanctuary.Core.Helpers;
 using Sanctuary.Database;
@@ -56,6 +64,8 @@ public static class WebsiteEndpoints
         group.MapPost("/account/optin", SetEmailOptInAsync).RequireAuthorization();
         group.MapGet("/characters/{id}/portrait", GetPortrait);
         group.MapGet("/characters/{id}/headshot", GetHeadshot);
+        group.MapGet("/characters/{id}/appearance", GetAppearanceAsync);
+        group.MapPost("/characters/{id}/portrait", UploadPortraitAsync).RequireAuthorization();
 
         group.MapGet("/account", GetAccountAsync).RequireAuthorization();
         group.MapPost("/characters", CreateCharacterAsync).RequireAuthorization();
@@ -63,7 +73,7 @@ public static class WebsiteEndpoints
         group.MapPost("/customize", CustomizeAsync).RequireAuthorization();
     }
 
-    public sealed record CreateCharacterRequest(int Preset, string FirstName, string LastNamePrefix, string LastNameSuffix);
+    public sealed record CreateCharacterRequest(int Preset, string FirstName, string LastNamePrefix, string LastNameSuffix, CharacterCustomizationModel? Customization = null);
 
     private static async Task<IResult> LoginAsync(
         LoginRequestModel request,
@@ -133,6 +143,7 @@ public static class WebsiteEndpoints
         SignupRequestModel request,
         HttpContext httpContext,
         CharacterNames names,
+        CreatorCatalog catalog,
         IResourceManager resourceManager,
         IOptions<WebAPIOptions> webAPIOptions,
         IOptionsSnapshot<CharacterCreationSettings> settings,
@@ -149,7 +160,7 @@ public static class WebsiteEndpoints
 
         if (request.Character is not null)
         {
-            if (!TryBuildCharacterData(request.Character.Preset, request.Character.FirstName, request.Character.LastNamePrefix, request.Character.LastNameSuffix, names, resourceManager, out characterData, out var characterError))
+            if (!TryBuildCharacterData(request.Character.Preset, request.Character.Customization, request.Character.FirstName, request.Character.LastNamePrefix, request.Character.LastNameSuffix, names, catalog, resourceManager, out characterData, out var characterError))
                 return characterError;
         }
 
@@ -287,7 +298,8 @@ public static class WebsiteEndpoints
                     gender = x.Gender,
                     lastLogin = x.LastLogin,
                     hasPortrait = HasPortraitFile(x.Id, "portrait.png"),
-                    hasHeadshot = HasPortraitFile(x.Id, "headshot.png")
+                    hasHeadshot = HasPortraitFile(x.Id, "headshot.png"),
+                    portraitStamp = PortraitStamp(x.Id)
                 })
         });
     }
@@ -351,6 +363,7 @@ public static class WebsiteEndpoints
             mounts = character.Mounts,
             pets = character.Pets,
             hasPortrait = HasPortraitFile(character.Id, "portrait.png"),
+            portraitStamp = PortraitStamp(character.Id),
             isOwner,
             friends = isOwner ? character.Friends.Select(f => new { id = f.Id, firstName = f.FirstName, lastName = f.LastName, lastLogin = f.LastLogin }) : null
         });
@@ -416,6 +429,164 @@ public static class WebsiteEndpoints
         return File.Exists(Path.Combine(PortraitStorage.GetCharacterDirectory(GuidHelper.GetPlayerGuid(id)), fileName));
     }
 
+    private static long PortraitStamp(ulong id)
+    {
+        var path = Path.Combine(PortraitStorage.GetCharacterDirectory(GuidHelper.GetPlayerGuid(id)), "portrait.png");
+
+        return File.Exists(path) ? File.GetLastWriteTimeUtc(path).Ticks / TimeSpan.TicksPerSecond : 0;
+    }
+
+    private const string PortraitRenderVersion = "web3";
+
+    private static async Task<(int CharacterType, Dictionary<string, int> Choices, string Fingerprint)?> DescribeAppearanceAsync(
+        ulong id,
+        CreatorCatalog catalog,
+        DatabaseContext dbContext,
+        CancellationToken cancellationToken)
+    {
+        var character = await dbContext.Characters
+            .AsNoTracking()
+            .Where(x => x.Id == id)
+            .Select(x => new
+            {
+                x.Model,
+                x.HeadId,
+                x.SkinToneId,
+                x.HairId,
+                x.HairColor,
+                x.EyeColor,
+                x.FacePaintId,
+                x.ModelCustomizationId,
+                Equipped = x.Profiles.Where(p => p.Id == x.ActiveProfileId).SelectMany(p => p.Items).Select(i => new { i.Definition, i.Tint }).ToList()
+            })
+            .SingleOrDefaultAsync(cancellationToken);
+
+        if (character is null)
+            return null;
+
+        var equipped = character.Equipped.Select(x => (x.Definition, x.Tint)).ToList();
+
+        if (!catalog.TryDescribe(
+                character.Model,
+                character.HeadId,
+                character.SkinToneId,
+                character.HairId,
+                character.HairColor,
+                character.EyeColor,
+                character.FacePaintId ?? 0,
+                character.ModelCustomizationId ?? 0,
+                equipped,
+                out var characterType,
+                out var choices) || choices is null)
+            return null;
+
+        var key = PortraitRenderVersion + ":" + characterType + ":" + string.Join(",", choices.OrderBy(x => x.Key, StringComparer.Ordinal).Select(x => x.Key + "=" + x.Value));
+        var fingerprint = Convert.ToHexString(SHA1.HashData(Encoding.UTF8.GetBytes(key)))[..16].ToLowerInvariant();
+
+        return (characterType, choices, fingerprint);
+    }
+
+    private static string? ReadPortraitFingerprint(ulong id)
+    {
+        var path = Path.Combine(PortraitStorage.GetCharacterDirectory(GuidHelper.GetPlayerGuid(id)), "portrait.appearance");
+
+        return File.Exists(path) ? File.ReadAllText(path).Trim() : null;
+    }
+
+    private static async Task<IResult> GetAppearanceAsync(
+        ulong id,
+        CreatorCatalog catalog,
+        IDbContextFactory<DatabaseContext> dbContextFactory,
+        CancellationToken cancellationToken)
+    {
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        var appearance = await DescribeAppearanceAsync(id, catalog, dbContext, cancellationToken);
+
+        if (appearance is null)
+            return Results.NotFound();
+
+        var stored = ReadPortraitFingerprint(id);
+
+        return Results.Ok(new
+        {
+            characterType = appearance.Value.CharacterType,
+            choices = appearance.Value.Choices,
+            fingerprint = appearance.Value.Fingerprint,
+            current = stored == appearance.Value.Fingerprint && HasPortraitFile(id, "portrait.png") && HasPortraitFile(id, "headshot.png")
+        });
+    }
+
+    private static async Task<IResult> UploadPortraitAsync(
+        ulong id,
+        HttpContext httpContext,
+        ClaimsPrincipal principal,
+        CreatorCatalog catalog,
+        IDbContextFactory<DatabaseContext> dbContextFactory,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(principal, out var userId))
+            return Results.Unauthorized();
+
+        if (!httpContext.Request.HasFormContentType)
+            return Results.BadRequest();
+
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        if (!await dbContext.Characters.AnyAsync(x => x.Id == id && x.UserId == userId, cancellationToken))
+            return Results.NotFound();
+
+        var appearance = await DescribeAppearanceAsync(id, catalog, dbContext, cancellationToken);
+
+        if (appearance is null)
+            return Results.NotFound();
+
+        var form = await httpContext.Request.ReadFormAsync(cancellationToken);
+
+        if (form["fingerprint"] != appearance.Value.Fingerprint)
+            return Results.Json(new { error = "stale" }, statusCode: StatusCodes.Status409Conflict);
+
+        var portrait = form.Files.GetFile("portrait");
+        var headshot = form.Files.GetFile("headshot");
+
+        if (portrait is null || headshot is null || portrait.Length > 1_000_000 || headshot.Length > 200_000)
+            return Results.BadRequest();
+
+        using var portraitImage = await TryLoadPngAsync(portrait, cancellationToken);
+        using var headshotImage = await TryLoadPngAsync(headshot, cancellationToken);
+
+        if (portraitImage is null || headshotImage is null
+            || portraitImage.Width != 180 || portraitImage.Height != 330
+            || headshotImage.Width != 70 || headshotImage.Height != 70)
+            return Results.BadRequest();
+
+        var directory = PortraitStorage.GetCharacterDirectory(GuidHelper.GetPlayerGuid(id));
+
+        Directory.CreateDirectory(directory);
+
+        await headshotImage.SaveAsPngAsync(Path.Combine(directory, "headshot.png"), cancellationToken);
+        await portraitImage.SaveAsPngAsync(Path.Combine(directory, "portrait.png"), cancellationToken);
+        await File.WriteAllTextAsync(Path.Combine(directory, "portrait.appearance"), appearance.Value.Fingerprint, cancellationToken);
+
+        return Results.Ok(new { portraitStamp = PortraitStamp(id) });
+    }
+
+    private static async Task<Image<Rgba32>?> TryLoadPngAsync(IFormFile file, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await using var stream = file.OpenReadStream();
+
+            var options = new PngDecoderOptions { GeneralOptions = new DecoderOptions { SkipMetadata = true } };
+
+            return await PngDecoder.Instance.DecodeAsync<Rgba32>(options, stream, cancellationToken);
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
     private static async Task<IResult> CheckNameAsync(
         string firstName,
         string lastName,
@@ -445,6 +616,7 @@ public static class WebsiteEndpoints
         CreateCharacterRequest request,
         ClaimsPrincipal principal,
         CharacterNames names,
+        CreatorCatalog catalog,
         IResourceManager resourceManager,
         IOptionsSnapshot<CharacterCreationSettings> settings,
         IDbContextFactory<DatabaseContext> dbContextFactory,
@@ -453,7 +625,7 @@ public static class WebsiteEndpoints
         if (!TryGetUserId(principal, out var userId))
             return Results.Unauthorized();
 
-        if (!TryBuildCharacterData(request.Preset, request.FirstName, request.LastNamePrefix, request.LastNameSuffix, names, resourceManager, out var characterData, out var characterError))
+        if (!TryBuildCharacterData(request.Preset, request.Customization, request.FirstName, request.LastNamePrefix, request.LastNameSuffix, names, catalog, resourceManager, out var characterData, out var characterError))
             return characterError;
 
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
@@ -468,16 +640,57 @@ public static class WebsiteEndpoints
 
     private static bool TryBuildCharacterData(
         int presetId,
+        CharacterCustomizationModel? customization,
         string firstName,
         string lastNamePrefix,
         string lastNameSuffix,
         CharacterNames names,
+        CreatorCatalog catalog,
         IResourceManager resourceManager,
         [NotNullWhen(true)] out CharacterData? characterData,
         [NotNullWhen(false)] out IResult? error)
     {
         characterData = null;
         error = null;
+
+        if (customization is not null)
+        {
+            if (!catalog.TryBuild(customization, out var custom) || custom is null)
+            {
+                error = Results.Json(new { error = "invalidCustomization" }, statusCode: StatusCodes.Status400BadRequest);
+                return false;
+            }
+
+            if (!names.IsValidFirstName(custom.Gender, firstName)
+                || !names.IsValidPrefix(lastNamePrefix)
+                || !names.IsValidSuffix(lastNameSuffix))
+            {
+                error = Results.Json(new { error = "invalidName" }, statusCode: StatusCodes.Status400BadRequest);
+                return false;
+            }
+
+            characterData = new CharacterData
+            {
+                FirstName = firstName,
+                LastName = CharacterNames.ComposeLastName(lastNamePrefix, lastNameSuffix),
+                Model = custom.Model,
+                Head = custom.Head,
+                SkinTone = custom.SkinTone,
+                Hair = custom.Hair,
+                HairColor = custom.HairColor,
+                EyeColor = custom.EyeColor,
+                ModelCustomization = custom.ModelCustomization,
+                FacePaint = custom.FacePaint,
+                ItemChest = custom.ItemChest,
+                ItemLegs = custom.ItemLegs,
+                ItemFeet = custom.ItemFeet,
+                TintChest = custom.TintChest,
+                TintLegs = custom.TintLegs,
+                TintFeet = custom.TintFeet
+            };
+
+            return true;
+        }
 
         if (!CharacterPresets.All.TryGetValue(presetId, out var preset))
         {
@@ -535,20 +748,30 @@ public static class WebsiteEndpoints
         if (IsLocked(dbUser))
             return Results.Json(new { error = "locked" }, statusCode: StatusCodes.Status403Forbidden);
 
-        var ticket = Guid.NewGuid();
+        var sessionTicket = Guid.NewGuid();
 
-        var updated = await dbContext.Characters
+        var tagged = await dbContext.Characters
             .Where(x => x.Id == id && x.UserId == userId)
-            .ExecuteUpdateAsync(x => x.SetProperty(c => c.Ticket, (Guid?)ticket), cancellationToken);
+            .ExecuteUpdateAsync(x => x.SetProperty(c => c.Ticket, (Guid?)sessionTicket), cancellationToken);
+
+        if (tagged <= 0)
+            return Results.NotFound();
+
+        var session = sessionTicket.ToString("N");
+        DateTimeOffset? sessionCreated = DateTimeOffset.UtcNow;
+
+        var updated = await dbContext.Users
+            .Where(x => x.Id == userId)
+            .ExecuteUpdateAsync(x => x
+                .SetProperty(u => u.Session, session)
+                .SetProperty(u => u.SessionCreated, sessionCreated), cancellationToken);
 
         if (updated <= 0)
             return Results.NotFound();
 
-        var guid = GuidHelper.GetPlayerGuid(id);
-
         var site = Uri.EscapeDataString(PluginEndpoints.SiteOrigin(httpContext, pluginOptions.Value));
 
-        return Results.Ok(new { url = $"freerealms://play/?site={site}&guid={guid}&ticket={ticket:N}" });
+        return Results.Ok(new { url = $"freerealms://login/?site={site}&session={session}" });
     }
 
     private static int DefaultTint(IResourceManager resourceManager, int itemId)

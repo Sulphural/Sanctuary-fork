@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 
+using Sanctuary.WebAPI.Website;
+
 namespace Sanctuary.WebAPI.Models;
 
 public class SignupRequestModel
@@ -36,6 +38,8 @@ public class SignupRequestModel
 public class SignupCharacterModel
 {
     public int Preset { get; set; }
+
+    public CharacterCustomizationModel? Customization { get; set; }
 
     public required string FirstName { get; set; }
 

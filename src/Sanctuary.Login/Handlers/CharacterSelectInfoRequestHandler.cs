@@ -111,6 +111,13 @@ public static class CharacterSelectInfoRequestHandler
 
         connection.Send(characterSelectInfoReply);
 
+        var autoLoginCharacterId = connection.AutoLoginCharacterId;
+
+        connection.AutoLoginCharacterId = 0;
+
+        if (autoLoginCharacterId != 0 && characters.Any(x => x.Id == autoLoginCharacterId))
+            CharacterLoginRequestHandler.BeginLogin(connection, autoLoginCharacterId);
+
         return true;
     }
 }

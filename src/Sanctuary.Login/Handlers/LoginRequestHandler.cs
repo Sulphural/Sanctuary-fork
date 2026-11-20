@@ -106,6 +106,14 @@ public static class LoginRequestHandler
 
         connection.UserId = user.Id;
 
+        if (Guid.TryParseExact(packet.Session, "N", out var sessionTicket))
+        {
+            connection.AutoLoginCharacterId = dbContext.Characters
+                .Where(x => x.UserId == user.Id && x.Ticket == sessionTicket)
+                .Select(x => x.Id)
+                .FirstOrDefault();
+        }
+
         loginReply.LoggedIn = true;
         loginReply.Status = 1;
         loginReply.IsMember = user.IsMember;

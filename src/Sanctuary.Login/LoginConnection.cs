@@ -24,6 +24,8 @@ public class LoginConnection : LoginServerConnection
 
     public ulong UserId { get; set; }
 
+    public ulong AutoLoginCharacterId { get; set; }
+
     public LoginConnection(ILogger<LoginConnection> logger, IOptionsMonitor<LoginServerOptions> options, LoginServer loginServer, SocketAddress socketAddress, int connectCode) : base(options, loginServer, socketAddress, connectCode)
     {
         _logger = logger;

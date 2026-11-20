@@ -107,39 +107,42 @@ public static class CharacterLoginRequestHandler
             return true;
         }
 
+        BeginLogin(connection, character.Id);
+
+        return true;
+    }
+
+    public static void BeginLogin(LoginConnection connection, ulong characterId)
+    {
         // TODO: Client currently doesn't let the user pick a server so default to the first one.
 
         var gatewayServer = GetGateway();
 
         if (gatewayServer is null)
         {
-            characterLoginReply.Status = 7;
+            connection.Send(new CharacterLoginReply { Status = 7 });
 
-            connection.Send(characterLoginReply);
-
-            return true;
+            return;
         }
 
         // Still online: hold the login until the old session is released (gone quiet, a crash) or logs out on its own.
-        if (IsBusy(gatewayServer, character.Id))
+        if (IsBusy(gatewayServer, characterId))
         {
-            _logger.LogInformation("Character {id} is still online; holding the login until the old session is released or logs out.", character.Id);
+            _logger.LogInformation("Character {id} is still online; holding the login until the old session is released or logs out.", characterId);
 
             _pendingLogins.Add(new PendingCharacterLogin
             {
                 Connection = connection,
                 Gateway = gatewayServer,
-                CharacterId = character.Id
+                CharacterId = characterId
             });
 
             ProcessPendingLogins();
 
-            return true;
+            return;
         }
 
-        Admit(connection, gatewayServer, character.Id);
-
-        return true;
+        Admit(connection, gatewayServer, characterId);
     }
 
     public static void CompleteRelease(uint requestId, bool released)
