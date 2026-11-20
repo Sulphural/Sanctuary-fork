@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -9,7 +8,6 @@ using Microsoft.Extensions.Options;
 using Sanctuary.Core.Configuration;
 using Sanctuary.Core.Helpers;
 using Sanctuary.Database;
-using Sanctuary.Database.Entities;
 using Sanctuary.Game;
 using Sanctuary.Packet;
 using Sanctuary.Packet.Common;
@@ -72,343 +70,27 @@ public static class CharacterCreateRequestHandler
             return true;
         }
 
-        // TODO: Validate name against CharacterCreateItemClothingSets.txt, CharacterCreateItemMappings.txt
-
-        if (!_resourceManager.Models.TryGetValue(characterData.Model, out var model))
+        var settings = new CharacterCreationSettings
         {
-            _logger.LogError("Failed to create character, invalid character model. {id}", characterData.Model);
-
-            characterCreateReply.Result = 2;
-
-            connection.Send(characterCreateReply);
-
-            return true;
-        }
-
-        if (!_resourceManager.HeadMappings.TryGetValue(characterData.Head, out var head))
-        {
-            _logger.LogError("Failed to create character, invalid character head. {id}", characterData.Head);
-
-            characterCreateReply.Result = 2;
-
-            connection.Send(characterCreateReply);
-
-            return true;
-        }
-
-        if (!_resourceManager.HairMappings.TryGetValue(characterData.Hair, out var hair))
-        {
-            _logger.LogError("Failed to create character, invalid character hair. {id}", characterData.Hair);
-
-            characterCreateReply.Result = 2;
-
-            connection.Send(characterCreateReply);
-
-            return true;
-        }
-
-        if (!_resourceManager.SkinToneMappings.TryGetValue(characterData.SkinTone, out var skinTone))
-        {
-            _logger.LogError("Failed to create character, invalid character skin tone. {id}", characterData.SkinTone);
-
-            characterCreateReply.Result = 2;
-
-            connection.Send(characterCreateReply);
-
-            return true;
-        }
-
-        string? facePaint = null;
-
-        if (!_resourceManager.FacePaintMappings.TryGetValue(characterData.FacePaint, out facePaint))
-        {
-            _logger.LogError("Failed to create character, invalid character face paint. {id}", characterData.FacePaint);
-
-            characterCreateReply.Result = 2;
-
-            connection.Send(characterCreateReply);
-
-            return true;
-        }
-
-        string? modelCustomization = null;
-
-        if (characterData.ModelCustomization > 0 && !_resourceManager.ModelCustomizationMappings.TryGetValue(characterData.ModelCustomization, out modelCustomization))
-        {
-            _logger.LogError("Failed to create character, invalid character model customization. {id}", characterData.ModelCustomization);
-
-            characterCreateReply.Result = 2;
-
-            connection.Send(characterCreateReply);
-
-            return true;
-        }
-
-        if (!_resourceManager.ClientItemDefinitions.TryGetValue(characterData.ItemFeet, out var itemFeet))
-        {
-            _logger.LogError("Failed to create character, invalid character item feet. {id}", characterData.ItemFeet);
-
-            characterCreateReply.Result = 2;
-
-            connection.Send(characterCreateReply);
-
-            return true;
-        }
-
-        if (!_resourceManager.ClientItemDefinitions.TryGetValue(characterData.ItemLegs, out var itemLegs))
-        {
-            _logger.LogError("Failed to create character, invalid character item legs. {id}", characterData.ItemLegs);
-
-            characterCreateReply.Result = 2;
-
-            connection.Send(characterCreateReply);
-
-            return true;
-        }
-
-        if (!_resourceManager.ClientItemDefinitions.TryGetValue(characterData.ItemChest, out var itemChest))
-        {
-            _logger.LogError("Failed to create character, invalid character item chest. {id}", characterData.ItemChest);
-
-            characterCreateReply.Result = 2;
-
-            connection.Send(characterCreateReply);
-
-            return true;
-        }
+            DefaultTitleId = _options.DefaultTitleId,
+            DefaultProfileId = _options.DefaultProfileId,
+            StartingCoins = _options.StartingCoins,
+            StartingStationCash = _options.StartingStationCash,
+            UnlockAllTitles = _options.UnlockAllTitles,
+            UnlockAllProfiles = _options.UnlockAllProfiles
+        };
 
         using var dbContext = _dbContextFactory.CreateDbContext();
 
-        var nameTaken = dbContext.Characters.Any(x => x.FirstName == characterData.FirstName && x.LastName == characterData.LastName);
+        var result = CharacterCreator.Create(_resourceManager, dbContext, settings, connection.UserId, characterData, _logger, out var characterId);
 
-        if (nameTaken)
-        {
-            _logger.LogInformation("Failed to create character, name taken.");
+        characterCreateReply.Result = (int)result;
 
-            characterCreateReply.Result = 4;
-
-            connection.Send(characterCreateReply);
-
-            return true;
-        }
-
-        var dbUser = dbContext.Users.SingleOrDefault(x => x.Id == connection.UserId);
-
-        if (dbUser is null)
-        {
-            _logger.LogInformation("Failed to create character, unknown user.");
-
-            characterCreateReply.Result = 3;
-
-            connection.Send(characterCreateReply);
-
-            return true;
-        }
-
-        var characterCount = dbContext.Characters.Count(x => x.UserId == connection.UserId);
-
-        if (characterCount >= dbUser.MaxCharacters)
-        {
-            _logger.LogInformation("Failed to create character, max characters.");
-
-            characterCreateReply.Result = 6;
-
-            connection.Send(characterCreateReply);
-
-            return true;
-        }
-
-        var dbCharacter = new DbCharacter
-        {
-            FirstName = characterData.FirstName ?? string.Empty,
-            LastName = characterData.LastName ?? string.Empty,
-            Model = characterData.Model,
-            Head = head,
-            HeadId = characterData.Head,
-            Hair = hair,
-            HairId = characterData.Hair,
-            ModelCustomization = modelCustomization,
-            ModelCustomizationId = characterData.ModelCustomization,
-            FacePaint = facePaint,
-            FacePaintId = characterData.FacePaint,
-            SkinTone = skinTone,
-            SkinToneId = characterData.SkinTone,
-            EyeColor = characterData.EyeColor,
-            HairColor = characterData.HairColor,
-
-            Gender = model.Gender,
-
-            MembershipStatus = dbUser.IsMember ? 2 : 0,
-
-            UserId = connection.UserId
-        };
-
-        dbCharacter.Coins = _options.StartingCoins;
-        dbCharacter.StationCash = _options.StartingStationCash;
-
-        if (_options.DefaultTitleId > 0)
-        {
-            if (_resourceManager.PlayerTitles.TryGetValue(_options.DefaultTitleId, out var playerTitle))
-            {
-                var dbCharacterTitle = new DbTitle
-                {
-                    Id = playerTitle.Id
-                };
-
-                dbCharacter.Titles.Add(dbCharacterTitle);
-
-                dbCharacter.ActiveTitleId = playerTitle.Id;
-            }
-        }
-
-        if (!_resourceManager.Profiles.TryGetValue(_options.DefaultProfileId, out var profileData))
-        {
-            _logger.LogError("Failed to create character, invalid default profile.");
-
-            characterCreateReply.Result = 3;
-
-            connection.Send(characterCreateReply);
-
-            return true;
-        }
-
-        var dbProfile = new DbProfile
-        {
-            Id = profileData.Id,
-            Level = 20
-        };
-
-        dbCharacter.ActiveProfileId = dbProfile.Id;
-
-        var chestItem = new DbItem
-        {
-            Id = dbCharacter.Items.Count + 1,
-            Definition = itemChest.Id,
-            Tint = characterData.TintChest,
-            Count = 1
-        };
-
-        dbCharacter.Items.Add(chestItem);
-
-        var legItem = new DbItem
-        {
-            Id = dbCharacter.Items.Count + 1,
-            Definition = itemLegs.Id,
-            Tint = characterData.TintLegs,
-            Count = 1
-        };
-
-        dbCharacter.Items.Add(legItem);
-
-        var feetItem = new DbItem
-        {
-            Id = dbCharacter.Items.Count + 1,
-            Definition = itemFeet.Id,
-            Tint = characterData.TintFeet,
-            Count = 1
-        };
-
-        dbCharacter.Items.Add(feetItem);
-
-        dbProfile.Items.Add(chestItem);
-        dbProfile.Items.Add(legItem);
-        dbProfile.Items.Add(feetItem);
-
-        dbCharacter.Profiles.Add(dbProfile);
-
-        if (_options.UnlockAllTitles)
-            UnlockAllTitles(dbCharacter);
-
-        if (_options.UnlockAllProfiles)
-            UnlockAllProfiles(dbCharacter, chestItem, legItem, feetItem);
-
-        dbContext.Characters.Add(dbCharacter);
-
-        if (dbContext.SaveChanges() <= 0)
-        {
-            _logger.LogError("Failed to create character, database save failed.");
-
-            characterCreateReply.Result = 3;
-
-            connection.Send(characterCreateReply);
-
-            return true;
-        }
-
-        characterCreateReply.Result = 1;
-        characterCreateReply.Guid = GuidHelper.GetPlayerGuid(dbCharacter.Id);
+        if (result == CharacterCreateResult.Success)
+            characterCreateReply.Guid = GuidHelper.GetPlayerGuid(characterId);
 
         connection.Send(characterCreateReply);
 
         return true;
-    }
-
-    private static void UnlockAllTitles(DbCharacter dbCharacter)
-    {
-        foreach (var playerTitle in _resourceManager.PlayerTitles.Values)
-        {
-            if (dbCharacter.Titles.Any(x => x.Id == playerTitle.Id))
-                continue;
-
-            var dbCharacterTitle = new DbTitle
-            {
-                Id = playerTitle.Id
-            };
-
-            dbCharacter.Titles.Add(dbCharacterTitle);
-        }
-    }
-
-    private static void UnlockAllProfiles(DbCharacter dbCharacter, DbItem chestItem, DbItem legItem, DbItem feetItem)
-    {
-        foreach (var profileData in _resourceManager.Profiles.Values)
-        {
-            if (dbCharacter.Profiles.Any(x => x.Id == profileData.Id))
-                continue;
-
-            var dbProfile = new DbProfile
-            {
-                Id = profileData.Id,
-                Level = 20
-            };
-
-            // TODO
-            if (profileData.DefaultItems.Count == 0)
-            {
-                dbProfile.Items.Add(chestItem);
-                dbProfile.Items.Add(legItem);
-                dbProfile.Items.Add(feetItem);
-            }
-            else
-            {
-                foreach (var defaultItemId in profileData.DefaultItems)
-                {
-                    if (!_resourceManager.ClientItemDefinitions.TryGetValue(defaultItemId, out var defaultClientItemDefinition))
-                        continue;
-
-                    if (defaultClientItemDefinition.GenderUsage != 0 && defaultClientItemDefinition.GenderUsage != dbCharacter.Gender)
-                        continue;
-
-                    var dbItem = dbCharacter.Items.SingleOrDefault(x => x.Definition == defaultItemId);
-
-                    if (dbItem is null)
-                    {
-                        dbItem = new DbItem
-                        {
-                            Id = dbCharacter.Items.Count + 1,
-                            Definition = defaultClientItemDefinition.Id,
-                            Tint = defaultClientItemDefinition.Icon.TintId,
-                            Count = 1
-                        };
-
-                        dbCharacter.Items.Add(dbItem);
-                    }
-
-                    dbProfile.Items.Add(dbItem);
-                }
-            }
-
-            dbCharacter.Profiles.Add(dbProfile);
-        }
     }
 }

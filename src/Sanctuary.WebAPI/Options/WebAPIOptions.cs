@@ -7,4 +7,6 @@ public class WebAPIOptions
     public string? LaunchArguments { get; set; }
 
     public bool? MemberByDefault { get; set; }
+
+    public string? WebsiteRoot { get; set; }
 }

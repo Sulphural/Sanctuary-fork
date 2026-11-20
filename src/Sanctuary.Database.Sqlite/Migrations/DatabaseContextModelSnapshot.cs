@@ -559,10 +559,26 @@ namespace Sanctuary.Database.Sqlite.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("Age")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Country")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTimeOffset>("Created")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT")
                         .HasDefaultValueSql("DATE()");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(254)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("EmailOptIn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
 
                     b.Property<bool>("IsAdmin")
                         .ValueGeneratedOnAdd()
@@ -603,6 +619,9 @@ namespace Sanctuary.Database.Sqlite.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset?>("SessionCreated")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("TermsAccepted")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Username")

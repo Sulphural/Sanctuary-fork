@@ -1,0 +1,59 @@
+name: Free Realms Plugin
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'src/Sanctuary.Plugin/**'
+      - '.github/workflows/plugin.yml'
+
+jobs:
+  windows-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        global-json-file: global.json
+
+    - name: Publish
+      working-directory: ./src
+      run: |
+        dotnet publish Sanctuary.Plugin/Sanctuary.Plugin.csproj -c Release -r win-x64 -o ../artifacts/win-x64
+        dotnet publish Sanctuary.Plugin/Sanctuary.Plugin.csproj -c Release -r linux-x64 -o ../artifacts/linux-x64
+        mkdir -p ../artifacts/downloads
+        cp ../artifacts/win-x64/FreeRealmsPlugin.exe ../artifacts/downloads/FreeRealmsPlugin-windows.exe
+        cp ../artifacts/linux-x64/FreeRealmsPlugin ../artifacts/downloads/FreeRealmsPlugin-linux
+
+    - uses: actions/upload-artifact@v5
+      with:
+        name: plugin-windows-linux
+        path: artifacts/downloads/
+
+  macos:
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        global-json-file: global.json
+
+    - name: Publish
+      working-directory: ./src
+      run: |
+        dotnet publish Sanctuary.Plugin/Sanctuary.Plugin.csproj -c Release -r osx-x64 -o ../artifacts/osx-x64
+        dotnet publish Sanctuary.Plugin/Sanctuary.Plugin.csproj -c Release -r osx-arm64 -o ../artifacts/osx-arm64
+
+    - name: Build app
+      run: sh src/Sanctuary.Plugin/macos/build-app.sh artifacts/osx-x64 artifacts/osx-arm64 artifacts/downloads
+
+    - uses: actions/upload-artifact@v5
+      with:
+        name: plugin-macos
+        path: artifacts/downloads/FreeRealmsPlugin-macos.zip

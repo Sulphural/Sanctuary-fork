@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Sanctuary.Core\Sanctuary.Core.csproj" />
+    <ProjectReference Include="..\Sanctuary.Game\Sanctuary.Game.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,5 +35,12 @@
     <None Remove="appsettings.Development.json" />
     <Content Remove="appsettings.Development.json" />
   </ItemGroup>
+
+  <Target Name="CopyResources" AfterTargets="PostBuildEvent">
+    <ItemGroup>
+      <ResourceFiles Include="$(SolutionDir)Resources\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(ResourceFiles)" DestinationFolder="$(OutputPath)Resources\%(RecursiveDir)" SkipUnchangedFiles="true" />
+  </Target>
 
 </Project>

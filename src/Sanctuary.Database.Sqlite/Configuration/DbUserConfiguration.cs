@@ -28,6 +28,12 @@ public sealed class DbUserConfiguration : IEntityTypeConfiguration<DbUser>
         builder.Property(u => u.LockedUntil).IsRequired(false);
         builder.Property(u => u.MutedUntil).IsRequired(false);
 
+        builder.Property(u => u.Email).IsRequired(false).HasMaxLength(254);
+        builder.Property(u => u.EmailOptIn).IsRequired().HasDefaultValue(false);
+        builder.Property(u => u.Country).IsRequired(false).HasMaxLength(64);
+        builder.Property(u => u.Age).IsRequired(false);
+        builder.Property(u => u.TermsAccepted).IsRequired(false);
+
         builder.Property(u => u.Created).IsRequired().HasDefaultValueSql("DATE()");
         builder.Property(u => u.LastLogin).IsRequired(false);
 

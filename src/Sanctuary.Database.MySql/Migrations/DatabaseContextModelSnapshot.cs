@@ -570,10 +570,26 @@ namespace Sanctuary.Database.MySql.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<ulong>("Id"));
 
+                    b.Property<int?>("Age")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Country")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
                     b.Property<DateTimeOffset>("Created")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime(6)")
                         .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(254)
+                        .HasColumnType("varchar(254)");
+
+                    b.Property<bool>("EmailOptIn")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(false);
 
                     b.Property<bool>("IsAdmin")
                         .ValueGeneratedOnAdd()
@@ -614,6 +630,9 @@ namespace Sanctuary.Database.MySql.Migrations
                         .HasColumnType("varchar(32)");
 
                     b.Property<DateTimeOffset?>("SessionCreated")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTimeOffset?>("TermsAccepted")
                         .HasColumnType("datetime(6)");
 
                     b.Property<string>("Username")

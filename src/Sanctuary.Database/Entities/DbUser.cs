@@ -22,6 +22,12 @@ public sealed class DbUser
     public DateTimeOffset? LockedUntil { get; set; }
     public DateTimeOffset? MutedUntil { get; set; }
 
+    public string? Email { get; set; }
+    public bool EmailOptIn { get; set; }
+    public string? Country { get; set; }
+    public int? Age { get; set; }
+    public DateTimeOffset? TermsAccepted { get; set; }
+
     public DateTimeOffset Created { get; set; }
     public DateTimeOffset? LastLogin { get; set; }
 
