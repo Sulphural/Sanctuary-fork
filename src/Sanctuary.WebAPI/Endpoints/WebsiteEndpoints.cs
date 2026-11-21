@@ -103,7 +103,7 @@ public static class WebsiteEndpoints
         }
 
         if (IsLocked(dbUser))
-            return Results.Json(new { error = "locked" }, statusCode: StatusCodes.Status403Forbidden);
+            return Results.Json(new { error = "locked", until = dbUser.LockedUntil }, statusCode: StatusCodes.Status403Forbidden);
 
         await SignInAsync(httpContext, dbUser);
 
@@ -254,7 +254,7 @@ public static class WebsiteEndpoints
             return Results.Unauthorized();
 
         if (IsLocked(dbUser))
-            return Results.Json(new { error = "locked" }, statusCode: StatusCodes.Status403Forbidden);
+            return Results.Json(new { error = "locked", until = dbUser.LockedUntil }, statusCode: StatusCodes.Status403Forbidden);
 
         dbUser.Session = Guid.NewGuid().ToString("N");
         dbUser.SessionCreated = DateTimeOffset.UtcNow;
@@ -882,7 +882,7 @@ public static class WebsiteEndpoints
             return Results.Unauthorized();
 
         if (IsLocked(dbUser))
-            return Results.Json(new { error = "locked" }, statusCode: StatusCodes.Status403Forbidden);
+            return Results.Json(new { error = "locked", until = dbUser.LockedUntil }, statusCode: StatusCodes.Status403Forbidden);
 
         var character = await dbContext.Characters.SingleOrDefaultAsync(x => x.Id == id && x.UserId == userId, cancellationToken);
 
@@ -932,7 +932,7 @@ public static class WebsiteEndpoints
             return Results.Unauthorized();
 
         if (IsLocked(dbUser))
-            return Results.Json(new { error = "locked" }, statusCode: StatusCodes.Status403Forbidden);
+            return Results.Json(new { error = "locked", until = dbUser.LockedUntil }, statusCode: StatusCodes.Status403Forbidden);
 
         var sessionTicket = Guid.NewGuid();
 
