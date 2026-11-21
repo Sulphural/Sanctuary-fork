@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 
 using Sanctuary.Core.Helpers;
 using Sanctuary.Database;
+using Sanctuary.Database.Entities;
 using Sanctuary.Game;
 using Sanctuary.Gateway.Helpers;
 using Sanctuary.Packet;
@@ -113,39 +114,27 @@ public static class ChangeNameRequestPacketHandler
         if (dbCharacter is null)
             return ChangeNameResponse.Error;
 
-        var taken = dbContext.Characters.Any(x => x.FirstName == packet.Name.FirstName && x.LastName == packet.Name.LastName);
-        if (taken)
+        if (dbCharacter.FirstName == packet.Name.FirstName && (dbCharacter.LastName ?? string.Empty) == packet.Name.LastName)
             return ChangeNameResponse.Error;
 
-        dbCharacter.FirstName = packet.Name.FirstName;
-        dbCharacter.LastName = packet.Name.LastName;
+        if (dbContext.NameReviews.Any(x => x.CharacterId == dbCharacter.Id))
+            return ChangeNameResponse.AlreadyInProgress;
+
+        if (NameReviewHelper.IsTaken(dbContext, packet.Name.FirstName, packet.Name.LastName, dbCharacter.Id))
+            return ChangeNameResponse.Error;
+
+        dbContext.NameReviews.Add(new DbNameReview
+        {
+            CharacterId = dbCharacter.Id,
+            RequestedFirstName = packet.Name.FirstName,
+            RequestedLastName = packet.Name.LastName,
+            Created = DateTimeOffset.UtcNow
+        });
 
         if (dbContext.SaveChanges() <= 0)
             return ChangeNameResponse.Error;
 
-        connection.Player.Name.FirstName = packet.Name.FirstName;
-        connection.Player.Name.LastName = packet.Name.LastName;
-
-        var playerUpdatePacketRenamePlayer = new PlayerUpdatePacketRenamePlayer();
-
-        playerUpdatePacketRenamePlayer.Guid = connection.Player.Guid;
-        playerUpdatePacketRenamePlayer.Name = connection.Player.Name;
-
-        connection.Player.SendTunneledToVisible(playerUpdatePacketRenamePlayer, true);
-
-        var friendRenamePacket = new FriendRenamePacket
-        {
-            Guid = connection.Player.Guid,
-            Name = connection.Player.Name.FullName
-        };
-
-        foreach (var friend in connection.Player.Friends)
-        {
-            if (!_zoneManager.TryGetPlayer(friend.Guid, out var friendPlayer))
-                continue;
-
-            friendPlayer.SendTunneled(friendRenamePacket);
-        }
+        _logger.LogInformation("Character {CharacterId} asked to be renamed to {Name}; waiting for staff review.", dbCharacter.Id, packet.Name.FullName);
 
         return ChangeNameResponse.Pending;
     }

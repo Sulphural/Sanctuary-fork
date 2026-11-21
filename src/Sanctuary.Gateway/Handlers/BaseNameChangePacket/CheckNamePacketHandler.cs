@@ -107,7 +107,7 @@ public static class CheckNamePacketHandler
         }
 
         using var dbContext = _dbContextFactory.CreateDbContext();
-        var taken = dbContext.Characters.Any(x => x.FirstName == packet.Name.FirstName && x.LastName == packet.Name.LastName);
+        var taken = NameReviewHelper.IsTaken(dbContext, packet.Name.FirstName, packet.Name.LastName, 0);
 
         if (taken)
             return CheckNameResponse.Taken;
