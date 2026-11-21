@@ -259,6 +259,31 @@ namespace Sanctuary.Database.Sqlite.Migrations
                     b.ToTable("CharacterQuestProgress");
                 });
 
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbCodeRedemption", b =>
+                {
+                    b.Property<string>("Code")
+                        .HasColumnType("TEXT");
+
+                    b.Property<ulong>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ulong>("CharacterId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("DATE()");
+
+                    b.HasKey("Code", "UserId");
+
+                    b.HasIndex("CharacterId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("CodeRedemptions");
+                });
+
             modelBuilder.Entity("Sanctuary.Database.Entities.DbCollectionEntry", b =>
                 {
                     b.Property<ulong>("CharacterId")
@@ -728,6 +753,53 @@ namespace Sanctuary.Database.Sqlite.Migrations
                     b.ToTable("ProfilePrivacy");
                 });
 
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbRedeemCode", b =>
+                {
+                    b.Property<string>("Code")
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Coins")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("DATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("ExpiresAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ItemCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ItemDefinition")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MaxUses")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("StationCash")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Uses")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Code");
+
+                    b.ToTable("RedeemCodes");
+                });
+
             modelBuilder.Entity("Sanctuary.Database.Entities.DbStaffAction", b =>
                 {
                     b.Property<ulong>("Id")
@@ -942,6 +1014,33 @@ namespace Sanctuary.Database.Sqlite.Migrations
                         .IsRequired();
 
                     b.Navigation("Quest");
+                });
+
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbCodeRedemption", b =>
+                {
+                    b.HasOne("Sanctuary.Database.Entities.DbCharacter", "Character")
+                        .WithMany()
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Sanctuary.Database.Entities.DbRedeemCode", "RedeemCode")
+                        .WithMany()
+                        .HasForeignKey("Code")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Sanctuary.Database.Entities.DbUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Character");
+
+                    b.Navigation("RedeemCode");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Sanctuary.Database.Entities.DbCollectionEntry", b =>

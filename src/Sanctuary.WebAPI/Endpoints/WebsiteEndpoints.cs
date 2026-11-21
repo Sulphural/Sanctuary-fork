@@ -77,6 +77,7 @@ public static class WebsiteEndpoints
         group.MapStaffEndpoints(loggerFactory);
         group.MapStaffPlayerEndpoints(loggerFactory);
         group.MapNewsEndpoints();
+        group.MapRedeemEndpoints(loggerFactory);
     }
 
     public sealed record CreateCharacterRequest(int Preset, string FirstName, string LastNamePrefix, string LastNameSuffix, CharacterCustomizationModel? Customization = null, string? CustomName = null);
@@ -314,6 +315,7 @@ public static class WebsiteEndpoints
             emailOptIn = dbUser.EmailOptIn,
             isMember = dbUser.IsMember,
             isStaff = dbUser.IsAdmin || dbUser.IsMod,
+            isAdmin = dbUser.IsAdmin,
             characters = dbUser.Characters
                 .OrderBy(x => x.Id)
                 .Select(x => new

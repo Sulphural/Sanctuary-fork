@@ -58,6 +58,12 @@ builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddSingleton<IResourceManager, ResourceManager>();
 builder.Services.AddSingleton<CharacterNames>();
 builder.Services.AddSingleton<CreatorCatalog>();
+builder.Services.AddSingleton<ItemNames>();
+
+builder.Services.AddOptions<BackupOptions>()
+    .BindConfiguration(BackupOptions.Section);
+builder.Services.AddSingleton<DatabaseBackupService>();
+builder.Services.AddHostedService(serviceProvider => serviceProvider.GetRequiredService<DatabaseBackupService>());
 
 // Website Authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

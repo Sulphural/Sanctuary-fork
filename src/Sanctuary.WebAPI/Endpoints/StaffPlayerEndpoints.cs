@@ -40,6 +40,7 @@ public static class StaffPlayerEndpoints
         group.MapPost("/staff/players/{userId}/mute", MuteAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.WritePolicy);
         group.MapPost("/staff/players/{userId}/unmute", UnmuteAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.WritePolicy);
         group.MapPost("/staff/players/{userId}/role", SetRoleAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.WritePolicy);
+        group.MapPost("/staff/players/{userId}/password", ResetPasswordAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.WritePolicy);
 
         group.MapGet("/staff/player-reports", GetPlayerReportsAsync).RequireAuthorization();
         group.MapPost("/staff/player-reports/{characterId}/dismiss", DismissPlayerReportsAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.WritePolicy);
@@ -407,6 +408,39 @@ public static class StaffPlayerEndpoints
         }
 
         return Results.Ok(new { role = StaffAccess.RoleName(target) });
+    }
+
+    private static async Task<IResult> ResetPasswordAsync(
+        ulong userId,
+        ClaimsPrincipal principal,
+        IDbContextFactory<DatabaseContext> dbContextFactory,
+        CancellationToken cancellationToken)
+    {
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        var (staff, target, error) = await LoadTargetAsync(dbContext, principal, userId, cancellationToken);
+
+        if (error is not null)
+            return error;
+
+        const string alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
+        var password = string.Create(10, alphabet, (span, chars) =>
+        {
+            for (var i = 0; i < span.Length; i++)
+                span[i] = chars[System.Security.Cryptography.RandomNumberGenerator.GetInt32(chars.Length)];
+        });
+
+        target!.Password = BCrypt.Net.BCrypt.HashPassword(password, BCrypt.Net.BCrypt.GenerateSalt());
+        target.Session = null;
+        target.SessionCreated = null;
+
+        StaffAccess.Log(dbContext, staff!, "resetPassword", target.Id, null, target.Username, "Gave a temporary password.");
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("Staff {Staff} reset the password of {Username}.", staff!.Username, target.Username);
+
+        return Results.Ok(new { password });
     }
 
     private static async Task<IResult> GetPlayerReportsAsync(

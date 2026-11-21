@@ -28,6 +28,8 @@ public abstract class DatabaseContext : DbContext
     public DbSet<DbStaffAction> StaffActions => Set<DbStaffAction>();
     public DbSet<DbPlayerReport> PlayerReports => Set<DbPlayerReport>();
     public DbSet<DbNewsPost> NewsPosts => Set<DbNewsPost>();
+    public DbSet<DbRedeemCode> RedeemCodes => Set<DbRedeemCode>();
+    public DbSet<DbCodeRedemption> CodeRedemptions => Set<DbCodeRedemption>();
 
     public DatabaseContext()
     {
