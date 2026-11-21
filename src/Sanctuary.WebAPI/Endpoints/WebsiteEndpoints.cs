@@ -76,7 +76,7 @@ public static class WebsiteEndpoints
         group.MapSocialEndpoints();
     }
 
-    public sealed record CreateCharacterRequest(int Preset, string FirstName, string LastNamePrefix, string LastNameSuffix, CharacterCustomizationModel? Customization = null);
+    public sealed record CreateCharacterRequest(int Preset, string FirstName, string LastNamePrefix, string LastNameSuffix, CharacterCustomizationModel? Customization = null, string? CustomName = null);
 
     private static async Task<IResult> LoginAsync(
         LoginRequestModel request,
@@ -163,7 +163,7 @@ public static class WebsiteEndpoints
 
         if (request.Character is not null)
         {
-            if (!TryBuildCharacterData(request.Character.Preset, request.Character.Customization, request.Character.FirstName, request.Character.LastNamePrefix, request.Character.LastNameSuffix, names, catalog, resourceManager, out characterData, out var characterError))
+            if (!TryBuildCharacterData(request.Character.Preset, request.Character.Customization, request.Character.FirstName, request.Character.LastNamePrefix, request.Character.LastNameSuffix, request.Character.CustomName, names, catalog, resourceManager, out characterData, out var characterError))
                 return characterError;
         }
 
@@ -446,7 +446,7 @@ public static class WebsiteEndpoints
         return File.Exists(path) ? File.GetLastWriteTimeUtc(path).Ticks / TimeSpan.TicksPerSecond : 0;
     }
 
-    private const string PortraitRenderVersion = "web4";
+    private const string PortraitRenderVersion = "web5";
 
     private static async Task<(int CharacterType, Dictionary<string, int> Choices, string Fingerprint)?> DescribeAppearanceAsync(
         ulong id,
@@ -598,16 +598,32 @@ public static class WebsiteEndpoints
     }
 
     private static async Task<IResult> CheckNameAsync(
-        string firstName,
-        string lastName,
+        string? firstName,
+        string? lastName,
+        string? custom,
+        IResourceManager resourceManager,
         IDbContextFactory<DatabaseContext> dbContextFactory,
         CancellationToken cancellationToken)
     {
+        if (custom is not null)
+        {
+            var nameError = CustomNames.Validate(custom, resourceManager, out var customFirstName, out var customLastName);
+
+            if (nameError is not null)
+                return Results.Ok(new { available = false, error = nameError });
+
+            firstName = customFirstName;
+            lastName = customLastName;
+        }
+
+        firstName ??= string.Empty;
+        lastName ??= string.Empty;
+
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         var taken = await dbContext.Characters.AnyAsync(x => x.FirstName == firstName && x.LastName == lastName, cancellationToken);
 
-        return Results.Ok(new { available = !taken });
+        return Results.Ok(new { available = !taken, error = taken ? "taken" : null });
     }
 
     private static async Task<IResult> CheckUsernameAsync(
@@ -635,7 +651,7 @@ public static class WebsiteEndpoints
         if (!TryGetUserId(principal, out var userId))
             return Results.Unauthorized();
 
-        if (!TryBuildCharacterData(request.Preset, request.Customization, request.FirstName, request.LastNamePrefix, request.LastNameSuffix, names, catalog, resourceManager, out var characterData, out var characterError))
+        if (!TryBuildCharacterData(request.Preset, request.Customization, request.FirstName, request.LastNamePrefix, request.LastNameSuffix, request.CustomName, names, catalog, resourceManager, out var characterData, out var characterError))
             return characterError;
 
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
@@ -654,6 +670,7 @@ public static class WebsiteEndpoints
         string firstName,
         string lastNamePrefix,
         string lastNameSuffix,
+        string? customName,
         CharacterNames names,
         CreatorCatalog catalog,
         IResourceManager resourceManager,
@@ -663,6 +680,21 @@ public static class WebsiteEndpoints
         characterData = null;
         error = null;
 
+        var useCustomName = !string.IsNullOrWhiteSpace(customName);
+        var customFirstName = string.Empty;
+        var customLastName = string.Empty;
+
+        if (useCustomName)
+        {
+            var nameError = CustomNames.Validate(customName, resourceManager, out customFirstName, out customLastName);
+
+            if (nameError is not null)
+            {
+                error = Results.Json(new { error = "invalidName", reason = nameError }, statusCode: StatusCodes.Status400BadRequest);
+                return false;
+            }
+        }
+
         if (customization is not null)
         {
             if (!catalog.TryBuild(customization, out var custom) || custom is null)
@@ -671,9 +703,10 @@ public static class WebsiteEndpoints
                 return false;
             }
 
-            if (!names.IsValidFirstName(custom.Gender, firstName)
-                || !names.IsValidPrefix(lastNamePrefix)
-                || !names.IsValidSuffix(lastNameSuffix))
+            if (!useCustomName
+                && (!names.IsValidFirstName(custom.Gender, firstName)
+                    || !names.IsValidPrefix(lastNamePrefix)
+                    || !names.IsValidSuffix(lastNameSuffix)))
             {
                 error = Results.Json(new { error = "invalidName" }, statusCode: StatusCodes.Status400BadRequest);
                 return false;
@@ -681,8 +714,8 @@ public static class WebsiteEndpoints
 
             characterData = new CharacterData
             {
-                FirstName = firstName,
-                LastName = CharacterNames.ComposeLastName(lastNamePrefix, lastNameSuffix),
+                FirstName = useCustomName ? customFirstName : firstName,
+                LastName = useCustomName ? customLastName : CharacterNames.ComposeLastName(lastNamePrefix, lastNameSuffix),
                 Model = custom.Model,
                 Head = custom.Head,
                 SkinTone = custom.SkinTone,
@@ -708,9 +741,10 @@ public static class WebsiteEndpoints
             return false;
         }
 
-        if (!names.IsValidFirstName(preset.Gender, firstName)
-            || !names.IsValidPrefix(lastNamePrefix)
-            || !names.IsValidSuffix(lastNameSuffix))
+        if (!useCustomName
+            && (!names.IsValidFirstName(preset.Gender, firstName)
+                || !names.IsValidPrefix(lastNamePrefix)
+                || !names.IsValidSuffix(lastNameSuffix)))
         {
             error = Results.Json(new { error = "invalidName" }, statusCode: StatusCodes.Status400BadRequest);
             return false;
@@ -718,8 +752,8 @@ public static class WebsiteEndpoints
 
         characterData = CharacterPresets.ToCharacterData(
             preset,
-            firstName,
-            CharacterNames.ComposeLastName(lastNamePrefix, lastNameSuffix),
+            useCustomName ? customFirstName : firstName,
+            useCustomName ? customLastName : CharacterNames.ComposeLastName(lastNamePrefix, lastNameSuffix),
             DefaultTint(resourceManager, preset.ItemChest),
             DefaultTint(resourceManager, preset.ItemLegs),
             DefaultTint(resourceManager, preset.ItemFeet));

@@ -56,6 +56,13 @@ public static class CharacterSelectInfoRequestHandler
 
         characterSelectInfoReply.Status = characters.Count == 0 ? 2 : 1;
 
+        var autoLoginCharacterId = connection.AutoLoginCharacterId;
+
+        connection.AutoLoginCharacterId = 0;
+
+        if (autoLoginCharacterId != 0)
+            characters = characters.OrderByDescending(x => x.Id == autoLoginCharacterId).ToList();
+
         foreach (var character in characters)
         {
             var accountInfoCharacterDetails = new AccountInfoCharacterDetails
@@ -110,10 +117,6 @@ public static class CharacterSelectInfoRequestHandler
         }
 
         connection.Send(characterSelectInfoReply);
-
-        var autoLoginCharacterId = connection.AutoLoginCharacterId;
-
-        connection.AutoLoginCharacterId = 0;
 
         if (autoLoginCharacterId != 0 && characters.Any(x => x.Id == autoLoginCharacterId))
             CharacterLoginRequestHandler.BeginLogin(connection, autoLoginCharacterId);

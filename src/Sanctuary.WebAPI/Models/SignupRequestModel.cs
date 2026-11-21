@@ -46,4 +46,6 @@ public class SignupCharacterModel
     public required string LastNamePrefix { get; set; }
 
     public required string LastNameSuffix { get; set; }
+
+    public string? CustomName { get; set; }
 }
