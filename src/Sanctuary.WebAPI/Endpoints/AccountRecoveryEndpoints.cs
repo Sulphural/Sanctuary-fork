@@ -152,7 +152,7 @@ public static class AccountRecoveryEndpoints
         var url = origin + "/verifyEmail.html?token=" + Uri.EscapeDataString(token);
 
         const string heading = "VERIFY YOUR E-MAIL ADDRESS";
-        var intro = "We are sending this e-mail because this e-mail address was entered for your Free Realms account {0}. If you did not initiate this request, you may simply disregard this e-mail.";
+        var intro = "We are sending this e-mail because this e-mail address was entered for your OSFR Account {0}. If you did not initiate this request, you may simply disregard this e-mail.";
 
         var html = RetailHtml(heading, origin,
         [
@@ -213,7 +213,7 @@ public static class AccountRecoveryEndpoints
 
         var origin = Origin(httpContext, pluginOptions);
         const string heading = "USERNAME(S) RETRIEVED";
-        const string intro = "We are sending this e-mail because we have received a request to retrieve the Free Realms usernames associated with this e-mail address. If you did not initiate this request, you may simply disregard this e-mail.";
+        const string intro = "We are sending this e-mail because we have received a request to retrieve the OSFR Account usernames associated with this e-mail address. If you did not initiate this request, you may simply disregard this e-mail.";
         const string limit = "Username retrieval may only be done once every 24 hours.";
 
         var html = RetailHtml(heading, origin,
@@ -267,7 +267,7 @@ public static class AccountRecoveryEndpoints
         var origin = Origin(httpContext, pluginOptions);
         var now = DateTimeOffset.UtcNow;
         const string heading = "PASSWORD RESET";
-        const string intro = "We are sending this e-mail because we have received a request to reset the password for your Free Realms account {0}. If you did not initiate this request, you may simply disregard this e-mail.";
+        const string intro = "We are sending this e-mail because we have received a request to reset the password for your OSFR Account {0}. If you did not initiate this request, you may simply disregard this e-mail.";
         const string limit = "Password reset may only be done once every 24 hours.";
 
         foreach (var user in users.Where(x => IsValidEmail(x.Email)))
