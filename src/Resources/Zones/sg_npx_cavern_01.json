@@ -415,6 +415,7 @@
           "Type": "Dialogue",
           "NpcId": 40133,
           "StringId": 5100101,
+          "SoundId": 18263,
           "ResponseTextId": 423585,
           "Script": "FirstTimeEvent.FtesNpxDppEnd",
           "ZoneDefinitionId": 1,
