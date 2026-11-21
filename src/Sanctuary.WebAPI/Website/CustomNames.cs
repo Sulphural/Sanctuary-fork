@@ -11,7 +11,7 @@ public static class CustomNames
     private const int MinLength = 3;
     private const int MaxLength = 14;
 
-    public static string? Validate(string? raw, IResourceManager resourceManager, out string firstName, out string lastName)
+    public static string? Validate(string? raw, IResourceManager resourceManager, CharacterNames names, out string firstName, out string lastName)
     {
         firstName = string.Empty;
         lastName = string.Empty;
@@ -44,7 +44,7 @@ public static class CustomNames
         if (CharacterNameHelper.ContainsIllegalCharacters(fullName))
             return "illegal";
 
-        if (resourceManager.NameFilter.Any(token => fullName.Contains(token, StringComparison.OrdinalIgnoreCase)))
+        if (parts.Any(part => !names.IsReelPart(part) && resourceManager.NameFilter.Any(token => part.Contains(token, StringComparison.OrdinalIgnoreCase))))
             return "profane";
 
         return null;

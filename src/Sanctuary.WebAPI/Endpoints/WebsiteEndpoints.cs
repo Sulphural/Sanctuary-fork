@@ -608,12 +608,13 @@ public static class WebsiteEndpoints
         string? lastName,
         string? custom,
         IResourceManager resourceManager,
+        CharacterNames names,
         IDbContextFactory<DatabaseContext> dbContextFactory,
         CancellationToken cancellationToken)
     {
         if (custom is not null)
         {
-            var nameError = CustomNames.Validate(custom, resourceManager, out var customFirstName, out var customLastName);
+            var nameError = CustomNames.Validate(custom, resourceManager, names, out var customFirstName, out var customLastName);
 
             if (nameError is not null)
                 return Results.Ok(new { available = false, error = nameError });
@@ -692,7 +693,7 @@ public static class WebsiteEndpoints
 
         if (useCustomName)
         {
-            var nameError = CustomNames.Validate(customName, resourceManager, out customFirstName, out customLastName);
+            var nameError = CustomNames.Validate(customName, resourceManager, names, out customFirstName, out customLastName);
 
             if (nameError is not null)
             {

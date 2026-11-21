@@ -70,6 +70,15 @@ public sealed class CharacterNames
 
     public bool IsValidSuffix(string suffix) => _lastNameSuffixes.Contains(suffix);
 
+    public bool IsReelPart(string name)
+    {
+        if (FemaleFirstNames.Concat(MaleFirstNames).Contains(name, StringComparer.OrdinalIgnoreCase))
+            return true;
+
+        return LastNamePrefixes.Any(prefix => name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+            && LastNameSuffixes.Contains(name[prefix.Length..], StringComparer.OrdinalIgnoreCase));
+    }
+
     public static string ComposeLastName(string prefix, string suffix)
     {
         var lastName = prefix + suffix;
