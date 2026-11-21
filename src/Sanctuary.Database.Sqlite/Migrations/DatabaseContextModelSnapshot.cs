@@ -427,6 +427,26 @@ namespace Sanctuary.Database.Sqlite.Migrations
                     b.ToTable("Items");
                 });
 
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbMessageReport", b =>
+                {
+                    b.Property<ulong>("MessageId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ulong>("ReporterUserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("DATE()");
+
+                    b.HasKey("MessageId", "ReporterUserId");
+
+                    b.HasIndex("ReporterUserId");
+
+                    b.ToTable("MessageReports");
+                });
+
             modelBuilder.Entity("Sanctuary.Database.Entities.DbMount", b =>
                 {
                     b.Property<int>("Id")
@@ -457,6 +477,21 @@ namespace Sanctuary.Database.Sqlite.Migrations
                         .IsUnique();
 
                     b.ToTable("Mounts");
+                });
+
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbNameReview", b =>
+                {
+                    b.Property<ulong>("CharacterId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("DATE()");
+
+                    b.HasKey("CharacterId");
+
+                    b.ToTable("NameReviews");
                 });
 
             modelBuilder.Entity("Sanctuary.Database.Entities.DbPet", b =>
@@ -877,10 +912,40 @@ namespace Sanctuary.Database.Sqlite.Migrations
                     b.Navigation("Character");
                 });
 
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbMessageReport", b =>
+                {
+                    b.HasOne("Sanctuary.Database.Entities.DbProfileMessage", "Message")
+                        .WithMany()
+                        .HasForeignKey("MessageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Sanctuary.Database.Entities.DbUser", "ReporterUser")
+                        .WithMany()
+                        .HasForeignKey("ReporterUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Message");
+
+                    b.Navigation("ReporterUser");
+                });
+
             modelBuilder.Entity("Sanctuary.Database.Entities.DbMount", b =>
                 {
                     b.HasOne("Sanctuary.Database.Entities.DbCharacter", "Character")
                         .WithMany("Mounts")
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Character");
+                });
+
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbNameReview", b =>
+                {
+                    b.HasOne("Sanctuary.Database.Entities.DbCharacter", "Character")
+                        .WithMany()
                         .HasForeignKey("CharacterId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

@@ -327,7 +327,8 @@ public static class SocialEndpoints
             text = x.Text,
             created = x.Created,
             author = new { id = x.AuthorCharacterId, firstName = x.AuthorFirstName, lastName = x.AuthorLastName },
-            canDelete = isOwner || ownCharacterIds.Contains(x.AuthorCharacterId)
+            canDelete = isOwner || ownCharacterIds.Contains(x.AuthorCharacterId),
+            canReport = userId != 0 && !ownCharacterIds.Contains(x.AuthorCharacterId)
         }));
     }
 

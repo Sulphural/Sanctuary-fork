@@ -23,6 +23,8 @@ public abstract class DatabaseContext : DbContext
     public DbSet<DbFriendRequest> FriendRequests => Set<DbFriendRequest>();
     public DbSet<DbProfileMessage> ProfileMessages => Set<DbProfileMessage>();
     public DbSet<DbProfilePrivacy> ProfilePrivacy => Set<DbProfilePrivacy>();
+    public DbSet<DbMessageReport> MessageReports => Set<DbMessageReport>();
+    public DbSet<DbNameReview> NameReviews => Set<DbNameReview>();
 
     public DatabaseContext()
     {

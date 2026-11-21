@@ -74,6 +74,7 @@ public static class WebsiteEndpoints
         group.MapPost("/customize", CustomizeAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.WritePolicy);
 
         group.MapSocialEndpoints();
+        group.MapStaffEndpoints(loggerFactory);
     }
 
     public sealed record CreateCharacterRequest(int Preset, string FirstName, string LastNamePrefix, string LastNameSuffix, CharacterCustomizationModel? Customization = null, string? CustomName = null);
@@ -208,6 +209,8 @@ public static class WebsiteEndpoints
                 return CharacterCreateError(result);
             }
 
+            await QueueNameReviewAsync(dbContext, names, request.Character!.CustomName, createdId, characterData, cancellationToken);
+
             characterId = createdId;
         }
 
@@ -290,6 +293,7 @@ public static class WebsiteEndpoints
             maxCharacters = dbUser.MaxCharacters,
             emailOptIn = dbUser.EmailOptIn,
             isMember = dbUser.IsMember,
+            isStaff = dbUser.IsAdmin || dbUser.IsMod,
             characters = dbUser.Characters
                 .OrderBy(x => x.Id)
                 .Select(x => new
@@ -668,7 +672,22 @@ public static class WebsiteEndpoints
         if (result != CharacterCreateResult.Success)
             return CharacterCreateError(result);
 
+        await QueueNameReviewAsync(dbContext, names, request.CustomName, characterId, characterData, cancellationToken);
+
         return Results.Ok(new { id = characterId, firstName = characterData.FirstName, lastName = characterData.LastName });
+    }
+
+    private static async Task QueueNameReviewAsync(DatabaseContext dbContext, CharacterNames names, string? customName, ulong characterId, CharacterData characterData, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(customName))
+            return;
+
+        if (names.IsReelPart(characterData.FirstName) && (string.IsNullOrEmpty(characterData.LastName) || names.IsReelPart(characterData.LastName)))
+            return;
+
+        dbContext.NameReviews.Add(new DbNameReview { CharacterId = characterId, Created = DateTimeOffset.UtcNow });
+
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
     private static bool TryBuildCharacterData(
