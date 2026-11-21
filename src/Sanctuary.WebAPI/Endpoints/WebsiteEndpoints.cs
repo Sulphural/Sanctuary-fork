@@ -173,6 +173,18 @@ public static class WebsiteEndpoints
         if (await dbContext.Users.AnyAsync(x => x.Username == request.Username, cancellationToken))
             return Results.Json(new { error = "usernameTaken" }, statusCode: StatusCodes.Status409Conflict);
 
+        (string FirstName, string LastName)? requestedName = null;
+
+        if (characterData is not null)
+        {
+            var (holdError, held) = await HoldCustomNameAsync(dbContext, names, resourceManager, request.Character!.CustomName, characterData, cancellationToken);
+
+            if (holdError is not null)
+                return holdError;
+
+            requestedName = held;
+        }
+
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
 
         var dbUser = new DbUser
@@ -209,7 +221,7 @@ public static class WebsiteEndpoints
                 return CharacterCreateError(result);
             }
 
-            await QueueNameReviewAsync(dbContext, names, request.Character!.CustomName, createdId, characterData, cancellationToken);
+            await AddNameReviewAsync(dbContext, createdId, requestedName, cancellationToken);
 
             characterId = createdId;
         }
@@ -218,7 +230,7 @@ public static class WebsiteEndpoints
 
         await SignInAsync(httpContext, dbUser);
 
-        return Results.Ok(new { username = dbUser.Username, characterId });
+        return Results.Ok(new { username = dbUser.Username, characterId, pendingName = PendingNameResponse(requestedName) });
     }
 
     private static async Task<IResult> CustomizeAsync(
@@ -287,6 +299,12 @@ public static class WebsiteEndpoints
         if (dbUser is null)
             return Results.Unauthorized();
 
+        var characterIds = dbUser.Characters.Select(x => x.Id).ToList();
+        var pendingNames = await dbContext.NameReviews
+            .AsNoTracking()
+            .Where(x => characterIds.Contains(x.CharacterId))
+            .ToDictionaryAsync(x => x.CharacterId, cancellationToken);
+
         return Results.Ok(new
         {
             username = dbUser.Username,
@@ -306,7 +324,10 @@ public static class WebsiteEndpoints
                     lastLogin = x.LastLogin,
                     hasPortrait = HasPortraitFile(x.Id, "portrait.png"),
                     hasHeadshot = HasPortraitFile(x.Id, "headshot.png"),
-                    portraitStamp = PortraitStamp(x.Id)
+                    portraitStamp = PortraitStamp(x.Id),
+                    pendingName = pendingNames.TryGetValue(x.Id, out var review)
+                        ? new { firstName = review.RequestedFirstName, lastName = review.RequestedLastName }
+                        : null
                 })
         });
     }
@@ -632,9 +653,10 @@ public static class WebsiteEndpoints
 
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        var taken = await dbContext.Characters.AnyAsync(x => x.FirstName == firstName && x.LastName == lastName, cancellationToken);
+        var taken = await PendingNames.IsTakenAsync(dbContext, firstName, lastName, 0, cancellationToken);
+        var review = !taken && custom is not null && PendingNames.NeedsReview(names, firstName, lastName);
 
-        return Results.Ok(new { available = !taken, error = taken ? "taken" : null });
+        return Results.Ok(new { available = !taken, error = taken ? "taken" : null, review });
     }
 
     private static async Task<IResult> CheckUsernameAsync(
@@ -667,27 +689,69 @@ public static class WebsiteEndpoints
 
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
+        var (holdError, requestedName) = await HoldCustomNameAsync(dbContext, names, resourceManager, request.CustomName, characterData, cancellationToken);
+
+        if (holdError is not null)
+            return holdError;
+
         var result = CharacterCreator.Create(resourceManager, dbContext, settings.Value, userId, characterData, _logger, out var characterId);
 
         if (result != CharacterCreateResult.Success)
             return CharacterCreateError(result);
 
-        await QueueNameReviewAsync(dbContext, names, request.CustomName, characterId, characterData, cancellationToken);
+        await AddNameReviewAsync(dbContext, characterId, requestedName, cancellationToken);
 
-        return Results.Ok(new { id = characterId, firstName = characterData.FirstName, lastName = characterData.LastName });
+        return Results.Ok(new { id = characterId, firstName = characterData.FirstName, lastName = characterData.LastName, pendingName = PendingNameResponse(requestedName) });
     }
 
-    private static async Task QueueNameReviewAsync(DatabaseContext dbContext, CharacterNames names, string? customName, ulong characterId, CharacterData characterData, CancellationToken cancellationToken)
+    private static async Task<(IResult? Error, (string FirstName, string LastName)? Requested)> HoldCustomNameAsync(
+        DatabaseContext dbContext,
+        CharacterNames names,
+        IResourceManager resourceManager,
+        string? customName,
+        CharacterData characterData,
+        CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(customName))
+        var firstName = characterData.FirstName ?? string.Empty;
+        var lastName = characterData.LastName ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(customName) || !PendingNames.NeedsReview(names, firstName, lastName))
+            return (null, null);
+
+        if (await PendingNames.IsTakenAsync(dbContext, firstName, lastName, 0, cancellationToken))
+            return (CharacterCreateError(CharacterCreateResult.NameTaken), null);
+
+        var male = resourceManager.Models.TryGetValue(characterData.Model, out var model) && model.Gender == 1;
+        var temporaryName = await PendingNames.PickFreeReelNameAsync(dbContext, names, male, cancellationToken);
+
+        if (temporaryName is null)
+            return (Results.Json(new { error = "failed" }, statusCode: StatusCodes.Status500InternalServerError), null);
+
+        characterData.FirstName = temporaryName.Value.FirstName;
+        characterData.LastName = temporaryName.Value.LastName;
+
+        return (null, (firstName, lastName));
+    }
+
+    private static async Task AddNameReviewAsync(DatabaseContext dbContext, ulong characterId, (string FirstName, string LastName)? requestedName, CancellationToken cancellationToken)
+    {
+        if (requestedName is null)
             return;
 
-        if (names.IsReelPart(characterData.FirstName) && (string.IsNullOrEmpty(characterData.LastName) || names.IsReelPart(characterData.LastName)))
-            return;
-
-        dbContext.NameReviews.Add(new DbNameReview { CharacterId = characterId, Created = DateTimeOffset.UtcNow });
+        dbContext.NameReviews.Add(new DbNameReview
+        {
+            CharacterId = characterId,
+            RequestedFirstName = requestedName.Value.FirstName,
+            RequestedLastName = requestedName.Value.LastName,
+            Created = DateTimeOffset.UtcNow
+        });
 
         await dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    private static object? PendingNameResponse((string FirstName, string LastName)? requestedName)
+    {
+        return requestedName is null ? null : new { firstName = requestedName.Value.FirstName, lastName = requestedName.Value.LastName };
     }
 
     private static bool TryBuildCharacterData(

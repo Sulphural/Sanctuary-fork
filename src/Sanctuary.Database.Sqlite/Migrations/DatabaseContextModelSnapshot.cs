@@ -489,7 +489,19 @@ namespace Sanctuary.Database.Sqlite.Migrations
                         .HasColumnType("TEXT")
                         .HasDefaultValueSql("DATE()");
 
+                    b.Property<string>("RequestedFirstName")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RequestedLastName")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
                     b.HasKey("CharacterId");
+
+                    b.HasIndex("RequestedFirstName", "RequestedLastName");
 
                     b.ToTable("NameReviews");
                 });

@@ -11,6 +11,11 @@ public sealed class DbNameReviewConfiguration : IEntityTypeConfiguration<DbNameR
     {
         builder.HasKey(r => r.CharacterId);
 
+        builder.Property(r => r.RequestedFirstName).IsRequired().HasMaxLength(16);
+        builder.Property(r => r.RequestedLastName).IsRequired().HasMaxLength(16);
+
+        builder.HasIndex(r => new { r.RequestedFirstName, r.RequestedLastName });
+
         builder.Property(r => r.Created).IsRequired().HasDefaultValueSql("NOW()");
 
         builder.HasOne(r => r.Character)

@@ -189,8 +189,8 @@ public static class StaffEndpoints
             .Select(x => new
             {
                 characterId = x.CharacterId,
-                firstName = x.Character.FirstName,
-                lastName = x.Character.LastName,
+                requested = new { firstName = x.RequestedFirstName, lastName = x.RequestedLastName },
+                current = new { firstName = x.Character.FirstName, lastName = x.Character.LastName },
                 username = x.Character.User.Username,
                 created = x.Created
             })
@@ -212,11 +212,24 @@ public static class StaffEndpoints
         if (staff is null)
             return Results.Forbid();
 
-        var approved = await dbContext.NameReviews.Where(x => x.CharacterId == characterId).ExecuteDeleteAsync(cancellationToken);
+        var review = await dbContext.NameReviews.SingleOrDefaultAsync(x => x.CharacterId == characterId, cancellationToken);
+        var character = await dbContext.Characters.SingleOrDefaultAsync(x => x.Id == characterId, cancellationToken);
 
-        _logger.LogInformation("Staff {Username} approved the name of character {CharacterId}.", staff.Username, characterId);
+        if (review is null || character is null)
+            return Results.NotFound();
 
-        return approved > 0 ? Results.Ok(new { approved = characterId }) : Results.NotFound();
+        if (await PendingNames.IsTakenAsync(dbContext, review.RequestedFirstName, review.RequestedLastName, characterId, cancellationToken))
+            return Results.Json(new { error = "taken" }, statusCode: StatusCodes.Status409Conflict);
+
+        character.FirstName = review.RequestedFirstName;
+        character.LastName = review.RequestedLastName;
+        dbContext.NameReviews.Remove(review);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("Staff {Username} approved the name {FirstName} {LastName} for character {CharacterId}.", staff.Username, character.FirstName, character.LastName, characterId);
+
+        return Results.Ok(new { characterId, firstName = character.FirstName, lastName = character.LastName });
     }
 
     private static async Task<IResult> RejectNameAsync(
@@ -239,31 +252,25 @@ public static class StaffEndpoints
         if (review is null || character is null)
             return Results.NotFound();
 
-        var firstNames = names.FirstNamesFor(character.Gender == 1 ? "male" : "female");
+        var stillCustom = character.FirstName == review.RequestedFirstName && (character.LastName ?? string.Empty) == review.RequestedLastName;
 
-        for (var attempt = 0; attempt < 50; attempt++)
+        if (stillCustom)
         {
-            var firstName = firstNames[Random.Shared.Next(firstNames.Count)];
-            var lastName = CharacterNames.ComposeLastName(
-                names.LastNamePrefixes[Random.Shared.Next(names.LastNamePrefixes.Count)],
-                names.LastNameSuffixes[Random.Shared.Next(names.LastNameSuffixes.Count)]);
+            var randomName = await PendingNames.PickFreeReelNameAsync(dbContext, names, character.Gender == 1, cancellationToken);
 
-            if (await dbContext.Characters.AnyAsync(x => x.FirstName == firstName && x.LastName == lastName, cancellationToken))
-                continue;
+            if (randomName is null)
+                return Results.Json(new { error = "noFreeName" }, statusCode: StatusCodes.Status409Conflict);
 
-            var oldName = string.IsNullOrEmpty(character.LastName) ? character.FirstName : $"{character.FirstName} {character.LastName}";
-
-            character.FirstName = firstName;
-            character.LastName = lastName;
-            dbContext.NameReviews.Remove(review);
-
-            await dbContext.SaveChangesAsync(cancellationToken);
-
-            _logger.LogInformation("Staff {Username} rejected the name {OldName} of character {CharacterId}, renamed to {FirstName} {LastName}.", staff.Username, oldName, characterId, firstName, lastName);
-
-            return Results.Ok(new { characterId, firstName, lastName });
+            character.FirstName = randomName.Value.FirstName;
+            character.LastName = randomName.Value.LastName;
         }
 
-        return Results.Json(new { error = "noFreeName" }, statusCode: StatusCodes.Status409Conflict);
+        dbContext.NameReviews.Remove(review);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("Staff {Username} rejected the name {RequestedFirstName} {RequestedLastName} for character {CharacterId}, which keeps the name {FirstName} {LastName}.", staff.Username, review.RequestedFirstName, review.RequestedLastName, characterId, character.FirstName, character.LastName);
+
+        return Results.Ok(new { characterId, firstName = character.FirstName, lastName = character.LastName });
     }
 }

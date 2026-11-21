@@ -498,7 +498,19 @@ namespace Sanctuary.Database.MySql.Migrations
                         .HasColumnType("datetime(6)")
                         .HasDefaultValueSql("NOW()");
 
+                    b.Property<string>("RequestedFirstName")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)");
+
+                    b.Property<string>("RequestedLastName")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)");
+
                     b.HasKey("CharacterId");
+
+                    b.HasIndex("RequestedFirstName", "RequestedLastName");
 
                     b.ToTable("NameReviews");
                 });
