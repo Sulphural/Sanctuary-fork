@@ -75,6 +75,8 @@ public static class WebsiteEndpoints
 
         group.MapSocialEndpoints();
         group.MapStaffEndpoints(loggerFactory);
+        group.MapStaffPlayerEndpoints(loggerFactory);
+        group.MapNewsEndpoints();
     }
 
     public sealed record CreateCharacterRequest(int Preset, string FirstName, string LastNamePrefix, string LastNameSuffix, CharacterCustomizationModel? Customization = null, string? CustomName = null);

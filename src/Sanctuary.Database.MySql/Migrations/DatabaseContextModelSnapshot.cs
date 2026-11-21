@@ -515,6 +515,46 @@ namespace Sanctuary.Database.MySql.Migrations
                     b.ToTable("NameReviews");
                 });
 
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbNewsPost", b =>
+                {
+                    b.Property<ulong>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint unsigned");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<ulong>("Id"));
+
+                    b.Property<string>("AuthorUsername")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(8000)
+                        .HasColumnType("varchar(8000)");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime(6)")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Created");
+
+                    b.ToTable("NewsPosts");
+                });
+
             modelBuilder.Entity("Sanctuary.Database.Entities.DbPet", b =>
                 {
                     b.Property<int>("Id")
@@ -597,6 +637,31 @@ namespace Sanctuary.Database.MySql.Migrations
                     b.ToTable("Pets");
                 });
 
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbPlayerReport", b =>
+                {
+                    b.Property<ulong>("CharacterId")
+                        .HasColumnType("bigint unsigned");
+
+                    b.Property<ulong>("ReporterUserId")
+                        .HasColumnType("bigint unsigned");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime(6)")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.HasKey("CharacterId", "ReporterUserId");
+
+                    b.HasIndex("ReporterUserId");
+
+                    b.ToTable("PlayerReports");
+                });
+
             modelBuilder.Entity("Sanctuary.Database.Entities.DbProfile", b =>
                 {
                     b.Property<int>("Id")
@@ -674,6 +739,55 @@ namespace Sanctuary.Database.MySql.Migrations
                     b.HasKey("CharacterId");
 
                     b.ToTable("ProfilePrivacy");
+                });
+
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbStaffAction", b =>
+                {
+                    b.Property<ulong>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint unsigned");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<ulong>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("varchar(32)");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime(6)")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("Details")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<ulong>("StaffUserId")
+                        .HasColumnType("bigint unsigned");
+
+                    b.Property<string>("StaffUsername")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<ulong?>("TargetCharacterId")
+                        .HasColumnType("bigint unsigned");
+
+                    b.Property<string>("TargetName")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<ulong?>("TargetUserId")
+                        .HasColumnType("bigint unsigned");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Created");
+
+                    b.HasIndex("TargetUserId");
+
+                    b.ToTable("StaffActions");
                 });
 
             modelBuilder.Entity("Sanctuary.Database.Entities.DbTitle", b =>
@@ -987,6 +1101,25 @@ namespace Sanctuary.Database.MySql.Migrations
                         .IsRequired();
 
                     b.Navigation("Character");
+                });
+
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbPlayerReport", b =>
+                {
+                    b.HasOne("Sanctuary.Database.Entities.DbCharacter", "Character")
+                        .WithMany()
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Sanctuary.Database.Entities.DbUser", "ReporterUser")
+                        .WithMany()
+                        .HasForeignKey("ReporterUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Character");
+
+                    b.Navigation("ReporterUser");
                 });
 
             modelBuilder.Entity("Sanctuary.Database.Entities.DbProfile", b =>

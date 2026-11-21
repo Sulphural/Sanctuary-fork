@@ -506,6 +506,44 @@ namespace Sanctuary.Database.Sqlite.Migrations
                     b.ToTable("NameReviews");
                 });
 
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbNewsPost", b =>
+                {
+                    b.Property<ulong>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AuthorUsername")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(8000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("DATE()");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Created");
+
+                    b.ToTable("NewsPosts");
+                });
+
             modelBuilder.Entity("Sanctuary.Database.Entities.DbPet", b =>
                 {
                     b.Property<int>("Id")
@@ -588,6 +626,31 @@ namespace Sanctuary.Database.Sqlite.Migrations
                     b.ToTable("Pets");
                 });
 
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbPlayerReport", b =>
+                {
+                    b.Property<ulong>("CharacterId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<ulong>("ReporterUserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("DATE()");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("CharacterId", "ReporterUserId");
+
+                    b.HasIndex("ReporterUserId");
+
+                    b.ToTable("PlayerReports");
+                });
+
             modelBuilder.Entity("Sanctuary.Database.Entities.DbProfile", b =>
                 {
                     b.Property<int>("Id")
@@ -663,6 +726,53 @@ namespace Sanctuary.Database.Sqlite.Migrations
                     b.HasKey("CharacterId");
 
                     b.ToTable("ProfilePrivacy");
+                });
+
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbStaffAction", b =>
+                {
+                    b.Property<ulong>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("DATE()");
+
+                    b.Property<string>("Details")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<ulong>("StaffUserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("StaffUsername")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<ulong?>("TargetCharacterId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TargetName")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<ulong?>("TargetUserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Created");
+
+                    b.HasIndex("TargetUserId");
+
+                    b.ToTable("StaffActions");
                 });
 
             modelBuilder.Entity("Sanctuary.Database.Entities.DbTitle", b =>
@@ -974,6 +1084,25 @@ namespace Sanctuary.Database.Sqlite.Migrations
                         .IsRequired();
 
                     b.Navigation("Character");
+                });
+
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbPlayerReport", b =>
+                {
+                    b.HasOne("Sanctuary.Database.Entities.DbCharacter", "Character")
+                        .WithMany()
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Sanctuary.Database.Entities.DbUser", "ReporterUser")
+                        .WithMany()
+                        .HasForeignKey("ReporterUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Character");
+
+                    b.Navigation("ReporterUser");
                 });
 
             modelBuilder.Entity("Sanctuary.Database.Entities.DbProfile", b =>

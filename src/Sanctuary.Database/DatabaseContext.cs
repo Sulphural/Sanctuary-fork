@@ -25,6 +25,9 @@ public abstract class DatabaseContext : DbContext
     public DbSet<DbProfilePrivacy> ProfilePrivacy => Set<DbProfilePrivacy>();
     public DbSet<DbMessageReport> MessageReports => Set<DbMessageReport>();
     public DbSet<DbNameReview> NameReviews => Set<DbNameReview>();
+    public DbSet<DbStaffAction> StaffActions => Set<DbStaffAction>();
+    public DbSet<DbPlayerReport> PlayerReports => Set<DbPlayerReport>();
+    public DbSet<DbNewsPost> NewsPosts => Set<DbNewsPost>();
 
     public DatabaseContext()
     {

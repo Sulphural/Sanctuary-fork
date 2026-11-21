@@ -40,12 +40,9 @@ public static class StaffEndpoints
         return ulong.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out userId);
     }
 
-    private static async Task<DbUser?> GetStaffAsync(DatabaseContext dbContext, ClaimsPrincipal principal, CancellationToken cancellationToken)
+    private static Task<DbUser?> GetStaffAsync(DatabaseContext dbContext, ClaimsPrincipal principal, CancellationToken cancellationToken)
     {
-        if (!TryGetUserId(principal, out var userId))
-            return null;
-
-        return await dbContext.Users.AsNoTracking().SingleOrDefaultAsync(x => x.Id == userId && (x.IsAdmin || x.IsMod), cancellationToken);
+        return StaffAccess.GetStaffAsync(dbContext, principal, cancellationToken);
     }
 
     private static async Task<IResult> ReportMessageAsync(
@@ -147,7 +144,16 @@ public static class StaffEndpoints
         if (staff is null)
             return Results.Forbid();
 
+        var message = await dbContext.ProfileMessages
+            .AsNoTracking()
+            .Where(x => x.Id == messageId)
+            .Select(x => new { x.Text, x.AuthorCharacterId, AuthorUserId = x.AuthorCharacter.UserId, x.AuthorCharacter.FullName })
+            .SingleOrDefaultAsync(cancellationToken);
+
         var dismissed = await dbContext.MessageReports.Where(x => x.MessageId == messageId).ExecuteDeleteAsync(cancellationToken);
+
+        StaffAccess.Log(dbContext, staff, "dismissMessageReports", message?.AuthorUserId, message?.AuthorCharacterId, message?.FullName, message?.Text);
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Staff {Username} dismissed {Count} reports on message {MessageId}.", staff.Username, dismissed, messageId);
 
@@ -167,7 +173,19 @@ public static class StaffEndpoints
         if (staff is null)
             return Results.Forbid();
 
+        var message = await dbContext.ProfileMessages
+            .AsNoTracking()
+            .Where(x => x.Id == messageId)
+            .Select(x => new { x.Text, x.AuthorCharacterId, AuthorUserId = x.AuthorCharacter.UserId, x.AuthorCharacter.FullName })
+            .SingleOrDefaultAsync(cancellationToken);
+
         var deleted = await dbContext.ProfileMessages.Where(x => x.Id == messageId).ExecuteDeleteAsync(cancellationToken);
+
+        if (deleted > 0)
+        {
+            StaffAccess.Log(dbContext, staff, "deleteMessage", message?.AuthorUserId, message?.AuthorCharacterId, message?.FullName, message?.Text);
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
 
         _logger.LogInformation("Staff {Username} deleted profile message {MessageId}.", staff.Username, messageId);
 
@@ -221,9 +239,13 @@ public static class StaffEndpoints
         if (await PendingNames.IsTakenAsync(dbContext, review.RequestedFirstName, review.RequestedLastName, characterId, cancellationToken))
             return Results.Json(new { error = "taken" }, statusCode: StatusCodes.Status409Conflict);
 
+        var oldName = FullName(character.FirstName, character.LastName);
+
         character.FirstName = review.RequestedFirstName;
         character.LastName = review.RequestedLastName;
         dbContext.NameReviews.Remove(review);
+
+        StaffAccess.Log(dbContext, staff, "approveName", character.UserId, characterId, FullName(character.FirstName, character.LastName), "Was " + oldName);
 
         await dbContext.SaveChangesAsync(cancellationToken);
 
@@ -267,10 +289,14 @@ public static class StaffEndpoints
 
         dbContext.NameReviews.Remove(review);
 
+        StaffAccess.Log(dbContext, staff, "rejectName", character.UserId, characterId, FullName(character.FirstName, character.LastName), "Requested " + FullName(review.RequestedFirstName, review.RequestedLastName));
+
         await dbContext.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Staff {Username} rejected the name {RequestedFirstName} {RequestedLastName} for character {CharacterId}, which keeps the name {FirstName} {LastName}.", staff.Username, review.RequestedFirstName, review.RequestedLastName, characterId, character.FirstName, character.LastName);
 
         return Results.Ok(new { characterId, firstName = character.FirstName, lastName = character.LastName });
     }
+
+    public static string FullName(string firstName, string? lastName) => string.IsNullOrEmpty(lastName) ? firstName : $"{firstName} {lastName}";
 }
