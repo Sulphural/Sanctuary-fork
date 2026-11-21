@@ -108,19 +108,40 @@ public static class AccountRecoveryEndpoints
 
     private static string Origin(HttpContext httpContext, IOptionsSnapshot<PluginOptions> pluginOptions) => PluginEndpoints.SiteOrigin(httpContext, pluginOptions.Value);
 
-    private static string Html(string title, string body)
+    private const string UsernamePurpose = "username";
+    private const string ResetDonePurpose = "resetdone";
+    private static readonly TimeSpan RetailLimit = TimeSpan.FromHours(24);
+    private static readonly TimeSpan ResendWait = TimeSpan.FromMinutes(5);
+
+    private static string Encode(string value) => WebUtility.HtmlEncode(value);
+
+    private static string RetailHtml(string heading, string origin, IEnumerable<string> paragraphs)
     {
-        return "<div style=\"font-family:Tahoma,Arial,sans-serif;font-size:14px;color:#1d3a63;max-width:520px\">"
-            + "<h2 style=\"color:#e8780c;margin:0 0 12px\">" + WebUtility.HtmlEncode(title) + "</h2>"
-            + body
-            + "<p style=\"color:#7a8aa0;font-size:12px;margin-top:24px\">If you didn't ask for this, you can ignore this e-mail.</p></div>";
+        var body = new StringBuilder();
+
+        body.Append("<div style=\"font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#333333;max-width:560px\">");
+        body.Append("<div style=\"font-size:18px;font-weight:bold;color:#1a75bc;border-bottom:1px solid #666666;padding-bottom:4px;margin-bottom:12px\">").Append(Encode(heading)).Append("</div>");
+        body.Append("<p style=\"margin:0 0 14px\">Dear Customer:</p>");
+
+        foreach (var paragraph in paragraphs)
+            body.Append("<p style=\"margin:0 0 14px\">").Append(paragraph).Append("</p>");
+
+        body.Append("<p style=\"margin:0 0 14px\">Feel free to <a href=\"").Append(Encode(origin)).Append("/\" style=\"color:#1a75bc\">contact us</a> if you have concerns over the security of your account.</p>");
+        body.Append("<p style=\"margin:0 0 14px\">Thank you.</p>");
+        body.Append("<p style=\"margin:0 0 40px\">(This is an automated e-mail. Please do not reply.)</p>");
+        body.Append("<p style=\"margin:0\">Free Realms<br><a href=\"").Append(Encode(origin)).Append("\" style=\"color:#333333\">").Append(Encode(origin)).Append("</a></p>");
+        body.Append("</div>");
+
+        return body.ToString();
     }
 
-    private static string Button(string url, string label)
+    private static string RetailText(string heading, string origin, IEnumerable<string> paragraphs)
     {
-        return "<p><a href=\"" + WebUtility.HtmlEncode(url) + "\" style=\"display:inline-block;padding:10px 22px;background:#4a9a1c;color:#ffffff;font-weight:bold;text-decoration:none;border-radius:10px\">"
-            + WebUtility.HtmlEncode(label) + "</a></p><p style=\"font-size:12px;color:#7a8aa0\">Or copy this link into your browser:<br>" + WebUtility.HtmlEncode(url) + "</p>";
+        return heading + "\n\nDear Customer:\n\n" + string.Join("\n\n", paragraphs)
+            + "\n\nFeel free to contact us (" + origin + "/) if you have concerns over the security of your account.\n\nThank you.\n\n(This is an automated e-mail. Please do not reply.)\n\n\nFree Realms\n" + origin;
     }
+
+    private static string Link(string url, string label) => "<a href=\"" + Encode(url) + "\" style=\"color:#1a75bc\">" + Encode(label) + "</a>";
 
     public static async Task<bool> SendVerificationEmailAsync(DatabaseContext dbContext, DbUser user, string origin, EmailSender emailSender, CancellationToken cancellationToken)
     {
@@ -130,10 +151,26 @@ public static class AccountRecoveryEndpoints
         var token = await CreateTokenAsync(dbContext, user.Id, VerifyPurpose, user.Email, VerifyLifetime, cancellationToken);
         var url = origin + "/verifyEmail.html?token=" + Uri.EscapeDataString(token);
 
-        var text = $"Hi {user.Username},\n\nPlease confirm this is your e-mail address for your Free Realms account by opening this link:\n\n{url}\n\nThe link works for 3 days.\n\nIf you didn't make a Free Realms account, you can ignore this e-mail.";
-        var html = Html("Confirm your e-mail", "<p>Hi " + WebUtility.HtmlEncode(user.Username) + ",</p><p>Please confirm this is your e-mail address for your <i>Free Realms</i> account.</p>" + Button(url, "Confirm My E-mail") + "<p>The link works for 3 days.</p>");
+        const string heading = "VERIFY YOUR E-MAIL ADDRESS";
+        var intro = "We are sending this e-mail because this e-mail address was entered for your Station Account {0}. If you did not initiate this request, you may simply disregard this e-mail.";
 
-        return await emailSender.SendAsync(user.Email!, "Confirm your Free Realms e-mail", text, html, cancellationToken);
+        var html = RetailHtml(heading, origin,
+        [
+            string.Format(intro, "<b>" + Encode(user.Username) + "</b>"),
+            "Click on the following link to verify your e-mail address.",
+            Link(url, "Verify your E-mail Address"),
+            "This link may only be used once, within 3 days."
+        ]);
+
+        var text = RetailText(heading, origin,
+        [
+            string.Format(intro, user.Username),
+            "Click on the following link to verify your e-mail address.",
+            url,
+            "This link may only be used once, within 3 days."
+        ]);
+
+        return await emailSender.SendAsync(user.Email!, "Free Realms - Verify Your E-mail Address", text, html, cancellationToken);
     }
 
     private static async Task<IResult> RecoverUsernameAsync(
@@ -152,24 +189,50 @@ public static class AccountRecoveryEndpoints
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         var lower = email.ToLowerInvariant();
-        var usernames = await dbContext.Users
+        var users = await dbContext.Users
             .AsNoTracking()
             .Where(x => x.Email != null && x.Email.ToLower() == lower)
-            .Select(x => x.Username)
+            .Select(x => new { x.Id, x.Username })
             .ToListAsync(cancellationToken);
 
-        if (usernames.Count > 0)
-        {
-            var login = Origin(httpContext, pluginOptions) + "/login.html";
-            var list = string.Join("\n", usernames.Select(x => "  - " + x));
-            var text = $"Hi!\n\nYou asked for the Free Realms username{(usernames.Count == 1 ? "" : "s")} for this e-mail address:\n\n{list}\n\nLog in here: {login}";
-            var html = Html("Your Free Realms username", "<p>You asked for the <i>Free Realms</i> username" + (usernames.Count == 1 ? "" : "s") + " for this e-mail address:</p><ul>"
-                + string.Concat(usernames.Select(x => "<li><b>" + WebUtility.HtmlEncode(x) + "</b></li>")) + "</ul>" + Button(login, "Log In"));
+        if (users.Count == 0)
+            return Results.Ok(new { sent = true });
 
-            await emailSender.SendAsync(email, "Your Free Realms username", text, html, cancellationToken);
+        var userIds = users.Select(x => x.Id).ToList();
+        var recent = await dbContext.AccountTokens
+            .Where(x => userIds.Contains(x.UserId) && x.Purpose == UsernamePurpose)
+            .ToListAsync(cancellationToken);
+
+        if (recent.Any(x => x.ExpiresAt > DateTimeOffset.UtcNow))
+        {
+            _logger.LogInformation("Username reminder skipped; one was already sent in the last 24 hours.");
+            return Results.Ok(new { sent = true });
         }
 
-        _logger.LogInformation("Username reminder asked for; {Count} accounts matched.", usernames.Count);
+        await CreateTokenAsync(dbContext, users[0].Id, UsernamePurpose, email, RetailLimit, cancellationToken);
+
+        var origin = Origin(httpContext, pluginOptions);
+        const string heading = "USERNAME(S) RETRIEVED";
+        const string intro = "We are sending this e-mail because we have received a request to retrieve the Station Usernames associated with this e-mail address. If you did not initiate this request, you may simply disregard this e-mail.";
+        const string limit = "Username retrieval may only be done once every 24 hours.";
+
+        var html = RetailHtml(heading, origin,
+        [
+            intro,
+            "Station Usernames associated with <b>" + Encode(email) + "</b>:<br>" + string.Concat(users.Select(x => "<br>&nbsp;&nbsp;&nbsp;&nbsp;<b>" + Encode(x.Username) + "</b>")),
+            limit
+        ]);
+
+        var text = RetailText(heading, origin,
+        [
+            intro,
+            "Station Usernames associated with " + email + ":\n\n" + string.Join("\n", users.Select(x => "    " + x.Username)),
+            limit
+        ]);
+
+        await emailSender.SendAsync(email, "Free Realms - Username(s) Retrieved", text, html, cancellationToken);
+
+        _logger.LogInformation("Username reminder sent for {Count} accounts.", users.Count);
 
         return Results.Ok(new { sent = true });
     }
@@ -202,17 +265,44 @@ public static class AccountRecoveryEndpoints
         }
 
         var origin = Origin(httpContext, pluginOptions);
+        var now = DateTimeOffset.UtcNow;
+        const string heading = "PASSWORD RESET";
+        const string intro = "We are sending this e-mail because we have received a request to reset the password for your Station Account {0}. If you did not initiate this request, you may simply disregard this e-mail.";
+        const string limit = "Password reset may only be done once every 24 hours.";
 
         foreach (var user in users.Where(x => IsValidEmail(x.Email)))
         {
+            var tokens = await dbContext.AccountTokens
+                .Where(x => x.UserId == user.Id && (x.Purpose == ResetDonePurpose || x.Purpose == ResetPurpose))
+                .ToListAsync(cancellationToken);
+
+            if (tokens.Any(x => x.Purpose == ResetDonePurpose && x.ExpiresAt > now)
+                || tokens.Any(x => x.Purpose == ResetPurpose && x.Created > now - ResendWait))
+            {
+                _logger.LogInformation("Password reset e-mail for user {UserId} skipped by the reset limits.", user.Id);
+                continue;
+            }
+
             var token = await CreateTokenAsync(dbContext, user.Id, ResetPurpose, user.Email, ResetLifetime, cancellationToken);
             var url = origin + "/resetPassword.html?token=" + Uri.EscapeDataString(token);
 
-            var text = $"Hi {user.Username},\n\nSomeone asked to reset the password for your Free Realms account. To choose a new password, open this link:\n\n{url}\n\nThe link works for 1 hour. If you didn't ask for this, you can ignore this e-mail and your password stays the same.";
-            var html = Html("Reset your password", "<p>Hi " + WebUtility.HtmlEncode(user.Username) + ",</p><p>Someone asked to reset the password for your <i>Free Realms</i> account.</p>"
-                + Button(url, "Choose a New Password") + "<p>The link works for 1 hour. If you didn't ask for this, your password stays the same.</p>");
+            var html = RetailHtml(heading, origin,
+            [
+                string.Format(intro, "<b>" + Encode(user.Username) + "</b>"),
+                "Click on the following link to create a new password.",
+                Link(url, "Create a new Password"),
+                limit
+            ]);
 
-            await emailSender.SendAsync(user.Email!, "Reset your Free Realms password", text, html, cancellationToken);
+            var text = RetailText(heading, origin,
+            [
+                string.Format(intro, user.Username),
+                "Click on the following link to create a new password.",
+                url,
+                limit
+            ]);
+
+            await emailSender.SendAsync(user.Email!, "Free Realms - Password Reset", text, html, cancellationToken);
         }
 
         _logger.LogInformation("Password reset asked for; {Count} accounts matched.", users.Count);
@@ -260,6 +350,7 @@ public static class AccountRecoveryEndpoints
 
         await dbContext.SaveChangesAsync(cancellationToken);
         await dbContext.AccountTokens.Where(x => x.UserId == user.Id && x.Purpose == ResetPurpose).ExecuteDeleteAsync(cancellationToken);
+        await CreateTokenAsync(dbContext, user.Id, ResetDonePurpose, null, RetailLimit, cancellationToken);
 
         _logger.LogInformation("User {UserId} reset their password with an e-mailed link.", user.Id);
 
