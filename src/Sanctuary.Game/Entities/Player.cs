@@ -584,14 +584,8 @@ public sealed class Player : ClientPcData, IEntity, ITradeParticipant
 
         try
         {
-            var path = Path.Combine(PortraitStorage.GetCharacterDirectory(Guid), "portrait.crc");
-
-            if (!File.Exists(path))
-                return;
-
-            var data = File.ReadAllBytes(path);
-
-            if (data.Length != sizeof(uint) || BitConverter.ToUInt32(data) != _pendingPortraitCrc)
+            if (!PortraitStorage.HasLivePortrait(Guid, _pendingPortraitCrc.Value)
+                && !PortraitStorage.TryPromotePendingUpload(Guid, _pendingPortraitCrc.Value))
                 return;
 
             var packetPlayerImageDataHeadshot = GetPortraitPacket(PortraitProvider.Headshot);

@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -30,7 +30,6 @@ public static class PortraitEndpoints
     private static readonly DecoderOptions UploadDecoderOptions = new() { SkipMetadata = true };
 
     private static ILogger _logger = null!;
-    private readonly static ConcurrentDictionary<string, SemaphoreSlim> _fileLocks = [];
 
     public static void MapPortraitEndpoints(this WebApplication app)
     {
@@ -71,55 +70,35 @@ public static class PortraitEndpoints
             return Results.BadRequest("Invalid characterId.");
         }
 
-        var saveDirectory = PortraitStorage.GetCharacterDirectory(characterId);
-
-        if (!Directory.Exists(saveDirectory))
-            Directory.CreateDirectory(saveDirectory);
-
+        var uploads = new Dictionary<string, Image<Rgba32>>();
         uint? portraitCrc = null;
 
-        foreach (var file in files)
+        try
         {
-            if (file.Length == 0)
+            foreach (var file in files)
             {
-                _logger.LogWarning("Invalid file name: {FileName}", file.FileName);
+                if (file.Length == 0 || file.ContentType != "image/png")
+                {
+                    _logger.LogWarning("Invalid file name: {FileName}", file.FileName);
 
-                return Results.BadRequest("Invalid file name.");
-            }
+                    return Results.BadRequest("Invalid file name.");
+                }
 
-            if (file.ContentType != "image/png")
-            {
-                _logger.LogWarning("Invalid file name: {FileName}", file.FileName);
+                // Names are hardcoded in the client.
+                var fileName = file.Name switch
+                {
+                    "thumbnailFile" => "headshot.png",
+                    "imageFile" => "portrait.png",
+                    _ => null
+                };
 
-                return Results.BadRequest("Invalid file name.");
-            }
+                if (fileName is null || Path.GetFileName(file.FileName) != fileName || uploads.ContainsKey(fileName))
+                {
+                    _logger.LogWarning("Invalid name: {Name} {FileName}", file.Name, file.FileName);
 
-            // Names are hardcoded in the client.
-            if (file.Name != "thumbnailFile" && file.Name != "imageFile")
-            {
-                _logger.LogWarning("Invalid name: {Name}", file.Name);
+                    return Results.BadRequest("Invalid name.");
+                }
 
-                return Results.BadRequest("Invalid name.");
-            }
-
-            var fileName = Path.GetFileName(file.FileName);
-
-            // File names are hardcoded in the client.
-            if (fileName != "headshot.png" && fileName != "portrait.png")
-            {
-                _logger.LogWarning("Invalid file name: {FileName}", file.FileName);
-
-                return Results.BadRequest("Invalid file name.");
-            }
-
-            var savePath = Path.Combine(saveDirectory, fileName);
-
-            var fileLock = _fileLocks.GetOrAdd(savePath, new SemaphoreSlim(1, 1));
-
-            await fileLock.WaitAsync();
-
-            try
-            {
                 using var stream = file.OpenReadStream();
 
                 using var imageBuffer = new MemoryStream();
@@ -138,46 +117,48 @@ public static class PortraitEndpoints
 
                 imageBuffer.Position = 0;
 
-                using var image = await TryDecodePngAsync(imageBuffer, cancellationToken);
+                var image = await TryDecodePngAsync(imageBuffer, cancellationToken);
 
                 if (image is null)
                     return Results.BadRequest("Invalid image format.");
 
-                if (file.Name == "thumbnailFile" && (image.Width != ThumbnailWidth || image.Height != ThumbnailHeight))
-                {
-                    _logger.LogWarning("Invalid thumbnailFile size: {Width}x{Height}", image.Width, image.Height);
-
-                    return Results.BadRequest("Invalid thumbnailFile size.");
-                }
-
-                if (file.Name == "imageFile" && (image.Width != PortraitWidth || image.Height != PortraitHeight))
-                {
-                    _logger.LogWarning("Invalid imageFile size: {Width}x{Height}", image.Width, image.Height);
-
-                    return Results.BadRequest("Invalid imageFile size.");
-                }
-
-                await image.SaveAsPngAsync(savePath, cancellationToken);
+                uploads[fileName] = image;
 
                 if (file.Name == "imageFile")
                     portraitCrc = PortraitStorage.GetPortraitCrc(imageBuffer.GetBuffer().AsSpan(0, (int)imageBuffer.Length));
+            }
 
-                _logger.LogDebug("Successfully uploaded {Name} for character {Character}.", file.Name, characterId);
-            }
-            catch (Exception ex)
+            if (portraitCrc is null)
             {
-                _logger.LogError(ex, "Error saving uploaded file for character {CharacterId}", characterId);
+                _logger.LogWarning("Portrait upload for character {CharacterId} has no imageFile.", characterId);
 
-                return Results.StatusCode(500);
+                return Results.BadRequest("Missing imageFile.");
             }
-            finally
-            {
-                fileLock.Release();
-            }
+
+            PortraitStorage.DeleteStalePendingUploads(characterId, TimeSpan.FromMinutes(2));
+
+            var pendingDirectory = PortraitStorage.GetPendingDirectory(characterId, portraitCrc.Value);
+
+            Directory.CreateDirectory(pendingDirectory);
+
+            foreach (var (fileName, image) in uploads)
+                await image.SaveAsPngAsync(Path.Combine(pendingDirectory, fileName), cancellationToken);
+
+            await File.WriteAllBytesAsync(Path.Combine(pendingDirectory, "portrait.crc"), BitConverter.GetBytes(portraitCrc.Value), cancellationToken);
+
+            _logger.LogDebug("Stored pending portrait {Crc} for character {Character}.", portraitCrc.Value, characterId);
         }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error saving uploaded file for character {CharacterId}", characterId);
 
-        if (portraitCrc is not null)
-            await File.WriteAllBytesAsync(Path.Combine(saveDirectory, "portrait.crc"), BitConverter.GetBytes(portraitCrc.Value), cancellationToken);
+            return Results.StatusCode(500);
+        }
+        finally
+        {
+            foreach (var image in uploads.Values)
+                image.Dispose();
+        }
 
         return Results.Ok();
     }
