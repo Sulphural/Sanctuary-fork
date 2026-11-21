@@ -60,6 +60,10 @@ builder.Services.AddSingleton<CharacterNames>();
 builder.Services.AddSingleton<CreatorCatalog>();
 builder.Services.AddSingleton<ItemNames>();
 
+builder.Services.AddOptions<EmailOptions>()
+    .BindConfiguration(EmailOptions.Section);
+builder.Services.AddSingleton<EmailSender>();
+
 builder.Services.AddOptions<BackupOptions>()
     .BindConfiguration(BackupOptions.Section);
 builder.Services.AddSingleton<DatabaseBackupService>();

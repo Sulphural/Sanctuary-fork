@@ -24,6 +24,7 @@ public sealed class DbUser
 
     public string? Email { get; set; }
     public bool EmailOptIn { get; set; }
+    public bool EmailVerified { get; set; }
     public string? Country { get; set; }
     public int? Age { get; set; }
     public DateTimeOffset? TermsAccepted { get; set; }

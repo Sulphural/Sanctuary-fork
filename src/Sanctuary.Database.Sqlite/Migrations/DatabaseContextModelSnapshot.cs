@@ -59,6 +59,39 @@ namespace Sanctuary.Database.Sqlite.Migrations
                     b.ToTable("ProfileItems", (string)null);
                 });
 
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbAccountToken", b =>
+                {
+                    b.Property<string>("TokenHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("DATE()");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(254)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("TEXT");
+
+                    b.Property<ulong>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("TokenHash");
+
+                    b.HasIndex("UserId", "Purpose");
+
+                    b.ToTable("AccountTokens");
+                });
+
             modelBuilder.Entity("Sanctuary.Database.Entities.DbCharacter", b =>
                 {
                     b.Property<ulong>("Id")
@@ -889,6 +922,11 @@ namespace Sanctuary.Database.Sqlite.Migrations
                         .HasColumnType("INTEGER")
                         .HasDefaultValue(false);
 
+                    b.Property<bool>("EmailVerified")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
                     b.Property<bool>("IsAdmin")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER")
@@ -974,6 +1012,17 @@ namespace Sanctuary.Database.Sqlite.Migrations
                         .HasForeignKey("ProfilesId", "ProfilesCharacterId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbAccountToken", b =>
+                {
+                    b.HasOne("Sanctuary.Database.Entities.DbUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Sanctuary.Database.Entities.DbCharacter", b =>

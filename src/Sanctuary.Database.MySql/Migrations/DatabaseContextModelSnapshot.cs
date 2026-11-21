@@ -64,6 +64,39 @@ namespace Sanctuary.Database.MySql.Migrations
                     b.ToTable("ProfileItems", (string)null);
                 });
 
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbAccountToken", b =>
+                {
+                    b.Property<string>("TokenHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime(6)")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(254)
+                        .HasColumnType("varchar(254)");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("varchar(16)");
+
+                    b.Property<ulong>("UserId")
+                        .HasColumnType("bigint unsigned");
+
+                    b.HasKey("TokenHash");
+
+                    b.HasIndex("UserId", "Purpose");
+
+                    b.ToTable("AccountTokens");
+                });
+
             modelBuilder.Entity("Sanctuary.Database.Entities.DbCharacter", b =>
                 {
                     b.Property<ulong>("Id")
@@ -906,6 +939,11 @@ namespace Sanctuary.Database.MySql.Migrations
                         .HasColumnType("tinyint(1)")
                         .HasDefaultValue(false);
 
+                    b.Property<bool>("EmailVerified")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(false);
+
                     b.Property<bool>("IsAdmin")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("tinyint(1)")
@@ -991,6 +1029,17 @@ namespace Sanctuary.Database.MySql.Migrations
                         .HasForeignKey("ProfilesId", "ProfilesCharacterId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbAccountToken", b =>
+                {
+                    b.HasOne("Sanctuary.Database.Entities.DbUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Sanctuary.Database.Entities.DbCharacter", b =>

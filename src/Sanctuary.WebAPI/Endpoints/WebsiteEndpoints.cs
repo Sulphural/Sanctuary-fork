@@ -78,6 +78,7 @@ public static class WebsiteEndpoints
         group.MapStaffPlayerEndpoints(loggerFactory);
         group.MapNewsEndpoints();
         group.MapRedeemEndpoints(loggerFactory);
+        group.MapAccountRecoveryEndpoints(loggerFactory);
     }
 
     public sealed record CreateCharacterRequest(int Preset, string FirstName, string LastNamePrefix, string LastNameSuffix, CharacterCustomizationModel? Customization = null, string? CustomName = null);
@@ -154,6 +155,8 @@ public static class WebsiteEndpoints
         IResourceManager resourceManager,
         IOptions<WebAPIOptions> webAPIOptions,
         IOptionsSnapshot<CharacterCreationSettings> settings,
+        IOptionsSnapshot<PluginOptions> pluginOptions,
+        EmailSender emailSender,
         IDbContextFactory<DatabaseContext> dbContextFactory,
         CancellationToken cancellationToken)
     {
@@ -232,6 +235,15 @@ public static class WebsiteEndpoints
         await transaction.CommitAsync(cancellationToken);
 
         await SignInAsync(httpContext, dbUser);
+
+        try
+        {
+            await AccountRecoveryEndpoints.SendVerificationEmailAsync(dbContext, dbUser, PluginEndpoints.SiteOrigin(httpContext, pluginOptions.Value), emailSender, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Could not send the verification e-mail for new user {Username}.", dbUser.Username);
+        }
 
         return Results.Ok(new { username = dbUser.Username, characterId, pendingName = PendingNameResponse(requestedName) });
     }
@@ -313,6 +325,8 @@ public static class WebsiteEndpoints
             username = dbUser.Username,
             maxCharacters = dbUser.MaxCharacters,
             emailOptIn = dbUser.EmailOptIn,
+            email = dbUser.Email,
+            emailVerified = dbUser.EmailVerified,
             isMember = dbUser.IsMember,
             isStaff = dbUser.IsAdmin || dbUser.IsMod,
             isAdmin = dbUser.IsAdmin,
