@@ -50,28 +50,28 @@ public static class WebsiteEndpoints
 
         var group = app.MapGroup("/website");
 
-        group.MapPost("/login", LoginAsync);
-        group.MapPost("/register", RegisterAsync);
-        group.MapPost("/signup", SignupAsync);
+        group.MapPost("/login", LoginAsync).RequireRateLimiting(WebsiteSecurity.AuthPolicy);
+        group.MapPost("/register", RegisterAsync).RequireRateLimiting(WebsiteSecurity.AuthPolicy);
+        group.MapPost("/signup", SignupAsync).RequireRateLimiting(WebsiteSecurity.AuthPolicy);
         group.MapPost("/logout", LogoutAsync);
 
         group.MapGet("/names", GetNames);
-        group.MapGet("/names/check", CheckNameAsync);
-        group.MapGet("/username/check", CheckUsernameAsync);
+        group.MapGet("/names/check", CheckNameAsync).RequireRateLimiting(WebsiteSecurity.LookupPolicy);
+        group.MapGet("/username/check", CheckUsernameAsync).RequireRateLimiting(WebsiteSecurity.LookupPolicy);
 
-        group.MapGet("/characters/search", SearchCharactersAsync);
+        group.MapGet("/characters/search", SearchCharactersAsync).RequireRateLimiting(WebsiteSecurity.LookupPolicy);
         group.MapGet("/characters/{id}/profile", GetCharacterProfileAsync);
-        group.MapPost("/account/optin", SetEmailOptInAsync).RequireAuthorization();
+        group.MapPost("/account/optin", SetEmailOptInAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.WritePolicy);
         group.MapGet("/characters/{id}/portrait", GetPortrait);
         group.MapGet("/characters/{id}/headshot", GetHeadshot);
         group.MapGet("/characters/{id}/appearance", GetAppearanceAsync);
-        group.MapPost("/characters/{id}/portrait", UploadPortraitAsync).RequireAuthorization();
+        group.MapPost("/characters/{id}/portrait", UploadPortraitAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.WritePolicy);
 
         group.MapGet("/account", GetAccountAsync).RequireAuthorization();
-        group.MapPost("/characters", CreateCharacterAsync).RequireAuthorization();
-        group.MapPost("/characters/{id}/play", PlayAsync).RequireAuthorization();
-        group.MapPost("/characters/{id}/delete", DeleteCharacterAsync).RequireAuthorization();
-        group.MapPost("/customize", CustomizeAsync).RequireAuthorization();
+        group.MapPost("/characters", CreateCharacterAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.WritePolicy);
+        group.MapPost("/characters/{id}/play", PlayAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.WritePolicy);
+        group.MapPost("/characters/{id}/delete", DeleteCharacterAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.WritePolicy);
+        group.MapPost("/customize", CustomizeAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.WritePolicy);
 
         group.MapSocialEndpoints();
     }
@@ -562,12 +562,10 @@ public static class WebsiteEndpoints
         if (portrait is null || headshot is null || portrait.Length > 1_000_000 || headshot.Length > 200_000)
             return Results.BadRequest();
 
-        using var portraitImage = await TryLoadPngAsync(portrait, cancellationToken);
-        using var headshotImage = await TryLoadPngAsync(headshot, cancellationToken);
+        using var portraitImage = await TryLoadPngAsync(portrait, 180, 330, cancellationToken);
+        using var headshotImage = await TryLoadPngAsync(headshot, 70, 70, cancellationToken);
 
-        if (portraitImage is null || headshotImage is null
-            || portraitImage.Width != 180 || portraitImage.Height != 330
-            || headshotImage.Width != 70 || headshotImage.Height != 70)
+        if (portraitImage is null || headshotImage is null)
             return Results.BadRequest();
 
         var directory = PortraitStorage.GetCharacterDirectory(GuidHelper.GetPlayerGuid(id));
@@ -581,13 +579,21 @@ public static class WebsiteEndpoints
         return Results.Ok(new { portraitStamp = PortraitStamp(id) });
     }
 
-    private static async Task<Image<Rgba32>?> TryLoadPngAsync(IFormFile file, CancellationToken cancellationToken)
+    private static async Task<Image<Rgba32>?> TryLoadPngAsync(IFormFile file, int width, int height, CancellationToken cancellationToken)
     {
         try
         {
-            await using var stream = file.OpenReadStream();
-
             var options = new PngDecoderOptions { GeneralOptions = new DecoderOptions { SkipMetadata = true } };
+
+            await using (var header = file.OpenReadStream())
+            {
+                var info = await PngDecoder.Instance.IdentifyAsync(options.GeneralOptions, header, cancellationToken);
+
+                if (info.Width != width || info.Height != height)
+                    return null;
+            }
+
+            await using var stream = file.OpenReadStream();
 
             return await PngDecoder.Instance.DecodeAsync<Rgba32>(options, stream, cancellationToken);
         }
@@ -878,12 +884,13 @@ public static class WebsiteEndpoints
         return ulong.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out userId);
     }
 
-    private static Task SignInAsync(HttpContext httpContext, DbUser dbUser)
+    public static Task SignInAsync(HttpContext httpContext, DbUser dbUser)
     {
         var identity = new ClaimsIdentity(
         [
             new Claim(ClaimTypes.NameIdentifier, dbUser.Id.ToString()),
-            new Claim(ClaimTypes.Name, dbUser.Username)
+            new Claim(ClaimTypes.Name, dbUser.Username),
+            new Claim(WebsiteSecurity.StampClaim, WebsiteSecurity.Stamp(dbUser))
         ], CookieAuthenticationDefaults.AuthenticationScheme);
 
         return httpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));

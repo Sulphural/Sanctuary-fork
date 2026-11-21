@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 
 using Sanctuary.Database;
 using Sanctuary.Database.Entities;
+using Sanctuary.WebAPI.Website;
 
 namespace Sanctuary.WebAPI.Endpoints;
 
@@ -27,14 +28,14 @@ public static class SocialEndpoints
     {
         group.MapGet("/characters/{id}/social", GetSocialAsync);
 
-        group.MapPost("/characters/{id}/friends/request", SendFriendRequestAsync).RequireAuthorization();
-        group.MapPost("/characters/{id}/friends/{otherId}/accept", AcceptFriendRequestAsync).RequireAuthorization();
-        group.MapPost("/characters/{id}/friends/{otherId}/decline", DeclineFriendRequestAsync).RequireAuthorization();
-        group.MapPost("/characters/{id}/friends/{otherId}/remove", RemoveFriendAsync).RequireAuthorization();
+        group.MapPost("/characters/{id}/friends/request", SendFriendRequestAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.WritePolicy);
+        group.MapPost("/characters/{id}/friends/{otherId}/accept", AcceptFriendRequestAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.WritePolicy);
+        group.MapPost("/characters/{id}/friends/{otherId}/decline", DeclineFriendRequestAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.WritePolicy);
+        group.MapPost("/characters/{id}/friends/{otherId}/remove", RemoveFriendAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.WritePolicy);
 
         group.MapGet("/characters/{id}/messages", GetMessagesAsync);
-        group.MapPost("/characters/{id}/messages", PostMessageAsync).RequireAuthorization();
-        group.MapPost("/characters/{id}/messages/{messageId}/delete", DeleteMessageAsync).RequireAuthorization();
+        group.MapPost("/characters/{id}/messages", PostMessageAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.WritePolicy);
+        group.MapPost("/characters/{id}/messages/{messageId}/delete", DeleteMessageAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.WritePolicy);
 
         group.MapPrivacyEndpoints();
     }

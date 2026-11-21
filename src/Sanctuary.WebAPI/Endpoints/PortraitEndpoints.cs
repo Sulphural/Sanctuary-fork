@@ -16,6 +16,7 @@ using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 
 using Sanctuary.Core.Helpers;
+using Sanctuary.WebAPI.Website;
 
 namespace Sanctuary.WebAPI.Endpoints;
 
@@ -37,7 +38,7 @@ public static class PortraitEndpoints
 
         _logger = loggerFactory.CreateLogger(nameof(PortraitEndpoints));
 
-        app.MapPost("/image", ImageHandlerAsync).DisableAntiforgery();
+        app.MapPost("/image", ImageHandlerAsync).DisableAntiforgery().RequireRateLimiting(WebsiteSecurity.WritePolicy);
     }
 
     private static async Task<IResult> ImageHandlerAsync(
@@ -125,6 +126,18 @@ public static class PortraitEndpoints
                 await stream.CopyToAsync(imageBuffer, cancellationToken);
                 imageBuffer.Position = 0;
 
+                var expectedWidth = file.Name == "thumbnailFile" ? ThumbnailWidth : PortraitWidth;
+                var expectedHeight = file.Name == "thumbnailFile" ? ThumbnailHeight : PortraitHeight;
+
+                if (!await HasSizeAsync(imageBuffer, expectedWidth, expectedHeight, cancellationToken))
+                {
+                    _logger.LogWarning("Invalid {Name} size for character {CharacterId}.", file.Name, characterId);
+
+                    return Results.BadRequest("Invalid image size.");
+                }
+
+                imageBuffer.Position = 0;
+
                 using var image = await TryDecodePngAsync(imageBuffer, cancellationToken);
 
                 if (image is null)
@@ -167,6 +180,20 @@ public static class PortraitEndpoints
             await File.WriteAllBytesAsync(Path.Combine(saveDirectory, "portrait.crc"), BitConverter.GetBytes(portraitCrc.Value), cancellationToken);
 
         return Results.Ok();
+    }
+
+    private static async Task<bool> HasSizeAsync(Stream stream, int width, int height, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var info = await PngDecoder.Instance.IdentifyAsync(UploadDecoderOptions, stream, cancellationToken);
+
+            return info.Width == width && info.Height == height;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
     }
 
     private static async Task<Image<Rgba32>?> TryDecodePngAsync(Stream stream, CancellationToken cancellationToken)

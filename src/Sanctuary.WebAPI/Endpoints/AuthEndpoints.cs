@@ -15,6 +15,7 @@ using Sanctuary.Database;
 using Sanctuary.Database.Entities;
 using Sanctuary.WebAPI.Models;
 using Sanctuary.WebAPI.Options;
+using Sanctuary.WebAPI.Website;
 
 using BC = BCrypt.Net.BCrypt;
 
@@ -30,8 +31,8 @@ public static class AuthEndpoints
 
         _logger = loggerFactory.CreateLogger(nameof(AuthEndpoints));
 
-        app.MapPost("/login", LoginHandlerAsync);
-        app.MapPost("/register", RegisterHandlerAsync);
+        app.MapPost("/login", LoginHandlerAsync).RequireRateLimiting(WebsiteSecurity.AuthPolicy);
+        app.MapPost("/register", RegisterHandlerAsync).RequireRateLimiting(WebsiteSecurity.AuthPolicy);
     }
 
     private static async Task<IResult> LoginHandlerAsync(

@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 using Sanctuary.Database;
 using Sanctuary.Database.Entities;
+using Sanctuary.WebAPI.Website;
 
 using BC = BCrypt.Net.BCrypt;
 
@@ -29,8 +30,8 @@ public static class PrivacyEndpoints
     public static void MapPrivacyEndpoints(this RouteGroupBuilder group)
     {
         group.MapGet("/characters/{id}/privacy", GetPrivacyAsync).RequireAuthorization();
-        group.MapPost("/characters/{id}/privacy", SetPrivacyAsync).RequireAuthorization();
-        group.MapPost("/account/password", ChangePasswordAsync).RequireAuthorization();
+        group.MapPost("/characters/{id}/privacy", SetPrivacyAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.WritePolicy);
+        group.MapPost("/account/password", ChangePasswordAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.AuthPolicy);
     }
 
     private static bool TryGetUserId(ClaimsPrincipal principal, out ulong userId)
@@ -127,6 +128,7 @@ public static class PrivacyEndpoints
     private static async Task<IResult> ChangePasswordAsync(
         ChangePasswordRequest request,
         ClaimsPrincipal principal,
+        HttpContext httpContext,
         IDbContextFactory<DatabaseContext> dbContextFactory,
         CancellationToken cancellationToken)
     {
@@ -149,8 +151,12 @@ public static class PrivacyEndpoints
             return Results.Json(new { error = "currentPassword" }, statusCode: StatusCodes.Status400BadRequest);
 
         dbUser.Password = BC.HashPassword(newPassword, BC.GenerateSalt());
+        dbUser.Session = null;
+        dbUser.SessionCreated = null;
 
         await dbContext.SaveChangesAsync(cancellationToken);
+
+        await WebsiteEndpoints.SignInAsync(httpContext, dbUser);
 
         return Results.Ok(new { changed = true });
     }

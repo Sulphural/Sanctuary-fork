@@ -78,9 +78,11 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
             context.Response.StatusCode = StatusCodes.Status403Forbidden;
             return Task.CompletedTask;
         };
+        options.Events.OnValidatePrincipal = WebsiteSecurity.ValidatePrincipalAsync;
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddWebsiteRateLimits();
 
 // Logging
 builder.Logging.ClearProviders();
@@ -120,6 +122,8 @@ _ = app.Services.GetRequiredService<CharacterNames>();
 
 // Configure the HTTP request pipeline.
 
+app.UseWebsiteSecurityHeaders();
+
 var websiteRoot = app.Services.GetRequiredService<IOptions<WebAPIOptions>>().Value.WebsiteRoot;
 
 if (!string.IsNullOrWhiteSpace(websiteRoot))
@@ -149,6 +153,7 @@ if (!string.IsNullOrWhiteSpace(websiteRoot))
 
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 
 app.MapAuthEndpoints();
 app.MapPortraitEndpoints();
