@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
@@ -51,6 +52,11 @@ public class GatewayServer : UdpManager<GatewayConnection>
     /// Otherwise returns true and calls <paramref name="onReleased"/> once every dropped session has saved and logged out
     /// (right away if there was none).
     /// </summary>
+    public List<GatewayConnection> OnlinePlayers()
+    {
+        return ConnectionList.Where(x => x.Player is not null && x.OnReleased is null).ToList();
+    }
+
     public bool TryReleaseIdleCharacter(ulong characterId, uint idleThresholdMilliseconds, Action onReleased)
     {
         var sessions = ConnectionList

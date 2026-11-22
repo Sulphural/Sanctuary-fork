@@ -21,6 +21,8 @@ public static class PacketTunneledClientWorldPacketHandler
         _logger = loggerFactory.CreateLogger(nameof(PacketTunneledClientWorldPacketHandler));
     }
 
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<short, byte> UnhandledOpCodes = new();
+
     public static bool HandlePacket(GatewayConnection connection, Span<byte> data)
     {
         if (!PacketTunneledClientWorldPacket.TryDeserialize(data, out var packetTunneledClientWorldPacket))
@@ -43,8 +45,10 @@ public static class PacketTunneledClientWorldPacketHandler
             BaseCommandPacket.OpCode => BaseCommandPacketHandler.HandlePacket(connection, reader),
             PacketWorldTeleportRequest.OpCode => PacketWorldTeleportRequestHandler.HandlePacket(connection, packetTunneledClientWorldPacket.Payload),
             PacketBaseInGamePurchase.OpCode => PacketBaseInGamePurchaseHandler.HandlePacket(connection, reader),
+            PacketBaseClaimSystem.OpCode => PacketBaseClaimSystemHandler.HandlePacket(connection, reader),
             AnnouncementDataSendPacket.OpCode => AnnouncementBasePacketHandler.HandlePacket(connection, reader),
             PacketSetLocale.OpCode => PacketSetLocaleHandler.HandlePacket(connection, packetTunneledClientWorldPacket.Payload),
+            OneTimeSessionRequestPacket.OpCode => OneTimeSessionRequestPacketHandler.HandlePacket(connection, packetTunneledClientWorldPacket.Payload),
             BaseLobbyGameDefinitionPacket.OpCode => BaseLobbyGameDefinitionPacketHandler.HandlePacket(connection, reader),
             BaseHousingPacket.OpCode => BaseHousingPacketHandler.HandlePacket(connection, reader),
             BaseGuildPacket.OpCode => BaseGuildPacketHandler.HandlePacket(connection, reader),
@@ -54,6 +58,9 @@ public static class PacketTunneledClientWorldPacketHandler
             PacketClientLuaMetrics.OpCode => PacketClientLuaMetricsHandler.HandlePacket(connection, packetTunneledClientWorldPacket.Payload),
             _ => false
         };
+
+        if (!handled && UnhandledOpCodes.TryAdd(opCode, 0))
+            _logger.LogInformation("Unhandled TunneledClientWorld packet {opCode} ( first time seen ).", opCode);
 
 #if DEBUG
         if (!handled)

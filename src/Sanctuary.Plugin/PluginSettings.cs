@@ -43,6 +43,7 @@ public sealed class PluginConfig
     public List<string> Arguments { get; set; } = [];
     public string ClientManifestUrl { get; set; } = "";
     public string ClientBaseUrl { get; set; } = "";
+    public string? PurchaseCertificate { get; set; }
 }
 
 public sealed class PluginStatus
@@ -55,8 +56,8 @@ public sealed class PluginStatus
 
 public static class PluginInfo
 {
-    public const string Version = "1.0.0";
-    public const string Name = "Free Realms Plugin";
+    public const string Version = "1.1.0";
+    public const string Name = "Open Source Free Realms Plugin";
 }
 
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = true)]

@@ -26,6 +26,8 @@ public static class PacketClientIsReadyHandler
 
         connection.Player.Zone.OnClientIsReady(connection.Player);
 
+        connection.QueueWork(() => PacketBaseClaimSystemHandler.SendList(connection));
+
         return true;
     }
 }

@@ -6,10 +6,9 @@ using System.Text.Json;
 
 using Microsoft.Extensions.Logging;
 
-using Sanctuary.Game;
 using Sanctuary.Game.Helpers;
 
-namespace Sanctuary.WebAPI.Website;
+namespace Sanctuary.Game;
 
 public sealed class ItemNames
 {

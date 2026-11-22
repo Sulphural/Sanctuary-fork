@@ -30,6 +30,7 @@ public abstract class DatabaseContext : DbContext
     public DbSet<DbNewsPost> NewsPosts => Set<DbNewsPost>();
     public DbSet<DbRedeemCode> RedeemCodes => Set<DbRedeemCode>();
     public DbSet<DbCodeRedemption> CodeRedemptions => Set<DbCodeRedemption>();
+    public DbSet<DbPendingReward> PendingRewards => Set<DbPendingReward>();
     public DbSet<DbAccountToken> AccountTokens => Set<DbAccountToken>();
 
     public DatabaseContext()

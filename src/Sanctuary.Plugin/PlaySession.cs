@@ -26,9 +26,9 @@ public static class PlaySession
             {
                 status.Set("confirm", "Waiting for you to allow this website...");
 
-                if (!Dialogs.Confirm($"Allow {link.Site.Authority} to start Free Realms on this computer?\n\nOnly allow websites you trust."))
+                if (!Dialogs.Confirm($"Allow {link.Site.Authority} to start Open Source Free Realms on this computer?\n\nOnly allow websites you trust."))
                 {
-                    status.Set("denied", "Free Realms was not allowed to start.");
+                    status.Set("denied", "Open Source Free Realms was not allowed to start.");
                     await Task.Delay(ExitLinger);
                     return 1;
                 }
@@ -46,13 +46,13 @@ public static class PlaySession
             var clientDirectory = await ClientDownloader.EnsureAsync(httpClient, paths, settings, config, status, cancellation.Token);
             var wine = OperatingSystem.IsWindows() ? null : await WineRuntime.EnsureAsync(httpClient, paths, status, cancellation.Token);
 
-            status.Set("launching", "Launching Free Realms!", 1);
+            status.Set("launching", "Launching Open Source Free Realms!", 1);
             using var game = GameLauncher.Start(paths, clientDirectory, wine, link, config);
 
             status.Set("running", "Game Running", 1);
             await game.WaitForExitAsync();
 
-            status.Set("exited", "Free Realms has closed.", 1);
+            status.Set("exited", "Open Source Free Realms has closed.", 1);
             paths.Log($"Game exited with code {game.ExitCode}");
             await Task.Delay(ExitLinger);
             return 0;
@@ -61,7 +61,7 @@ public static class PlaySession
         {
             paths.Log($"Launch failed: {ex}");
             status.Set("error", ex.Message);
-            Dialogs.Error($"Free Realms could not start.\n\n{ex.Message}");
+            Dialogs.Error($"Open Source Free Realms could not start.\n\n{ex.Message}");
             await Task.Delay(ExitLinger);
             return 1;
         }

@@ -50,7 +50,7 @@ public static class ClientDownloader
         var total = missing.Sum(file => file.Size);
         long done = 0;
         var firstInstall = !HasClient(paths.ClientDirectory);
-        var verb = firstInstall ? "Downloading Free Realms" : "Updating Free Realms";
+        var verb = firstInstall ? "Downloading Open Source Free Realms" : "Updating Open Source Free Realms";
 
         status.Set("downloading", $"{verb}...", 0);
 

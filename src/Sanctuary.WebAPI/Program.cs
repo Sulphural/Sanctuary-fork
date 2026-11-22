@@ -59,6 +59,8 @@ builder.Services.AddSingleton<IResourceManager, ResourceManager>();
 builder.Services.AddSingleton<CharacterNames>();
 builder.Services.AddSingleton<CreatorCatalog>();
 builder.Services.AddSingleton<ItemNames>();
+builder.Services.AddSingleton<ItemIcons>();
+builder.Services.AddSingleton<PortraitCutouts>();
 
 builder.Services.AddOptions<EmailOptions>()
     .BindConfiguration(EmailOptions.Section);

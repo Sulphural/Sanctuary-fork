@@ -15,9 +15,9 @@ public sealed record WineBuild(string Name, string Url, string Sha256);
 public static class WineRuntime
 {
     public static readonly WineBuild Linux = new(
-        "wine-11.20-staging-amd64-wow64",
-        "https://github.com/Kron4ek/Wine-Builds/releases/download/11.20/wine-11.20-staging-amd64-wow64.tar.xz",
-        "fad302e59925777bac89e3e4fc3e55ad396663d031c62718d0b029dd1e0fa823");
+        "wine-10.20-staging-amd64-wow64",
+        "https://github.com/Kron4ek/Wine-Builds/releases/download/10.20/wine-10.20-staging-amd64-wow64.tar.xz",
+        "11386cb12bdd1dd04b32409b08f4622e1bf376019e0f3ed4b9f383fc087e4a4c");
 
     public static readonly WineBuild MacOS = new(
         "wine-staging-11.20-osx64",
@@ -34,7 +34,7 @@ public static class WineRuntime
         if (OperatingSystem.IsLinux() && RuntimeInformation.OSArchitecture == Architecture.X64)
             return Linux;
 
-        throw new PlatformNotSupportedException("Free Realms needs a 64-bit Intel/AMD Linux PC or a Mac.");
+        throw new PlatformNotSupportedException("Open Source Free Realms needs a 64-bit Intel/AMD Linux PC or a Mac.");
     }
 
     public static async Task<string> EnsureAsync(HttpClient httpClient, PluginPaths paths, StatusServer status, CancellationToken cancellationToken)
@@ -53,7 +53,7 @@ public static class WineRuntime
         if (!File.Exists(archive) || !await HasHashAsync(archive, build.Sha256, cancellationToken))
             await DownloadAsync(httpClient, build, archive, status, cancellationToken);
 
-        status.Set("installing", "Installing the Free Realms Plugin game runtime...", 1);
+        status.Set("installing", "Installing the Open Source Free Realms Plugin game runtime...", 1);
 
         if (Directory.Exists(installDirectory))
             Directory.Delete(installDirectory, true);
@@ -116,7 +116,7 @@ public static class WineRuntime
             {
                 await output.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
                 done += read;
-                status.Set("downloading", $"Downloading the Free Realms Plugin game runtime... {done / 1048576} MB of {Math.Max(1, total / 1048576)} MB", total > 0 ? (double)done / total : 0);
+                status.Set("downloading", $"Downloading the Open Source Free Realms Plugin game runtime... {done / 1048576} MB of {Math.Max(1, total / 1048576)} MB", total > 0 ? (double)done / total : 0);
             }
         }
 

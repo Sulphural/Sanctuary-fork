@@ -1,0 +1,131 @@
+name: Plugin Smoke Test
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'src/Sanctuary.Plugin/**'
+      - '.github/plugin-smoke/**'
+      - '.github/workflows/plugin-smoke.yml'
+
+jobs:
+  linux:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        global-json-file: ./src/global.json
+
+    - name: Install test tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gcc-mingw-w64-i686 gcc-mingw-w64-x86-64 xvfb xdg-utils desktop-file-utils gdb
+
+    - name: Build 32-bit stand-in game
+      run: |
+        mkdir -p "$RUNNER_TEMP/stub"
+        i686-w64-mingw32-gcc -O2 -static -o "$RUNNER_TEMP/stub/FreeRealms.exe" .github/plugin-smoke/stub.c
+        x86_64-w64-mingw32-gcc -O2 -static -o "$RUNNER_TEMP/stub/stub64.exe" .github/plugin-smoke/stub.c
+        file "$RUNNER_TEMP/stub/FreeRealms.exe"
+
+    - name: Publish plugin
+      working-directory: ./src
+      run: dotnet publish Sanctuary.Plugin/Sanctuary.Plugin.csproj -c Release -r linux-x64 -o "$RUNNER_TEMP/plugin"
+
+    - name: Install as link handler
+      run: |
+        export XDG_DATA_HOME="$RUNNER_TEMP/xdg"
+        "$RUNNER_TEMP/plugin/FreeRealmsPlugin" --quiet
+        cat "$XDG_DATA_HOME/applications/freerealms-plugin.desktop"
+        test -x "$XDG_DATA_HOME/FreeRealmsPlugin/FreeRealmsPlugin"
+        handler="$(XDG_DATA_HOME="$XDG_DATA_HOME" xdg-mime query default x-scheme-handler/freerealms)"
+        echo "freerealms:// handler: $handler"
+        test "$handler" = "freerealms-plugin.desktop"
+
+    - name: Smoke test
+      run: bash .github/plugin-smoke/smoke.sh "$RUNNER_TEMP/plugin/FreeRealmsPlugin" "$RUNNER_TEMP/stub/FreeRealms.exe"
+
+    - name: Wine diagnostics
+      if: always()
+      run: |
+        sudo apt-get install -y wine || true
+        bash .github/plugin-smoke/wine-debug.sh "$RUNNER_TEMP/stub/FreeRealms.exe" "$RUNNER_TEMP/stub/stub64.exe"
+
+    - name: Uninstall
+      run: |
+        export XDG_DATA_HOME="$RUNNER_TEMP/xdg"
+        "$RUNNER_TEMP/plugin/FreeRealmsPlugin" --uninstall || true
+        test ! -f "$XDG_DATA_HOME/applications/freerealms-plugin.desktop"
+
+    - name: Upload logs
+      if: always()
+      uses: actions/upload-artifact@v5
+      with:
+        name: logs-${{ matrix.os }}
+        path: |
+          ${{ runner.temp }}/xdg/FreeRealmsPlugin/plugin.log
+          ${{ runner.temp }}/*.log
+          ${{ runner.temp }}/states*.txt
+
+  macos:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, macos-15-intel]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+
+    steps:
+    - uses: actions/checkout@v6
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v5
+      with:
+        global-json-file: ./src/global.json
+
+    - name: Machine info
+      run: |
+        uname -m
+        sw_vers
+        if /usr/bin/pgrep -q oahd; then echo "Rosetta 2: installed"; else echo "Rosetta 2: not running"; fi
+
+    - name: Build 32-bit stand-in game
+      run: |
+        brew install mingw-w64
+        mkdir -p "$RUNNER_TEMP/stub"
+        i686-w64-mingw32-gcc -O2 -static -o "$RUNNER_TEMP/stub/FreeRealms.exe" .github/plugin-smoke/stub.c
+        file "$RUNNER_TEMP/stub/FreeRealms.exe"
+
+    - name: Publish plugin and build app
+      working-directory: ./src
+      run: |
+        dotnet publish Sanctuary.Plugin/Sanctuary.Plugin.csproj -c Release -r osx-x64 -o "$RUNNER_TEMP/osx-x64"
+        dotnet publish Sanctuary.Plugin/Sanctuary.Plugin.csproj -c Release -r osx-arm64 -o "$RUNNER_TEMP/osx-arm64"
+        sh Sanctuary.Plugin/macos/build-app.sh "$RUNNER_TEMP/osx-x64" "$RUNNER_TEMP/osx-arm64" "$RUNNER_TEMP/downloads"
+
+    - name: Smoke test
+      run: |
+        if [ "$(uname -m)" = "arm64" ]; then bin="$RUNNER_TEMP/osx-arm64/FreeRealmsPlugin"; else bin="$RUNNER_TEMP/osx-x64/FreeRealmsPlugin"; fi
+        bash .github/plugin-smoke/smoke.sh "$bin" "$RUNNER_TEMP/stub/FreeRealms.exe"
+
+    - name: App bundle and link test
+      run: bash .github/plugin-smoke/macapp.sh "$RUNNER_TEMP/downloads/FreeRealmsPlugin-macos.zip" "$RUNNER_TEMP/stub/FreeRealms.exe"
+
+    - name: Upload logs
+      if: always()
+      uses: actions/upload-artifact@v5
+      with:
+        name: logs-${{ matrix.os }}
+        path: |
+          ~/Library/Application Support/FreeRealmsPlugin/plugin.log
+          ${{ runner.temp }}/*.log
+          ${{ runner.temp }}/states*.txt

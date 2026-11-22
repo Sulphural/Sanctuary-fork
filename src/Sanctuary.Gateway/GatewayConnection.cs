@@ -78,6 +78,8 @@ public class GatewayConnection : UdpConnection
     /// </summary>
     public Action? OnReleased { get; set; }
 
+    public long PendingRewardsSignature { get; set; } = -1;
+
     public void BeginLoginSession()
     {
         _loginSession = (ulong)Random.Shared.NextInt64(1, long.MaxValue);
@@ -364,6 +366,7 @@ public class GatewayConnection : UdpConnection
         Player.PlayTime = dbCharacter.PlayTime;
 
         Player.MembershipStatus = dbCharacter.MembershipStatus;
+        Player.IsLifetimeMember = dbCharacter.MembershipStatus != Membership.FreeStatus && dbCharacter.User is not null && Membership.IsLifetime(dbCharacter.User);
         Player.ShowMemberNagScreen = _options.ShowMemberNagScreen;
 
         foreach (var dbProfile in dbCharacter.Profiles)

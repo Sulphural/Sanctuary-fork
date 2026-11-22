@@ -602,6 +602,48 @@ namespace Sanctuary.Database.Sqlite.Migrations
                     b.ToTable("NewsPosts");
                 });
 
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbPendingReward", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset?>("ClaimedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<ulong?>("ClaimedByCharacterId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Code")
+                        .HasMaxLength(40)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("DATE()");
+
+                    b.Property<int>("ItemDefinition")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<ulong>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PendingRewards");
+                });
+
             modelBuilder.Entity("Sanctuary.Database.Entities.DbPet", b =>
                 {
                     b.Property<int>("Id")
@@ -1224,6 +1266,17 @@ namespace Sanctuary.Database.Sqlite.Migrations
                         .IsRequired();
 
                     b.Navigation("Character");
+                });
+
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbPendingReward", b =>
+                {
+                    b.HasOne("Sanctuary.Database.Entities.DbUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Sanctuary.Database.Entities.DbPet", b =>

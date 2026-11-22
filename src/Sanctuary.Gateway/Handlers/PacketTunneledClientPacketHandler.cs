@@ -21,6 +21,8 @@ public static class PacketTunneledClientPacketHandler
         _logger = loggerFactory.CreateLogger(nameof(PacketTunneledClientPacketHandler));
     }
 
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<short, byte> UnhandledOpCodes = new();
+
     public static bool HandlePacket(GatewayConnection connection, Span<byte> data)
     {
         if (!PacketTunneledClientPacket.TryDeserialize(data, out var packetTunneledClientPacket))
@@ -49,12 +51,14 @@ public static class PacketTunneledClientPacketHandler
             BaseInventoryPacket.OpCode => BaseInventoryPacketHandler.HandlePacket(connection, reader),
             PacketGameTimeSync.OpCode => PacketGameTimeSyncHandler.HandlePacket(connection, packetTunneledClientPacket.Payload),
             PacketBaseInGamePurchase.OpCode => PacketBaseInGamePurchaseHandler.HandlePacket(connection, reader),
+            PacketBaseClaimSystem.OpCode => PacketBaseClaimSystemHandler.HandlePacket(connection, reader),
             AnnouncementDataSendPacket.OpCode => AnnouncementBasePacketHandler.HandlePacket(connection, reader),
             BaseQuickChatPacket.OpCode => BaseQuickChatPacketHandler.HandlePacket(connection, reader),
             PacketZoneTeleportRequest.OpCode => PacketZoneTeleportRequestHandler.HandlePacket(connection, packetTunneledClientPacket.Payload),
             PacketClientMetrics.OpCode => PacketClientMetricsHandler.HandlePacket(connection, packetTunneledClientPacket.Payload),
             PacketClientLog.OpCode => PacketClientLogHandler.HandlePacket(connection, packetTunneledClientPacket.Payload),
             PacketZoneSafeTeleportRequest.OpCode => PacketZoneSafeTeleportRequestHandler.HandlePacket(connection, packetTunneledClientPacket.Payload),
+            OneTimeSessionRequestPacket.OpCode => OneTimeSessionRequestPacketHandler.HandlePacket(connection, packetTunneledClientPacket.Payload),
             PlayerUpdatePacketUpdatePosition.OpCode => PlayerUpdatePacketUpdatePositionHandler.HandlePacket(connection, packetTunneledClientPacket.Payload),
             PlayerUpdatePacketCameraUpdate.OpCode => PlayerUpdatePacketCameraUpdateHandler.HandlePacket(connection, packetTunneledClientPacket.Payload),
             BaseHousingPacket.OpCode => BaseHousingPacketHandler.HandlePacket(connection, reader),
@@ -73,6 +77,9 @@ public static class PacketTunneledClientPacketHandler
             BaseInspectPacket.OpCode => BaseInspectPacketHandler.HandlePacket(connection, reader),
             _ => false
         };
+
+        if (!handled && UnhandledOpCodes.TryAdd(opCode, 0))
+            _logger.LogInformation("Unhandled TunneledClient packet {opCode} ( first time seen ).", opCode);
 
 #if DEBUG
         if (!handled)

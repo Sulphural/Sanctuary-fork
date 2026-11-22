@@ -20,7 +20,7 @@ public static partial class SiteConfig
 
     public static async Task<PluginConfig> FetchAsync(HttpClient httpClient, Uri site, CancellationToken cancellationToken)
     {
-        var config = await httpClient.GetFromJsonAsync(new Uri(site, "/website/plugin/config"), PluginJsonContext.Default.PluginConfig, cancellationToken)
+        var config = await httpClient.GetFromJsonAsync(new Uri(site, "/website/plugin/config?plugin=" + PluginInfo.Version), PluginJsonContext.Default.PluginConfig, cancellationToken)
             ?? throw new InvalidOperationException("The website did not send the server settings.");
 
         if (!AddressPattern().IsMatch(config.Gateway) || !AddressPattern().IsMatch(config.Login))
@@ -39,7 +39,26 @@ public static partial class SiteConfig
 
         config.ClientBaseUrl = config.ClientBaseUrl.TrimEnd('/');
 
+        if (config.PurchaseCertificate is not null && !IsCertificate(config.PurchaseCertificate))
+            config.PurchaseCertificate = null;
+
         return config;
+    }
+
+    private static bool IsCertificate(string pem)
+    {
+        if (pem.Length > 16384 || !pem.TrimStart().StartsWith("-----BEGIN CERTIFICATE-----", StringComparison.Ordinal) || pem.Contains("PRIVATE KEY", StringComparison.Ordinal))
+            return false;
+
+        try
+        {
+            using var certificate = System.Security.Cryptography.X509Certificates.X509Certificate2.CreateFromPem(pem);
+            return true;
+        }
+        catch (System.Security.Cryptography.CryptographicException)
+        {
+            return false;
+        }
     }
 
     private static bool IsWebUrl(string value)

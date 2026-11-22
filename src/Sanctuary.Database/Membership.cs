@@ -23,7 +23,7 @@ public static class Membership
         new("FRREL-SU-IR0309-MEMBER-03MON", "3 Month", "Free Realms Membership", "10% Savings", 3, 1299),
         new("FRREL-SU-IR0309-MEMBER-06MON", "6 Month", "Free Realms Membership", null, 6, 2450),
         new("FRREL-SU-IR0309-MEMBER-12MON", "12 Month", "Free Realms Membership", null, 12, 3950),
-        new("FRREL-SU-IR0810-NEWMBR-LIFE", "Lifetime", "Best Value!", "Best Value!", 0, 3499)
+        new("FRREL-SU-IR0810-NEWMBR-LIFE", "Lifetime", "Best Value!", "Best Value!", 0, 7999)
     ];
 
     public static MembershipPlan? FindPlan(string? sku)

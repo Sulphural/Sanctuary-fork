@@ -7,8 +7,22 @@ namespace Sanctuary.Plugin;
 
 public static class GameLauncher
 {
+    public const string PurchaseCertificateFile = "sanctuary-uram-ca.pem";
+
     public static Process Start(PluginPaths paths, string clientDirectory, string? wine, PluginLink link, PluginConfig config)
     {
+        if (config.PurchaseCertificate is not null)
+        {
+            try
+            {
+                File.WriteAllText(Path.Combine(clientDirectory, PurchaseCertificateFile), config.PurchaseCertificate);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                paths.Log($"Could not save the in-game purchase certificate: {ex.Message}");
+            }
+        }
+
         var arguments = new List<string> { "Internationalization:Locale=8" };
 
         if (link.Kind == PluginLinkKind.Play)
@@ -50,6 +64,6 @@ public static class GameLauncher
 
         paths.Log($"Starting {(wine is null ? "client" : "client with " + wine)} for {link.Kind} on {link.Origin}");
 
-        return Process.Start(startInfo) ?? throw new InvalidOperationException("Could not start Free Realms.");
+        return Process.Start(startInfo) ?? throw new InvalidOperationException("Could not start Open Source Free Realms.");
     }
 }

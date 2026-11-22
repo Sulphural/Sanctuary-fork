@@ -39,11 +39,26 @@ public static class PluginEndpoints
         return $"{httpContext.Request.Scheme}://{httpContext.Request.Host}";
     }
 
-    private static IResult GetConfig(HttpContext httpContext, IOptionsSnapshot<PluginOptions> pluginOptions, IOptionsSnapshot<WebAPIOptions> webAPIOptions)
+    private static readonly Version PurchaseCertificatePluginVersion = new(1, 1, 0);
+
+    private const string PurchaseCertificateFileName = "sanctuary-uram-ca.pem";
+
+    private static IResult GetConfig(string? plugin, HttpContext httpContext, IOptionsSnapshot<PluginOptions> pluginOptions, IOptionsSnapshot<WebAPIOptions> webAPIOptions)
     {
         var options = pluginOptions.Value;
-        var arguments = (webAPIOptions.Value.LaunchArguments ?? string.Empty).Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var arguments = new List<string>((webAPIOptions.Value.LaunchArguments ?? string.Empty).Split(' ', StringSplitOptions.RemoveEmptyEntries));
         var local = IsSameNetwork(httpContext, options);
+
+        string? purchaseCertificate = null;
+        var purchaseAddress = local && !string.IsNullOrWhiteSpace(options.LocalPurchaseAddress) ? options.LocalPurchaseAddress : options.PurchaseAddress;
+
+        if (!string.IsNullOrWhiteSpace(purchaseAddress)
+            && Version.TryParse(plugin, out var pluginVersion) && pluginVersion >= PurchaseCertificatePluginVersion
+            && TryReadPurchaseCertificate(options, out purchaseCertificate))
+        {
+            arguments.Add($"INGAMEPURCHASE:UramPlatform={purchaseAddress}/");
+            arguments.Add($"INGAMEPURCHASE:UramCert={PurchaseCertificateFileName}");
+        }
 
         return Results.Ok(new
         {
@@ -51,8 +66,25 @@ public static class PluginEndpoints
             login = local && !string.IsNullOrWhiteSpace(options.LocalLoginAddress) ? options.LocalLoginAddress : options.LoginAddress,
             arguments,
             clientManifestUrl = options.ClientManifestUrl,
-            clientBaseUrl = options.ClientBaseUrl
+            clientBaseUrl = options.ClientBaseUrl,
+            purchaseCertificate
         });
+    }
+
+    private static bool TryReadPurchaseCertificate(PluginOptions options, out string? certificate)
+    {
+        certificate = null;
+
+        if (string.IsNullOrWhiteSpace(options.PurchaseCertificateFile) || !File.Exists(options.PurchaseCertificateFile))
+            return false;
+
+        var text = File.ReadAllText(options.PurchaseCertificateFile);
+
+        if (!text.Contains("BEGIN CERTIFICATE", StringComparison.Ordinal) || text.Contains("PRIVATE KEY", StringComparison.Ordinal))
+            return false;
+
+        certificate = text;
+        return true;
     }
 
     private static bool IsSameNetwork(HttpContext httpContext, PluginOptions options)

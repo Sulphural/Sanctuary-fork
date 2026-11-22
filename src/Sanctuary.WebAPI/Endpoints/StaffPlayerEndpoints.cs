@@ -26,6 +26,9 @@ public static class StaffPlayerEndpoints
     public sealed record DurationRequest(int? Minutes, string? Reason);
     public sealed record RoleRequest(string? Role);
     public sealed record MembershipRequest(int? Days, bool Remove);
+    public sealed record StationCashRequest(int Amount, string? Reason);
+
+    private const int MaxStationCashChange = 1_000_000;
     public sealed record ReportCharacterRequest(string? Reason);
 
     public static void MapStaffPlayerEndpoints(this RouteGroupBuilder group, ILoggerFactory loggerFactory)
@@ -43,6 +46,7 @@ public static class StaffPlayerEndpoints
         group.MapPost("/staff/players/{userId}/role", SetRoleAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.WritePolicy);
         group.MapPost("/staff/players/{userId}/password", ResetPasswordAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.WritePolicy);
         group.MapPost("/staff/players/{userId}/membership", SetMembershipAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.WritePolicy);
+        group.MapPost("/staff/characters/{characterId}/stationcash", ChangeStationCashAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.WritePolicy);
 
         group.MapGet("/staff/player-reports", GetPlayerReportsAsync).RequireAuthorization();
         group.MapPost("/staff/player-reports/{characterId}/dismiss", DismissPlayerReportsAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.WritePolicy);
@@ -223,6 +227,7 @@ public static class StaffPlayerEndpoints
             role = StaffAccess.RoleName(user),
             canModerate = StaffAccess.CanActOn(staff, user),
             canChangeRole = staff.IsAdmin && !user.IsAdmin && user.Id != staff.Id,
+            canChangeStationCash = staff.IsAdmin,
             email = staff.IsAdmin ? user.Email : null,
             country = user.Country,
             isMember = user.IsMember && !Membership.HasExpired(user),
@@ -361,6 +366,61 @@ public static class StaffPlayerEndpoints
         _logger.LogInformation("Staff {Staff} changed membership of {Username}: {Text}", staff.Username, target.Username, text);
 
         return Results.Ok(new { isMember = target.IsMember, memberUntil = target.MemberUntil });
+    }
+
+    private static async Task<IResult> ChangeStationCashAsync(
+        ulong characterId,
+        StationCashRequest request,
+        ClaimsPrincipal principal,
+        IDbContextFactory<DatabaseContext> dbContextFactory,
+        CancellationToken cancellationToken)
+    {
+        if (request.Amount == 0 || request.Amount is > MaxStationCashChange or < -MaxStationCashChange)
+            return Results.Json(new { error = "amount" }, statusCode: StatusCodes.Status400BadRequest);
+
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        var staff = await StaffAccess.GetStaffAsync(dbContext, principal, cancellationToken);
+
+        if (staff is null || !staff.IsAdmin)
+            return Results.Forbid();
+
+        var character = await dbContext.Characters
+            .AsNoTracking()
+            .Where(x => x.Id == characterId)
+            .Select(x => new { x.Id, x.UserId, x.FirstName, x.LastName, x.StationCash })
+            .SingleOrDefaultAsync(cancellationToken);
+
+        if (character is null)
+            return Results.NotFound();
+
+        var amount = request.Amount;
+
+        await dbContext.Characters
+            .Where(x => x.Id == characterId)
+            .ExecuteUpdateAsync(x => x.SetProperty(c => c.StationCash, c =>
+                amount > 0
+                    ? (c.StationCash > int.MaxValue - amount ? int.MaxValue : c.StationCash + amount)
+                    : (c.StationCash + amount < 0 ? 0 : c.StationCash + amount)), cancellationToken);
+
+        var balance = await dbContext.Characters
+            .AsNoTracking()
+            .Where(x => x.Id == characterId)
+            .Select(x => x.StationCash)
+            .SingleAsync(cancellationToken);
+
+        var name = StaffEndpoints.FullName(character.FirstName, character.LastName);
+        var reason = CleanReason(request.Reason);
+        var text = (amount > 0 ? $"Gave {amount:N0} Station Cash" : $"Took {-amount:N0} Station Cash")
+            + $" ({character.StationCash:N0} to {balance:N0})" + (reason is null ? "." : ": " + reason);
+
+        StaffAccess.Log(dbContext, staff, "stationcash", character.UserId, character.Id, name, text);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("Staff {Staff} changed Station Cash of {Character}: {Text}", staff.Username, name, text);
+
+        return Results.Ok(new { stationCash = balance });
     }
 
     private static async Task<IResult> UnbanAsync(

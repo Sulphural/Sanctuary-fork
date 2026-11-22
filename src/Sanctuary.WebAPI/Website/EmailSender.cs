@@ -20,7 +20,7 @@ public sealed class EmailOptions
     public string? Username { get; set; }
     public string? Password { get; set; }
     public string? From { get; set; }
-    public string FromName { get; set; } = "Free Realms";
+    public string FromName { get; set; } = "Open Source Free Realms";
     public bool EnableSsl { get; set; } = true;
     public string? OutboxFolder { get; set; }
 }

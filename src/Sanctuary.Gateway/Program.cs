@@ -96,6 +96,12 @@ builder.ConfigureServices((hostBuilderContext, serviceCollection) =>
 
     serviceCollection.AddHostedService<GatewayService>();
 
+    serviceCollection.AddOptions<Sanctuary.Gateway.Uram.UramOptions>()
+        .BindConfiguration(Sanctuary.Gateway.Uram.UramOptions.Section);
+    serviceCollection.AddHostedService<Sanctuary.Gateway.Uram.UramServer>();
+    serviceCollection.AddHostedService<Sanctuary.Gateway.Uram.MembershipSyncService>();
+    serviceCollection.AddSingleton<ItemNames>();
+
     // Managers
     serviceCollection.AddSingleton<IZoneManager, ZoneManager>();
     serviceCollection.AddSingleton<IResourceManager, ResourceManager>();

@@ -128,6 +128,7 @@ public sealed class Player : ClientPcData, IEntity, ITradeParticipant
     public ConcurrentSet<int> InspectedItemDefinitionIds { get; } = [];
 
     public int StationCash { get; set; }
+    public bool IsLifetimeMember { get; set; }
     public List<CoinStoreTransactionRecord> CoinStoreTransactions { get; set; } = [];
 
     public GuildData? GuildData { get; set; }

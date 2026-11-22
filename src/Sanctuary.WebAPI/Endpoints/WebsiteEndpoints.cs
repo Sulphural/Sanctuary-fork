@@ -477,15 +477,16 @@ public static class WebsiteEndpoints
         return Results.Ok(results);
     }
 
-    private static IResult GetPortrait(ulong id) => PortraitFile(id, "portrait.png");
+    private static IResult GetPortrait(ulong id, PortraitCutouts cutouts) => PortraitFile(id, "portrait", cutouts);
 
-    private static IResult GetHeadshot(ulong id) => PortraitFile(id, "headshot.png");
+    private static IResult GetHeadshot(ulong id, PortraitCutouts cutouts) => PortraitFile(id, "headshot", cutouts);
 
-    private static IResult PortraitFile(ulong id, string fileName)
+    private static IResult PortraitFile(ulong id, string kind, PortraitCutouts cutouts)
     {
-        var path = Path.GetFullPath(Path.Combine(PortraitStorage.GetCharacterDirectory(GuidHelper.GetPlayerGuid(id)), fileName));
+        var path = Path.GetFullPath(Path.Combine(PortraitStorage.GetCharacterDirectory(GuidHelper.GetPlayerGuid(id)), kind + ".png"));
+        var png = cutouts.GetCutout(path, kind);
 
-        return File.Exists(path) ? Results.File(path, "image/png") : Results.NotFound();
+        return png is null ? Results.NotFound() : Results.File(png, "image/png");
     }
 
     private static bool HasPortraitFile(ulong id, string fileName)

@@ -35,6 +35,9 @@ The server is made up of three programs:
 | `Sanctuary.Login` | 20042 | UDP | Handles Character Select and creating characters |
 | `Sanctuary.Login` | 20041 | UDP | Internal connection from the Gateway |
 | `Sanctuary.Gateway` | 20260 | UDP | Runs the game world |
+| `Sanctuary.Gateway` | 20044 | TCP | In-game purchases (the membership panel), only when `Uram:Enabled` is on |
+
+`Sanctuary.WebAPI` can also serve a website (`WebAPI:WebsiteRoot`), and `Sanctuary.Plugin` is the program players install so the website's **Play Now!** button can start the game. See [Website and plugin](#website-and-plugin).
 
 ## Requirements
 
@@ -185,6 +188,7 @@ Type these in chat. All commands start with `!`.
 |---|---|---|
 | `!help` | | Player |
 | `!whereami` | | Player |
+| `!skip` | Skips the Darkthorne tutorial (also offered as a dialogue choice) | Player |
 | `!zone` | `ls` | Player |
 | `!navnpcto` | `spawn [count] [radius]`, `moveto [<x> <y> <z>]`, `chase`, `stop` or `despawn` | Player |
 | `!teleport` | `<x> <y> <z>` | Mod |
@@ -214,7 +218,7 @@ Each program reads its settings from a file next to it. Any setting can also be 
 | `DefaultTitleId` | `0` | Title given to new characters |
 | `DefaultProfileId` | `1` | Job given to new characters |
 | `StartingCoins` | `999999999` | Coins given to new characters |
-| `StartingStationCash` | `999999999` | Station Cash given to new characters |
+| `StartingStationCash` | `500` | Station Cash given to new characters |
 | `UnlockAllTitles` | `true` | Gives new characters every title |
 | `UnlockAllProfiles` | `true` | Gives new characters every job |
 
@@ -233,13 +237,45 @@ The defaults are meant for development, so change the starting currency, unlocks
 | `LoginGatewayChallenge` | | Shared secret; must match Login's |
 | `ShowMemberNagScreen` | `false` | Shows the membership prompt |
 
+In-game purchases (buying membership with Station Cash from the client's membership panel) use a separate `Uram` section, usually set with environment variables such as `Uram__Enabled=true`:
+
+| Setting | Default | Purpose |
+|---|---|---|
+| `Uram:Enabled` | `false` | Starts the purchase server |
+| `Uram:Port` | `20044` | TCP port the client's purchase panel connects to |
+| `Uram:CertificateFolder` | `uram` | Where the purchase certificates are kept. They are created on first start; keep this folder private, it holds a private key |
+
 **`appsettings.json`** (`src/Sanctuary.WebAPI/appsettings.json`)
 
 | Setting | Default | Purpose |
 |---|---|---|
 | `WebAPI:LaunchArguments` | Asset and portrait URLs | Arguments returned to clients at login |
-| `WebAPI:MemberByDefault` | `true` | Makes new accounts members |
+| `WebAPI:MemberByDefault` | `false` | Makes new accounts members. Staff can give membership for a set time, and players can buy it with Station Cash |
+| `WebAPI:WebsiteRoot` | empty | Folder of a website to serve at `/`. Empty serves no website |
+| `WebAPI:ClientFolder` | empty | A game client folder, used to show item icons on the website |
+| `WebAPI:PortraitPlateFolder` | empty | Folder with `portrait.png` and `headshot.png` background plates; when set, the website shows character portraits without their background |
+| `Plugin:PublicSiteUrl` | empty | The website's public address, given to the plugin |
+| `Plugin:GatewayAddress`, `Plugin:LoginAddress` | `127.0.0.1:20260`, `127.0.0.1:20042` | Server addresses the plugin starts the game with; use your public address |
+| `Plugin:LocalGatewayAddress`, `Plugin:LocalLoginAddress` | empty | Addresses for players on the same network as the server |
+| `Plugin:ClientManifestUrl`, `Plugin:ClientBaseUrl` | OSFR client mirror | Where the plugin downloads the game client from |
+| `Plugin:DownloadsPath` | empty | Folder with the plugin installers the website offers |
+| `Plugin:PurchaseAddress`, `Plugin:LocalPurchaseAddress` | empty | The `Uram` purchase server address (public and local) |
+| `Plugin:PurchaseCertificateFile` | empty | `sanctuary-uram-ca.pem` from `Uram:CertificateFolder`; the plugin installs it so the client trusts the purchase server |
 | `Urls` | `http://127.0.0.1:20040` | Address the WebAPI listens on |
+
+## Website and plugin
+
+The WebAPI can serve a full website: set `WebAPI:WebsiteRoot` to its folder. The website talks to the WebAPI through `/website/*` (accounts, characters, profiles, redeem codes, membership and staff tools).
+
+Players install the plugin (`src/Sanctuary.Plugin`) once. The website's **Play Now!** button then opens a `freerealms://` link, and the plugin downloads the game client, starts it and logs the player in. On Linux and macOS it downloads and runs Wine by itself. Build the installers with:
+
+```sh
+cd src
+dotnet publish Sanctuary.Plugin/Sanctuary.Plugin.csproj -c Release -r win-x64 -o ../artifacts/win-x64
+dotnet publish Sanctuary.Plugin/Sanctuary.Plugin.csproj -c Release -r linux-x64 -o ../artifacts/linux-x64
+```
+
+The macOS app has to be built on a Mac (`src/Sanctuary.Plugin/macos/build-app.sh`). The **Free Realms Plugin** GitHub workflow builds all three and uploads them as artifacts. Put the files in the folder set as `Plugin:DownloadsPath`, named `FreeRealmsPlugin-windows.exe`, `FreeRealmsPlugin-linux` and `FreeRealmsPlugin-macos.zip`.
 
 ## Project layout
 
@@ -252,6 +288,7 @@ src/
   Sanctuary.Gateway         World server and its packet handlers
   Sanctuary.Login           Login and Character Select server
   Sanctuary.Packet*         Packet definitions
+  Sanctuary.Plugin          Player-side launcher for freerealms:// links (Windows, Linux, macOS)
   Sanctuary.Scripting       Lua scripting engine
   Sanctuary.UdpLibrary      Network protocol
   Sanctuary.WebAPI          Accounts, sessions and portraits
@@ -269,6 +306,15 @@ dotnet test Sanctuary.slnx
 ```
 
 The database tests in CI run against MariaDB, so some may need a MariaDB server to pass locally.
+
+The **Plugin Smoke Test** workflow (`.github/workflows/plugin-smoke.yml`) checks the plugin on Ubuntu 24.04, Ubuntu 22.04 and Apple Silicon and Intel Macs. It runs when plugin code changes, or by hand from the Actions tab. It starts a fake website (`.github/plugin-smoke/`) and checks that the plugin:
+
+- rejects bad links and asks before trusting a new website;
+- downloads the client and Wine, and verifies Wine's checksum;
+- starts a small 32-bit stand-in for `FreeRealms.exe` through Wine with the right arguments;
+- registers `freerealms://` links (and on macOS, that opening a link through the app starts the game).
+
+If a Wine version stops working on a new Linux kernel, `wine-debug.sh` there shows why. Kron4ek Wine 11.20 crashes on kernel 7.0, so Linux uses 10.20.
 
 ## Contributing
 

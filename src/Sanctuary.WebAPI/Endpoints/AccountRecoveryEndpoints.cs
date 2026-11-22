@@ -129,7 +129,7 @@ public static class AccountRecoveryEndpoints
         body.Append("<p style=\"margin:0 0 14px\">Feel free to <a href=\"").Append(Encode(origin)).Append("/\" style=\"color:#1a75bc\">contact us</a> if you have concerns over the security of your account.</p>");
         body.Append("<p style=\"margin:0 0 14px\">Thank you.</p>");
         body.Append("<p style=\"margin:0 0 40px\">(This is an automated e-mail. Please do not reply.)</p>");
-        body.Append("<p style=\"margin:0\">Free Realms<br><a href=\"").Append(Encode(origin)).Append("\" style=\"color:#333333\">").Append(Encode(origin)).Append("</a></p>");
+        body.Append("<p style=\"margin:0\">Open Source Free Realms<br><a href=\"").Append(Encode(origin)).Append("\" style=\"color:#333333\">").Append(Encode(origin)).Append("</a></p>");
         body.Append("</div>");
 
         return body.ToString();
@@ -138,7 +138,7 @@ public static class AccountRecoveryEndpoints
     private static string RetailText(string heading, string origin, IEnumerable<string> paragraphs)
     {
         return heading + "\n\nDear Customer:\n\n" + string.Join("\n\n", paragraphs)
-            + "\n\nFeel free to contact us (" + origin + "/) if you have concerns over the security of your account.\n\nThank you.\n\n(This is an automated e-mail. Please do not reply.)\n\n\nFree Realms\n" + origin;
+            + "\n\nFeel free to contact us (" + origin + "/) if you have concerns over the security of your account.\n\nThank you.\n\n(This is an automated e-mail. Please do not reply.)\n\n\nOpen Source Free Realms\n" + origin;
     }
 
     private static string Link(string url, string label) => "<a href=\"" + Encode(url) + "\" style=\"color:#1a75bc\">" + Encode(label) + "</a>";
@@ -170,7 +170,7 @@ public static class AccountRecoveryEndpoints
             "This link may only be used once, within 3 days."
         ]);
 
-        return await emailSender.SendAsync(user.Email!, "Free Realms - Verify Your E-mail Address", text, html, cancellationToken);
+        return await emailSender.SendAsync(user.Email!, "Open Source Free Realms - Verify Your E-mail Address", text, html, cancellationToken);
     }
 
     private static async Task<IResult> RecoverUsernameAsync(
@@ -230,7 +230,7 @@ public static class AccountRecoveryEndpoints
             limit
         ]);
 
-        await emailSender.SendAsync(email, "Free Realms - Username(s) Retrieved", text, html, cancellationToken);
+        await emailSender.SendAsync(email, "Open Source Free Realms - Username(s) Retrieved", text, html, cancellationToken);
 
         _logger.LogInformation("Username reminder sent for {Count} accounts.", users.Count);
 
@@ -302,7 +302,7 @@ public static class AccountRecoveryEndpoints
                 limit
             ]);
 
-            await emailSender.SendAsync(user.Email!, "Free Realms - Password Reset", text, html, cancellationToken);
+            await emailSender.SendAsync(user.Email!, "Open Source Free Realms - Password Reset", text, html, cancellationToken);
         }
 
         _logger.LogInformation("Password reset asked for; {Count} accounts matched.", users.Count);

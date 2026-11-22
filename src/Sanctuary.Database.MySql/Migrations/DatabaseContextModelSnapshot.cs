@@ -613,6 +613,50 @@ namespace Sanctuary.Database.MySql.Migrations
                     b.ToTable("NewsPosts");
                 });
 
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbPendingReward", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTimeOffset?>("ClaimedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<ulong?>("ClaimedByCharacterId")
+                        .HasColumnType("bigint unsigned");
+
+                    b.Property<string>("Code")
+                        .HasMaxLength(40)
+                        .HasColumnType("varchar(40)");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime(6)")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<int>("ItemDefinition")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<ulong>("UserId")
+                        .HasColumnType("bigint unsigned");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("PendingRewards");
+                });
+
             modelBuilder.Entity("Sanctuary.Database.Entities.DbPet", b =>
                 {
                     b.Property<int>("Id")
@@ -1241,6 +1285,17 @@ namespace Sanctuary.Database.MySql.Migrations
                         .IsRequired();
 
                     b.Navigation("Character");
+                });
+
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbPendingReward", b =>
+                {
+                    b.HasOne("Sanctuary.Database.Entities.DbUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Sanctuary.Database.Entities.DbPet", b =>

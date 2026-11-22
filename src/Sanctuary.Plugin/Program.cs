@@ -15,7 +15,7 @@ public static class Program
             if (!PluginLink.TryParse(args[0], out var link))
             {
                 paths.Log($"Rejected link: {args[0]}");
-                Dialogs.Error("This Free Realms link is not valid.");
+                Dialogs.Error("This Open Source Free Realms link is not valid.");
                 return 1;
             }
 
@@ -25,7 +25,7 @@ public static class Program
         if (args.Length > 0 && args[0] == "--uninstall")
         {
             ProtocolRegistration.Uninstall();
-            Dialogs.Info("The Free Realms Plugin has been removed.");
+            Dialogs.Info("The Open Source Free Realms Plugin has been removed.");
             return 0;
         }
 
@@ -51,12 +51,12 @@ public static class Program
         catch (Exception ex)
         {
             paths.Log($"Install failed: {ex}");
-            Dialogs.Error($"The Free Realms Plugin could not be installed.\n\n{ex.Message}");
+            Dialogs.Error($"The Open Source Free Realms Plugin could not be installed.\n\n{ex.Message}");
             return 1;
         }
 
         if (args.Length == 0 || args[0] != "--quiet")
-            Dialogs.Info("The Free Realms Plugin is installed!\n\nGo back to your browser and press Play Now! to start Free Realms.");
+            Dialogs.Info("The Open Source Free Realms Plugin is installed!\n\nGo back to your browser and press Play Now! to start Open Source Free Realms.");
 
         return 0;
     }

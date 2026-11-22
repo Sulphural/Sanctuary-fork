@@ -15,6 +15,7 @@ using Microsoft.Extensions.Logging;
 
 using Sanctuary.Database;
 using Sanctuary.Database.Entities;
+using Sanctuary.Game;
 using Sanctuary.WebAPI.Website;
 
 namespace Sanctuary.WebAPI.Endpoints;
@@ -36,6 +37,8 @@ public static partial class RedeemEndpoints
         _logger = loggerFactory.CreateLogger(nameof(RedeemEndpoints));
 
         group.MapPost("/characters/{id}/redeem", RedeemAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.AuthPolicy);
+        group.MapGet("/rewards/pending", PendingRewardsAsync).RequireAuthorization();
+        group.MapGet("/items/{id}/icon", ItemIcon).RequireRateLimiting(WebsiteSecurity.LookupPolicy);
 
         group.MapGet("/staff/codes", ListCodesAsync).RequireAuthorization();
         group.MapPost("/staff/codes", CreateCodeAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.WritePolicy);
@@ -97,37 +100,17 @@ public static partial class RedeemEndpoints
         if (!TryGetUserId(principal, out var userId))
             return Results.Unauthorized();
 
-        var codeText = Normalize(request.Code);
-
-        if (!CodePattern().IsMatch(codeText))
-            return Results.Json(new { error = "invalid" }, statusCode: StatusCodes.Status400BadRequest);
-
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         if (!await dbContext.Characters.AnyAsync(x => x.Id == id && x.UserId == userId, cancellationToken))
             return Results.NotFound();
 
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+        var outcome = CodeRedeemer.Redeem(dbContext, userId, id, request.Code);
 
-        var code = await dbContext.RedeemCodes.AsNoTracking().SingleOrDefaultAsync(x => x.Code == codeText, cancellationToken);
+        if (!outcome.Success)
+            return Results.Json(new { error = outcome.Error }, statusCode: StatusCodes.Status400BadRequest);
 
-        if (code is null)
-            return Results.Json(new { error = "invalid" }, statusCode: StatusCodes.Status400BadRequest);
-
-        if (code.ExpiresAt is not null && code.ExpiresAt <= DateTimeOffset.UtcNow)
-            return Results.Json(new { error = "expired" }, statusCode: StatusCodes.Status400BadRequest);
-
-        if (await dbContext.CodeRedemptions.AnyAsync(x => x.Code == codeText && x.UserId == userId, cancellationToken))
-            return Results.Json(new { error = "alreadyRedeemed" }, statusCode: StatusCodes.Status400BadRequest);
-
-        var claimed = await dbContext.RedeemCodes
-            .Where(x => x.Code == codeText && (x.MaxUses == 0 || x.Uses < x.MaxUses))
-            .ExecuteUpdateAsync(x => x.SetProperty(c => c.Uses, c => c.Uses + 1), cancellationToken);
-
-        if (claimed == 0)
-            return Results.Json(new { error = "usedUp" }, statusCode: StatusCodes.Status400BadRequest);
-
-        dbContext.CodeRedemptions.Add(new DbCodeRedemption { Code = codeText, UserId = userId, CharacterId = id, Created = DateTimeOffset.UtcNow });
+        var code = outcome.Code!;
 
         if (code.Coins > 0)
         {
@@ -145,35 +128,55 @@ public static partial class RedeemEndpoints
                 .ExecuteUpdateAsync(x => x.SetProperty(c => c.StationCash, c => c.StationCash > int.MaxValue - stationCash ? int.MaxValue : c.StationCash + stationCash), cancellationToken);
         }
 
-        if (code.ItemDefinition is not null && code.ItemCount > 0)
+        _logger.LogInformation("User {UserId} redeemed code {Code} on character {CharacterId}.", userId, code.Code, id);
+
+        return Results.Ok(new
         {
-            var definition = code.ItemDefinition.Value;
-            var items = await dbContext.Items.Where(x => x.CharacterId == id).ToListAsync(cancellationToken);
-            var existing = items.SingleOrDefault(x => x.Definition == definition && x.Tint == 0);
+            description = code.Description,
+            rewards = RewardParts(code, itemNames),
+            waitingInGame = outcome.PendingReward is null ? null : itemNames.NameOf(outcome.PendingReward.ItemDefinition),
+            item = outcome.PendingReward is null ? null : new { id = outcome.PendingReward.ItemDefinition, name = itemNames.NameOf(outcome.PendingReward.ItemDefinition), quantity = outcome.PendingReward.Quantity },
+            coins = code.Coins,
+            stationCash = code.StationCash
+        });
+    }
 
-            if (existing is null)
-            {
-                dbContext.Items.Add(new DbItem
-                {
-                    Id = items.Select(x => x.Id).DefaultIfEmpty(0).Max() + 1,
-                    CharacterId = id,
-                    Definition = definition,
-                    Count = code.ItemCount,
-                    Tint = 0
-                });
-            }
-            else
-            {
-                existing.Count += code.ItemCount;
-            }
-        }
+    private static IResult ItemIcon(int id, HttpContext httpContext, ItemIcons itemIcons)
+    {
+        var png = itemIcons.GetIconPng(id);
 
-        await dbContext.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+        if (png is null)
+            return Results.NotFound();
 
-        _logger.LogInformation("User {UserId} redeemed code {Code} on character {CharacterId}.", userId, codeText, id);
+        httpContext.Response.Headers.CacheControl = "public, max-age=86400";
+        return Results.File(png, "image/png");
+    }
 
-        return Results.Ok(new { description = code.Description, rewards = RewardParts(code, itemNames) });
+    private static async Task<IResult> PendingRewardsAsync(
+        ClaimsPrincipal principal,
+        ItemNames itemNames,
+        IDbContextFactory<DatabaseContext> dbContextFactory,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(principal, out var userId))
+            return Results.Unauthorized();
+
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        var rewards = await CodeRedeemer.Unclaimed(dbContext, userId)
+            .AsNoTracking()
+            .OrderBy(x => x.Id)
+            .ToListAsync(cancellationToken);
+
+        return Results.Ok(rewards.Select(x => new
+        {
+            id = x.Id,
+            itemDefinition = x.ItemDefinition,
+            item = itemNames.NameOf(x.ItemDefinition),
+            quantity = x.Quantity,
+            source = x.Source,
+            created = x.Created
+        }));
     }
 
     private static async Task<IResult> ListCodesAsync(

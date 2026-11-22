@@ -9,4 +9,8 @@ public class WebAPIOptions
     public bool? MemberByDefault { get; set; }
 
     public string? WebsiteRoot { get; set; }
+
+    public string? ClientFolder { get; set; }
+
+    public string? PortraitPlateFolder { get; set; }
 }

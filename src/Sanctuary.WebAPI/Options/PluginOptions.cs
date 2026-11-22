@@ -19,4 +19,10 @@ public class PluginOptions
     public string ClientBaseUrl { get; set; } = "https://opensourcefreerealms.com/client";
 
     public string? DownloadsPath { get; set; }
+
+    public string? PurchaseAddress { get; set; }
+
+    public string? LocalPurchaseAddress { get; set; }
+
+    public string? PurchaseCertificateFile { get; set; }
 }

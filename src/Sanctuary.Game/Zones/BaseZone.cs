@@ -511,7 +511,7 @@ public abstract class BaseZone : IZone, IDisposable
         bool isReferee = player.IsAdmin || player.IsMod;
         var packetMembershipSubscriptionInfo = new PacketMembershipSubscriptionInfo
         {
-            IsMember = player.MembershipStatus != 0,
+            IsMember = player.IsLifetimeMember,
             IsReferee = isReferee
         };
 
