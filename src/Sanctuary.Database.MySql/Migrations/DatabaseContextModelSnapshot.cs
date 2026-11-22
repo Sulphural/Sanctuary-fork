@@ -970,6 +970,9 @@ namespace Sanctuary.Database.MySql.Migrations
                         .HasColumnType("int")
                         .HasDefaultValue(10);
 
+                    b.Property<DateTimeOffset?>("MemberUntil")
+                        .HasColumnType("datetime(6)");
+
                     b.Property<DateTimeOffset?>("MutedUntil")
                         .HasColumnType("datetime(6)");
 

@@ -16,6 +16,7 @@ public sealed class DbUser
     public int MaxCharacters { get; set; }
 
     public bool IsMember { get; set; }
+    public DateTimeOffset? MemberUntil { get; set; }
     public bool IsAdmin { get; set; }
     public bool IsMod { get; set; }
 

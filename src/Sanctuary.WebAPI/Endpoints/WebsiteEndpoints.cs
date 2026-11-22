@@ -78,6 +78,7 @@ public static class WebsiteEndpoints
         group.MapStaffPlayerEndpoints(loggerFactory);
         group.MapNewsEndpoints();
         group.MapRedeemEndpoints(loggerFactory);
+        group.MapMembershipEndpoints(loggerFactory);
         group.MapAccountRecoveryEndpoints(loggerFactory);
     }
 
@@ -114,12 +115,16 @@ public static class WebsiteEndpoints
     private static async Task<IResult> RegisterAsync(
         RegisterRequestModel request,
         HttpContext httpContext,
+        IResourceManager resourceManager,
         IOptions<WebAPIOptions> webAPIOptions,
         IDbContextFactory<DatabaseContext> dbContextFactory,
         CancellationToken cancellationToken)
     {
         if (!MiniValidator.TryValidate(request, out var errors))
             return Results.ValidationProblem(errors);
+
+        if (Usernames.IsBlocked(request.Username, resourceManager))
+            return Results.Json(new { error = "usernameBlocked" }, statusCode: StatusCodes.Status400BadRequest);
 
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
@@ -130,7 +135,7 @@ public static class WebsiteEndpoints
         {
             Username = request.Username,
             Password = BC.HashPassword(request.Password, BC.GenerateSalt()),
-            IsMember = webAPIOptions.Value.MemberByDefault ?? true,
+            IsMember = webAPIOptions.Value.MemberByDefault ?? false,
         };
 
         await dbContext.Users.AddAsync(dbUser, cancellationToken);
@@ -174,6 +179,9 @@ public static class WebsiteEndpoints
                 return characterError;
         }
 
+        if (Usernames.IsBlocked(request.Username, resourceManager))
+            return Results.Json(new { error = "usernameBlocked" }, statusCode: StatusCodes.Status400BadRequest);
+
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         if (await dbContext.Users.AnyAsync(x => x.Username == request.Username, cancellationToken))
@@ -183,7 +191,7 @@ public static class WebsiteEndpoints
 
         if (characterData is not null)
         {
-            var (holdError, held) = await HoldCustomNameAsync(dbContext, names, resourceManager, request.Character!.CustomName, characterData, cancellationToken);
+            var (holdError, held) = await HoldCustomNameAsync(dbContext, names, resourceManager, request.Character!.CustomName, request.Character.FirstName, request.Character.LastNamePrefix, request.Character.LastNameSuffix, characterData, cancellationToken);
 
             if (holdError is not null)
                 return holdError;
@@ -197,7 +205,7 @@ public static class WebsiteEndpoints
         {
             Username = request.Username,
             Password = BC.HashPassword(request.Password, BC.GenerateSalt()),
-            IsMember = webAPIOptions.Value.MemberByDefault ?? true,
+            IsMember = webAPIOptions.Value.MemberByDefault ?? false,
             Email = request.Email.Trim(),
             EmailOptIn = request.EmailOptIn,
             Country = request.Country.Trim(),
@@ -323,11 +331,12 @@ public static class WebsiteEndpoints
         return Results.Ok(new
         {
             username = dbUser.Username,
-            maxCharacters = dbUser.MaxCharacters,
+            maxCharacters = Membership.CharacterLimit(dbUser),
             emailOptIn = dbUser.EmailOptIn,
             email = dbUser.Email,
             emailVerified = dbUser.EmailVerified,
-            isMember = dbUser.IsMember,
+            isMember = dbUser.IsMember && !Membership.HasExpired(dbUser),
+            memberUntil = dbUser.IsMember && !Membership.HasExpired(dbUser) ? dbUser.MemberUntil : null,
             isStaff = dbUser.IsAdmin || dbUser.IsMod,
             isAdmin = dbUser.IsAdmin,
             characters = dbUser.Characters
@@ -374,6 +383,7 @@ public static class WebsiteEndpoints
                 x.LastLogin,
                 x.PlayTime,
                 x.Coins,
+                x.StationCash,
                 x.MembershipStatus,
                 Level = x.Profiles.Where(p => p.Id == x.ActiveProfileId).Select(p => p.Level).FirstOrDefault(),
                 Collections = x.CollectionEntries.Count,
@@ -402,6 +412,7 @@ public static class WebsiteEndpoints
             lastLogin = character.LastLogin,
             playTimeMinutes = character.PlayTime,
             coins = character.Coins,
+            stationCash = isOwner ? character.StationCash : (int?)null,
             isMember = character.MembershipStatus != 0,
             level = character.Level,
             collections = character.Collections,
@@ -650,11 +661,17 @@ public static class WebsiteEndpoints
         string? firstName,
         string? lastName,
         string? custom,
+        string? gender,
+        string? prefix,
+        string? suffix,
         IResourceManager resourceManager,
         CharacterNames names,
         IDbContextFactory<DatabaseContext> dbContextFactory,
         CancellationToken cancellationToken)
     {
+        if (custom is null && firstName is not null && prefix is not null && suffix is not null)
+            lastName = CharacterNames.ComposeLastName(prefix, suffix);
+
         if (custom is not null)
         {
             var nameError = CustomNames.Validate(custom, resourceManager, names, out var customFirstName, out var customLastName);
@@ -673,20 +690,53 @@ public static class WebsiteEndpoints
 
         var taken = await PendingNames.IsTakenAsync(dbContext, firstName, lastName, 0, cancellationToken);
         var review = !taken && custom is not null && PendingNames.NeedsReview(names, firstName, lastName);
+        var male = gender == "male";
+        var knownGender = gender is "male" or "female";
 
-        return Results.Ok(new { available = !taken, error = taken ? "taken" : null, review });
+        object? temporary = null;
+
+        if (review && knownGender)
+        {
+            var picked = await PendingNames.PickFreeReelPartsAsync(dbContext, names, male, cancellationToken);
+
+            if (picked is not null)
+                temporary = ReelNameResponse(picked.Value);
+        }
+
+        object[]? suggestions = null;
+
+        if (taken && custom is null && knownGender && prefix is not null && suffix is not null
+            && names.IsValidFirstName(gender!, firstName) && names.IsValidPrefix(prefix) && names.IsValidSuffix(suffix))
+        {
+            var found = await PendingNames.SuggestReelNamesAsync(dbContext, names, male, firstName, prefix, suffix, cancellationToken);
+            suggestions = found.Select(ReelNameResponse).ToArray();
+        }
+
+        return Results.Ok(new { available = !taken, error = taken ? "taken" : null, review, temporary, suggestions });
+    }
+
+    private static object ReelNameResponse((string FirstName, string Prefix, string Suffix) name)
+    {
+        return new { firstName = name.FirstName, lastNamePrefix = name.Prefix, lastNameSuffix = name.Suffix, lastName = CharacterNames.ComposeLastName(name.Prefix, name.Suffix) };
     }
 
     private static async Task<IResult> CheckUsernameAsync(
         string username,
+        IResourceManager resourceManager,
         IDbContextFactory<DatabaseContext> dbContextFactory,
         CancellationToken cancellationToken)
     {
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        var taken = await dbContext.Users.AnyAsync(x => x.Username == username, cancellationToken);
+        var blocked = Usernames.IsBlocked(username, resourceManager);
+        var taken = !blocked && await dbContext.Users.AnyAsync(x => x.Username == username, cancellationToken);
 
-        return Results.Ok(new { available = !taken });
+        if (!blocked && !taken)
+            return Results.Ok(new { available = true });
+
+        var suggestions = await Usernames.SuggestAsync(dbContext, username, resourceManager, cancellationToken);
+
+        return Results.Ok(new { available = false, reason = blocked ? "blocked" : "taken", suggestions });
     }
 
     private static async Task<IResult> CreateCharacterAsync(
@@ -707,7 +757,7 @@ public static class WebsiteEndpoints
 
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
-        var (holdError, requestedName) = await HoldCustomNameAsync(dbContext, names, resourceManager, request.CustomName, characterData, cancellationToken);
+        var (holdError, requestedName) = await HoldCustomNameAsync(dbContext, names, resourceManager, request.CustomName, request.FirstName, request.LastNamePrefix, request.LastNameSuffix, characterData, cancellationToken);
 
         if (holdError is not null)
             return holdError;
@@ -727,6 +777,9 @@ public static class WebsiteEndpoints
         CharacterNames names,
         IResourceManager resourceManager,
         string? customName,
+        string? reelFirstName,
+        string? reelPrefix,
+        string? reelSuffix,
         CharacterData characterData,
         CancellationToken cancellationToken)
     {
@@ -740,7 +793,9 @@ public static class WebsiteEndpoints
             return (CharacterCreateError(CharacterCreateResult.NameTaken), null);
 
         var male = resourceManager.Models.TryGetValue(characterData.Model, out var model) && model.Gender == 1;
-        var temporaryName = await PendingNames.PickFreeReelNameAsync(dbContext, names, male, cancellationToken);
+        var temporaryName = await PendingNames.IsFreeReelNameAsync(dbContext, names, male, reelFirstName, reelPrefix, reelSuffix, cancellationToken)
+            ? (reelFirstName!, CharacterNames.ComposeLastName(reelPrefix!, reelSuffix!))
+            : await PendingNames.PickFreeReelNameAsync(dbContext, names, male, cancellationToken);
 
         if (temporaryName is null)
             return (Results.Json(new { error = "failed" }, statusCode: StatusCodes.Status500InternalServerError), null);

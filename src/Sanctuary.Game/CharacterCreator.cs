@@ -118,7 +118,7 @@ public static class CharacterCreator
 
         var characterCount = dbContext.Characters.Count(x => x.UserId == userId);
 
-        if (characterCount >= dbUser.MaxCharacters)
+        if (characterCount >= Membership.CharacterLimit(dbUser))
         {
             logger.LogInformation("Failed to create character, max characters.");
             return CharacterCreateResult.MaxCharacters;
@@ -144,7 +144,7 @@ public static class CharacterCreator
 
             Gender = model.Gender,
 
-            MembershipStatus = dbUser.IsMember ? 2 : 0,
+            MembershipStatus = Membership.StatusFor(dbUser),
 
             UserId = userId
         };

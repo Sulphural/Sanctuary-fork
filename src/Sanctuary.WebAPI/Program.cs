@@ -68,6 +68,7 @@ builder.Services.AddOptions<BackupOptions>()
     .BindConfiguration(BackupOptions.Section);
 builder.Services.AddSingleton<DatabaseBackupService>();
 builder.Services.AddHostedService(serviceProvider => serviceProvider.GetRequiredService<DatabaseBackupService>());
+builder.Services.AddHostedService<MembershipExpiryService>();
 
 // Website Authentication
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

@@ -11,7 +11,7 @@
     "DefaultProfileId": 1,
 
     "StartingCoins": 999999999,
-    "StartingStationCash": 999999999,
+    "StartingStationCash": 500,
 
     "UnlockAllTitles": true,
     "UnlockAllProfiles": true

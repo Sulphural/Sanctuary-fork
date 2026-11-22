@@ -141,6 +141,29 @@ public static class PacketLoginHandler
             }
         }
 
+        var membershipStatus = Membership.StatusFor(character.User);
+
+        if (Membership.HasExpired(character.User))
+        {
+            dbContext.Users
+                .Where(x => x.Id == character.User.Id)
+                .ExecuteUpdate(x => x
+                    .SetProperty(u => u.IsMember, false)
+                    .SetProperty(u => u.MemberUntil, (DateTimeOffset?)null));
+
+            dbContext.Characters
+                .Where(x => x.UserId == character.User.Id)
+                .ExecuteUpdate(x => x.SetProperty(c => c.MembershipStatus, Membership.FreeStatus));
+        }
+        else if (character.MembershipStatus != membershipStatus)
+        {
+            dbContext.Characters
+                .Where(x => x.Id == character.Id)
+                .ExecuteUpdate(x => x.SetProperty(c => c.MembershipStatus, membershipStatus));
+        }
+
+        character.MembershipStatus = membershipStatus;
+
         var orphanedIgnores = character.Ignores
             .Where(x => x.IgnoreCharacter is null)
             .ToList();

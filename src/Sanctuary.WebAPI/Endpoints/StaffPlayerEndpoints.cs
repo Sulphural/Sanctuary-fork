@@ -25,6 +25,7 @@ public static class StaffPlayerEndpoints
 
     public sealed record DurationRequest(int? Minutes, string? Reason);
     public sealed record RoleRequest(string? Role);
+    public sealed record MembershipRequest(int? Days, bool Remove);
     public sealed record ReportCharacterRequest(string? Reason);
 
     public static void MapStaffPlayerEndpoints(this RouteGroupBuilder group, ILoggerFactory loggerFactory)
@@ -41,6 +42,7 @@ public static class StaffPlayerEndpoints
         group.MapPost("/staff/players/{userId}/unmute", UnmuteAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.WritePolicy);
         group.MapPost("/staff/players/{userId}/role", SetRoleAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.WritePolicy);
         group.MapPost("/staff/players/{userId}/password", ResetPasswordAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.WritePolicy);
+        group.MapPost("/staff/players/{userId}/membership", SetMembershipAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.WritePolicy);
 
         group.MapGet("/staff/player-reports", GetPlayerReportsAsync).RequireAuthorization();
         group.MapPost("/staff/player-reports/{characterId}/dismiss", DismissPlayerReportsAsync).RequireAuthorization().RequireRateLimiting(WebsiteSecurity.WritePolicy);
@@ -151,6 +153,8 @@ public static class StaffPlayerEndpoints
                 u.IsMod,
                 u.LockedUntil,
                 u.MutedUntil,
+                u.IsMember,
+                u.MemberUntil,
                 Characters = u.Characters.Select(c => new { c.Id, c.FirstName, c.LastName }).ToList()
             })
             .ToListAsync(cancellationToken);
@@ -162,6 +166,7 @@ public static class StaffPlayerEndpoints
             role = u.IsAdmin ? "admin" : u.IsMod ? "moderator" : "player",
             bannedUntil = ActiveOrNull(u.LockedUntil),
             mutedUntil = ActiveOrNull(u.MutedUntil),
+            isMember = u.IsMember && (u.MemberUntil == null || u.MemberUntil > DateTimeOffset.UtcNow),
             characters = u.Characters.OrderBy(c => c.Id).Select(c => new { id = c.Id, firstName = c.FirstName, lastName = c.LastName })
         }));
     }
@@ -220,7 +225,8 @@ public static class StaffPlayerEndpoints
             canChangeRole = staff.IsAdmin && !user.IsAdmin && user.Id != staff.Id,
             email = staff.IsAdmin ? user.Email : null,
             country = user.Country,
-            isMember = user.IsMember,
+            isMember = user.IsMember && !Membership.HasExpired(user),
+            memberUntil = user.IsMember && !Membership.HasExpired(user) ? user.MemberUntil : null,
             created = user.Created,
             lastLogin = user.LastLogin,
             bannedUntil = ActiveOrNull(user.LockedUntil),
@@ -234,6 +240,8 @@ public static class StaffPlayerEndpoints
                 gender = x.Gender,
                 created = x.Created,
                 lastLogin = x.LastLogin,
+                coins = x.Coins,
+                stationCash = x.StationCash,
                 pendingName = pendingNames.TryGetValue(x.Id, out var review)
                     ? new { firstName = review.RequestedFirstName, lastName = review.RequestedLastName }
                     : null
@@ -293,6 +301,66 @@ public static class StaffPlayerEndpoints
         _logger.LogInformation("Staff {Staff} banned {Username} {Duration}.", staff!.Username, target.Username, DurationText(request.Minutes));
 
         return Results.Ok(new { bannedUntil = target.LockedUntil });
+    }
+
+    private static async Task<IResult> SetMembershipAsync(
+        ulong userId,
+        MembershipRequest request,
+        ClaimsPrincipal principal,
+        IDbContextFactory<DatabaseContext> dbContextFactory,
+        CancellationToken cancellationToken)
+    {
+        if (!request.Remove && request.Days is <= 0 or > 3650)
+            return Results.Json(new { error = "duration" }, statusCode: StatusCodes.Status400BadRequest);
+
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        var staff = await StaffAccess.GetStaffAsync(dbContext, principal, cancellationToken);
+
+        if (staff is null)
+            return Results.Forbid();
+
+        var target = await dbContext.Users.SingleOrDefaultAsync(x => x.Id == userId, cancellationToken);
+
+        if (target is null)
+            return Results.NotFound();
+
+        Membership.ExpireIfDue(dbContext, target);
+
+        string text;
+
+        if (request.Remove)
+        {
+            if (!target.IsMember)
+                return Results.Json(new { error = "notMember" }, statusCode: StatusCodes.Status409Conflict);
+
+            Membership.Set(dbContext, target, false, null);
+            text = "Removed membership.";
+        }
+        else if (request.Days is null)
+        {
+            Membership.Set(dbContext, target, true, null);
+            text = "Gave permanent membership.";
+        }
+        else
+        {
+            var from = target.IsMember && target.MemberUntil is not null ? target.MemberUntil.Value : DateTimeOffset.UtcNow;
+
+            if (target.IsMember && target.MemberUntil is null)
+                from = DateTimeOffset.UtcNow;
+
+            var until = from.AddDays(request.Days.Value);
+            Membership.Set(dbContext, target, true, until);
+            text = "Gave membership " + DurationText(request.Days.Value * 1440) + " (until " + until.ToString("yyyy-MM-dd HH:mm") + " UTC).";
+        }
+
+        StaffAccess.Log(dbContext, staff, "membership", target.Id, null, target.Username, text);
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        _logger.LogInformation("Staff {Staff} changed membership of {Username}: {Text}", staff.Username, target.Username, text);
+
+        return Results.Ok(new { isMember = target.IsMember, memberUntil = target.MemberUntil });
     }
 
     private static async Task<IResult> UnbanAsync(

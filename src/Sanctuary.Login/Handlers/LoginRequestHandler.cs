@@ -88,6 +88,9 @@ public static class LoginRequestHandler
 
         user.LastLogin = DateTimeOffset.UtcNow;
 
+        if (Membership.ExpireIfDue(dbContext, user))
+            _logger.LogInformation("Membership of {username} has run out.", user.Username);
+
         if (dbContext.SaveChanges() <= 0)
         {
             connection.Send(loginReply);
@@ -121,7 +124,7 @@ public static class LoginRequestHandler
         var accountInfo = new AccountInfo
         {
             IsMember = user.IsMember,
-            MaxCharacters = user.MaxCharacters,
+            MaxCharacters = Membership.CharacterLimit(user),
             IsAdminAccount = user.IsAdmin
         };
 

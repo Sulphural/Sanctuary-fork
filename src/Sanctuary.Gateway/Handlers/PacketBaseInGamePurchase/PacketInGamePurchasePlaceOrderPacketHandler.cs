@@ -104,6 +104,13 @@ public static class PacketInGamePurchasePlaceOrderPacketHandler
             return SendOrderResult(connection, packetInGamePurchasePlaceOrderResponse, InGamePurchaseOrderResult.OrderFailure);
         }
 
+        if (dbCharacter.StationCash < totalCost)
+        {
+            connection.Player.StationCash = dbCharacter.StationCash;
+
+            return SendOrderResult(connection, packetInGamePurchasePlaceOrderResponse, InGamePurchaseOrderResult.BalanceNotEnough);
+        }
+
         var lastItemId = dbCharacter.Items.Count > 0 ? dbCharacter.Items.Max(i => i.Id) : 0;
         var lastMountId = dbCharacter.Mounts.Count > 0 ? dbCharacter.Mounts.Max(x => x.Id) : 0;
         var lastPetId = dbCharacter.Pets.Count > 0 ? dbCharacter.Pets.Max(x => x.Id) : 0;

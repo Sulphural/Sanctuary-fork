@@ -83,10 +83,14 @@ public static class AuthEndpoints
         RegisterRequestModel request,
         CancellationToken cancellationToken,
         IOptions<WebAPIOptions> webAPIOptions,
+        Sanctuary.Game.IResourceManager resourceManager,
         IDbContextFactory<DatabaseContext> dbContextFactory)
     {
         if (!MiniValidator.TryValidate(request, out var errors))
             return Results.ValidationProblem(errors);
+
+        if (Usernames.IsBlocked(request.Username, resourceManager))
+            return Results.BadRequest();
 
         var dbContext = await dbContextFactory.CreateDbContextAsync();
 
@@ -106,7 +110,7 @@ public static class AuthEndpoints
         {
             Username = request.Username,
             Password = hashedPassword,
-            IsMember = webAPIOptions.Value.MemberByDefault ?? true,
+            IsMember = webAPIOptions.Value.MemberByDefault ?? false,
         };
 
         await dbContext.Users.AddAsync(dbUser, cancellationToken);

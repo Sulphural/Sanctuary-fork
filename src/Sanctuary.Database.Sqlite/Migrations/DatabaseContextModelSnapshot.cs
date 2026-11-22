@@ -953,6 +953,9 @@ namespace Sanctuary.Database.Sqlite.Migrations
                         .HasColumnType("INTEGER")
                         .HasDefaultValue(10);
 
+                    b.Property<DateTimeOffset?>("MemberUntil")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTimeOffset?>("MutedUntil")
                         .HasColumnType("TEXT");
 
