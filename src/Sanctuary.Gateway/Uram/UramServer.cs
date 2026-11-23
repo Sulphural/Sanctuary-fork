@@ -348,6 +348,19 @@ public sealed class UramServer : BackgroundService
 
         _logger.LogInformation("{connection} redeemed code {code} in game.", connection, code.Code);
 
+        int? stationCashBalance = null;
+
+        if (code.StationCash > 0)
+        {
+            var stationCash = code.StationCash;
+
+            dbContext.Characters
+                .Where(x => x.Id == characterId)
+                .ExecuteUpdate(x => x.SetProperty(c => c.StationCash, c => c.StationCash > int.MaxValue - stationCash ? int.MaxValue : c.StationCash + stationCash));
+
+            stationCashBalance = dbContext.Characters.AsNoTracking().Where(x => x.Id == characterId).Select(x => x.StationCash).Single();
+        }
+
         connection.QueueWork(() =>
         {
             if (connection.Player is null)
@@ -356,8 +369,8 @@ public sealed class UramServer : BackgroundService
             if (code.Coins > 0)
                 _rewardManager.TryGrantCurrency(connection.Player, CurrencyType.Coins, code.Coins);
 
-            if (code.StationCash > 0)
-                _rewardManager.TryGrantCurrency(connection.Player, CurrencyType.StationCash, code.StationCash);
+            if (stationCashBalance is { } balance)
+                connection.Player.StationCash = balance;
 
             if (outcome.PendingReward is not null)
                 Handlers.PacketBaseClaimSystemHandler.SendList(connection);

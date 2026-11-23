@@ -79,6 +79,10 @@ public static class PacketLoginHandler
 
         using var dbContext = _dbContextFactory.CreateDbContext();
 
+        var characterId = GuidHelper.IsPlayerGuid(packetLogin.Guid)
+            ? GuidHelper.GetPlayerId(packetLogin.Guid)
+            : dbContext.Characters.Where(x => x.Ticket == ticket).Select(x => x.Id).FirstOrDefault();
+
         var character = dbContext.Characters
             .AsNoTrackingWithIdentityResolution()
             .Include(x => x.User)
@@ -101,7 +105,7 @@ public static class PacketLoginHandler
                     .ThenInclude(x => x.Members)
                         .ThenInclude(x => x.Character)
             .AsSplitQuery()
-            .SingleOrDefault(x => x.Id == GuidHelper.GetPlayerId(packetLogin.Guid)
+            .SingleOrDefault(x => x.Id == characterId
 #if !DEBUG
                 && x.Ticket == ticket
 #endif
