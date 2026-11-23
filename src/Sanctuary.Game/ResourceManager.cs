@@ -61,6 +61,7 @@ public class ResourceManager : IResourceManager, IDisposable
     public static readonly string NpcAmbientFile = Path.Combine(BaseDirectory, "NpcAmbient.json");
     public static readonly string NameFilterFile = Path.Combine(BaseDirectory, "NameFilter.txt");
     public static readonly string QuestsFile = Path.Combine(BaseDirectory, "Quests.json");
+    public static readonly string ProgressiveQuestsFile = Path.Combine(BaseDirectory, "ProgressiveQuests.json");
     public static readonly string NavMeshDirectory = Path.Combine(BaseDirectory, "NavMeshes");
     public static readonly string RewardTablesFile = Path.Combine(BaseDirectory, "Rewards.json");
     public static readonly string CombatAbilitiesFile = Path.Combine(BaseDirectory, "CombatAbilities.json");
@@ -110,6 +111,7 @@ public class ResourceManager : IResourceManager, IDisposable
     public NpcMovementDefinitionCollection NpcMovements { get; }
     public NpcAmbientDefinitionCollection NpcAmbient { get; }
     public QuestDefinitionCollection Quests { get; }
+    public ProgressiveQuestDefinitionCollection ProgressiveQuests { get; }
     public NavMeshCollection NavMeshes { get; }
 
     public RewardTableDefinitionCollection RewardTables { get; }
@@ -171,6 +173,7 @@ public class ResourceManager : IResourceManager, IDisposable
         NpcMovements = new(_logger);
         NpcAmbient = new(_logger);
         Quests = new(_logger);
+        ProgressiveQuests = new(_logger);
         NavMeshes = new(_logger);
         RewardTables = new(_logger);
         CombatAbilities = new(_logger);
@@ -378,6 +381,9 @@ public class ResourceManager : IResourceManager, IDisposable
         if (!Quests.Load(QuestsFile))
             return false;
 
+        if (!ProgressiveQuests.Load(ProgressiveQuestsFile))
+            return false;
+
         var playerSpecificNodeTypes = CollectionNodePools.Values
             .Where(pool => pool.PlayerSpecific)
             .Select(pool => pool.NodeType)
@@ -510,6 +516,8 @@ public class ResourceManager : IResourceManager, IDisposable
                 loaded = CombatJobs.Load(CombatJobsFile);
             else if (e.FullPath == QuestsFile)
                 loaded = Quests.Load(QuestsFile);
+            else if (e.FullPath == ProgressiveQuestsFile)
+                loaded = ProgressiveQuests.Load(ProgressiveQuestsFile);
             else
                 _logger.LogWarning("Unknown file changed. File: {filepath}", e.FullPath);
 

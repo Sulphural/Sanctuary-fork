@@ -319,7 +319,7 @@ public class GatewayConnection : UdpConnection
         {
             if (dbQuest.Completed)
             {
-                Player.Quests.AddCompleted(dbQuest.QuestId);
+                Player.Quests.AddCompleted(dbQuest.QuestId, dbQuest.CompletedAt);
                 continue;
             }
 

@@ -8168,5 +8168,19 @@
     "NodeType": "bike-retrieval-bikes",
     "MaxActiveNodes": 6,
     "PlayerSpecific": true
+  },
+  {
+    "Key": "snowhill-gifting-tree-presents",
+    "ZoneDefinitionId": 1,
+    "NodeType": "gifting-tree-present",
+    "MaxActiveNodes": 5,
+    "PlayerSpecific": true
+  },
+  {
+    "Key": "snowhill-mysterious-present",
+    "ZoneDefinitionId": 1,
+    "NodeType": "mysterious-present",
+    "MaxActiveNodes": 1,
+    "PlayerSpecific": true
   }
 ]

@@ -15,6 +15,8 @@ public class SeasonalClientAreaDefinition
 
     public List<int> AreaIds { get; set; } = [];
 
+    public List<int> NpcIds { get; set; } = [];
+
     public bool IsActive(DateTime date)
     {
         var day = (date.Month, date.Day);

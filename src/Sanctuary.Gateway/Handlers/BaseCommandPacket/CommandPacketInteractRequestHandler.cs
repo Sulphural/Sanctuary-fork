@@ -213,9 +213,13 @@ public static class CommandPacketInteractRequestHandler
         if (!_questManager.CanGatherQuestNode(player, node))
             return true;
 
-        player.OnRemoveVisibleNpcGracefully(node, animate: true);
-
         var typeDefinition = node.TypeDefinition;
+
+        if (typeDefinition.GatherAnimationId != 0)
+            player.SendTunneled(new PlayerUpdatePacketSetAnimation { Guid = node.Guid, AnimationId = typeDefinition.GatherAnimationId });
+
+        player.OnRemoveVisibleNpcGracefully(node, animate: true, typeDefinition.GatherRemoveDelayMs, typeDefinition.GatherCompositeEffectId);
+
         if (typeDefinition.CollectionEntryId != 0 && !player.CollectedCollectionEntryIds.Contains(typeDefinition.CollectionEntryId))
         {
             try

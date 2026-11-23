@@ -47,6 +47,17 @@
         4003,
         4004
       ]
+    },
+    {
+      "Name": "SnowDays",
+      "StartMonth": 12,
+      "StartDay": 3,
+      "EndMonth": 1,
+      "EndDay": 13,
+      "NpcIds": [
+        40302,
+        40310
+      ]
     }
   ],
   "AreaDefinitions": [

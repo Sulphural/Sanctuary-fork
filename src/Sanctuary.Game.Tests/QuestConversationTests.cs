@@ -81,6 +81,31 @@ public sealed class QuestConversationTests
         Assert.IsNull(conversation.Finish());
     }
 
+    [TestMethod]
+    [DataRow(1, true)]
+    [DataRow(2, false)]
+    public void Answer_ACancellingChoiceDropsTheFinishCallback(int responseId, bool expectsCallback)
+    {
+        var finished = false;
+        var conversation = new QuestConversation();
+        var prompt = new QuestDialogueLine
+        {
+            TextId = Question,
+            Choices =
+            [
+                new QuestDialogueChoice { ResponseTextId = 10 },
+                new QuestDialogueChoice { ResponseTextId = 11, Cancels = true }
+            ]
+        };
+
+        conversation.Start([prompt], 7, () => finished = true);
+
+        Assert.AreEqual(QuestConversationStep.Finished, conversation.Answer(responseId));
+        conversation.Finish()?.Invoke();
+
+        Assert.AreEqual(expectsCallback, finished);
+    }
+
     private static QuestConversation Start(params QuestDialogueLine[] lines)
     {
         var conversation = new QuestConversation();

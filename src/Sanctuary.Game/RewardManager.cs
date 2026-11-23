@@ -26,6 +26,8 @@ public class RewardManager : IRewardManager
     private readonly IResourceManager _resourceManager;
     private readonly IDbContextFactory<DatabaseContext> _dbContextFactory;
 
+    public event Action<Player, int>? ItemCountChanged;
+
     public RewardManager(ILogger<RewardManager> logger, IResourceManager resourceManager,
         IDbContextFactory<DatabaseContext> dbContextFactory)
     {
@@ -211,6 +213,121 @@ public class RewardManager : IRewardManager
 
         SendRewardToast(player, itemDefinition, quantity, sourceGuid, itemGuid: clientItem.Id, tint: clientItem.Tint);
 
+        ItemCountChanged?.Invoke(player, itemDefinitionId);
+
+        return true;
+    }
+
+    public int CountItems(Player player, int itemDefinitionId)
+        => player.Items.Where(item => item.Definition == itemDefinitionId).Sum(item => item.Count);
+
+    public bool TryTakeItems(Player player, int itemDefinitionId, int quantity)
+    {
+        if (quantity <= 0)
+            return true;
+
+        if (CountItems(player, itemDefinitionId) < quantity)
+            return false;
+
+        var characterId = GuidHelper.GetPlayerId(player.Guid);
+
+        using var dbContext = _dbContextFactory.CreateDbContext();
+        var dbItems = dbContext.Items
+            .Where(item => item.CharacterId == characterId && item.Definition == itemDefinitionId)
+            .OrderBy(item => item.Id)
+            .ToList();
+
+        if (dbItems.Sum(item => item.Count) < quantity)
+            return false;
+
+        var remaining = quantity;
+
+        foreach (var dbItem in dbItems)
+        {
+            if (remaining == 0)
+                break;
+
+            var taken = Math.Min(dbItem.Count, remaining);
+            dbItem.Count -= taken;
+            remaining -= taken;
+
+            if (dbItem.Count == 0)
+                dbContext.Items.Remove(dbItem);
+        }
+
+        if (dbContext.SaveChanges() <= 0)
+            return false;
+
+        foreach (var dbItem in dbItems)
+        {
+            var clientItem = player.Items.SingleOrDefault(item => item.Id == dbItem.Id);
+
+            if (clientItem is null || clientItem.Count == dbItem.Count)
+                continue;
+
+            if (dbItem.Count == 0)
+            {
+                player.Items.Remove(clientItem);
+                player.SendTunneled(new ClientUpdatePacketItemDelete { ItemGuid = clientItem.Id });
+                continue;
+            }
+
+            clientItem.Count = dbItem.Count;
+            player.SendTunneled(new ClientUpdatePacketItemUpdate
+            {
+                ItemGuid = clientItem.Id,
+                Count = clientItem.Count
+            });
+        }
+
+        ItemCountChanged?.Invoke(player, itemDefinitionId);
+
+        return true;
+    }
+
+    public bool TryTakeItem(Player player, ClientItem clientItem, int quantity = 1)
+    {
+        if (quantity <= 0)
+            return true;
+
+        if (clientItem.Count < quantity || !player.Items.Contains(clientItem))
+            return false;
+
+        var characterId = GuidHelper.GetPlayerId(player.Guid);
+
+        using var dbContext = _dbContextFactory.CreateDbContext();
+        var dbItem = dbContext.Items.SingleOrDefault(item => item.CharacterId == characterId && item.Id == clientItem.Id);
+
+        if (dbItem is null || dbItem.Count < quantity)
+            return false;
+
+        dbItem.Count -= quantity;
+
+        var deleteItem = dbItem.Count <= 0;
+
+        if (deleteItem)
+            dbContext.Items.Remove(dbItem);
+
+        if (dbContext.SaveChanges() <= 0)
+            return false;
+
+        if (deleteItem)
+        {
+            player.Items.Remove(clientItem);
+            player.SendTunneled(new ClientUpdatePacketItemDelete { ItemGuid = clientItem.Id });
+        }
+        else
+        {
+            clientItem.Count = dbItem.Count;
+            player.SendTunneled(new ClientUpdatePacketItemUpdate
+            {
+                ItemGuid = clientItem.Id,
+                Count = clientItem.Count
+            });
+        }
+
+        ItemCountChanged?.Invoke(player, clientItem.Definition);
+
         return true;
     }
 
@@ -379,6 +496,60 @@ public class RewardManager : IRewardManager
         player.Coins = dbCharacter.Coins;
 
         player.SendTunneled(new ClientUpdatePacketCoinCount { Coins = player.Coins });
+
+        return true;
+    }
+
+    public bool TrySpendCoins(Player player, int amount)
+    {
+        if (amount <= 0)
+            return true;
+
+        if (player.Coins < amount)
+            return false;
+
+        var characterId = GuidHelper.GetPlayerId(player.Guid);
+
+        using var dbContext = _dbContextFactory.CreateDbContext();
+        var dbCharacter = dbContext.Characters.SingleOrDefault(character => character.Id == characterId);
+
+        if (dbCharacter is null || dbCharacter.Coins < amount)
+            return false;
+
+        dbCharacter.Coins -= amount;
+
+        if (dbContext.SaveChanges() <= 0)
+            return false;
+
+        player.Coins = dbCharacter.Coins;
+
+        player.SendTunneled(new ClientUpdatePacketCoinCount { Coins = player.Coins });
+
+        return true;
+    }
+
+    public bool TrySpendStationCash(Player player, int amount)
+    {
+        if (amount <= 0)
+            return true;
+
+        if (player.StationCash < amount)
+            return false;
+
+        var characterId = GuidHelper.GetPlayerId(player.Guid);
+
+        using var dbContext = _dbContextFactory.CreateDbContext();
+        var dbCharacter = dbContext.Characters.SingleOrDefault(character => character.Id == characterId);
+
+        if (dbCharacter is null || dbCharacter.StationCash < amount)
+            return false;
+
+        dbCharacter.StationCash -= amount;
+
+        if (dbContext.SaveChanges() <= 0)
+            return false;
+
+        player.StationCash = dbCharacter.StationCash;
 
         return true;
     }

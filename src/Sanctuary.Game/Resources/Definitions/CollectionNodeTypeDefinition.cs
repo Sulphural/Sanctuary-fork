@@ -14,4 +14,7 @@ public sealed class CollectionNodeTypeDefinition
     public int SubTextNameId { get; set; }
     public int CollectionId { get; set; }
     public int CollectionEntryId { get; set; }
+    public int GatherAnimationId { get; set; }
+    public int GatherCompositeEffectId { get; set; }
+    public int GatherRemoveDelayMs { get; set; }
 }

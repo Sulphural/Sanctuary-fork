@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Linq;
 using System.Numerics;
 
 using Microsoft.Extensions.Logging;
@@ -109,6 +110,14 @@ public class Npc : IScriptableNpc, IEntity
 
     public NotificationInfo? Notification { get; set; }
     public List<NotificationInfo> Notifications { get; set; } = [];
+
+    public NotificationInfo? OwnNotification => Notification ?? Notifications.FirstOrDefault();
+
+    public bool IsOwnNotification(NotificationInfo notification)
+        => ReferenceEquals(notification, Notification) || IsListedNotification(notification);
+
+    public bool IsListedNotification(NotificationInfo notification)
+        => Notifications.Any(listed => ReferenceEquals(listed, notification));
 
     public List<CharacterAttachmentData> Attachments { get; set; } = [];
 

@@ -40948,5 +40948,83 @@
     "Name": "Wonders Mystery Chest",
     "ModelId": 4460,
     "ModelFileName": "sg_mystery_chest_05.adr"
+  },
+  {
+    "Id": 40300,
+    "NameId": 429024,
+    "Name": "Robbie",
+    "ModelId": 1928,
+    "ModelFileName": "robgoblin_m_xmas.adr",
+    "IsInteractable": false
+  },
+  {
+    "Id": 40301,
+    "NameId": 429024,
+    "Name": "Robbie",
+    "ModelId": 1935,
+    "ModelFileName": "robgoblin_m_reindeerantlers.adr",
+    "IsInteractable": false
+  },
+  {
+    "Id": 40302,
+    "NameId": 420526,
+    "Name": "Telephone Booth",
+    "ModelId": 271,
+    "ModelFileName": "invisible_cube.adr",
+    "Scale": 1,
+    "TerrainObjectId": 1259130200,
+    "ReplaceTerrainObject": false,
+    "HasCursor": true,
+    "CursorId": 17
+  },
+  {
+    "Id": 40303,
+    "NameId": 429024,
+    "Name": "Robbie",
+    "ModelId": 1928,
+    "ModelFileName": "robgoblin_m_xmas.adr",
+    "IsInteractable": false
+  },
+  {
+    "Id": 40304,
+    "NameId": 429024,
+    "Name": "Robbie",
+    "ModelId": 1935,
+    "ModelFileName": "robgoblin_m_reindeerantlers.adr",
+    "IsInteractable": false
+  },
+  {
+    "Id": 40305,
+    "NameId": 420569,
+    "Name": "Toppled Snowman",
+    "ModelId": 140,
+    "ModelFileName": "snowman.adr",
+    "HideNamePlate": true,
+    "Animation": 1152,
+    "IsInteractable": false
+  },
+  {
+    "Id": 40310,
+    "NameId": 441046,
+    "SubTextNameId": 441047,
+    "ModelId": 4108,
+    "ModelFileName": "human_f_winterwonderland.agr",
+    "Scale": 1,
+    "Name": "Trina Turtledove",
+    "HasCursor": true,
+    "CursorId": 5,
+    "RelevanceUnknown2": false,
+    "Notification": {
+      "IsCompact": false,
+      "NotificationType": 2,
+      "IconId": 0,
+      "IconState": 382,
+      "Unknown": 0,
+      "NameId": 441046,
+      "ReferenceId": -1,
+      "Unknown3": false,
+      "Unknown2": 0,
+      "Enabled": true
+    }
   }
 ]

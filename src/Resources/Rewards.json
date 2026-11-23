@@ -653,5 +653,99 @@
                 "Weight": 1
             }
         ]
+    },
+    {
+        "Key": "snow-days-gifting-tree",
+        "DropTable": [
+            {
+                "RewardType": "Item",
+                "ItemDefinitionId": 76538,
+                "Weight": 1,
+                "Quantity": 1
+            },
+            {
+                "RewardType": "Item",
+                "ItemDefinitionId": 76536,
+                "Weight": 1,
+                "Quantity": 1
+            },
+            {
+                "RewardType": "Item",
+                "ItemDefinitionId": 76541,
+                "Weight": 1,
+                "Quantity": 1
+            },
+            {
+                "RewardType": "Item",
+                "ItemDefinitionId": 76539,
+                "Weight": 1,
+                "Quantity": 1
+            },
+            {
+                "RewardType": "Item",
+                "ItemDefinitionId": 76540,
+                "Weight": 1,
+                "Quantity": 1
+            },
+            {
+                "RewardType": "Item",
+                "ItemDefinitionId": 76537,
+                "Weight": 1,
+                "Quantity": 1
+            },
+            {
+                "RewardType": "Item",
+                "ItemDefinitionId": 76620,
+                "Weight": 1,
+                "Quantity": 1
+            },
+            {
+                "RewardType": "Item",
+                "ItemDefinitionId": 76621,
+                "Weight": 1,
+                "Quantity": 1
+            },
+            {
+                "RewardType": "Item",
+                "ItemDefinitionId": 76624,
+                "Weight": 1,
+                "Quantity": 1
+            },
+            {
+                "RewardType": "Item",
+                "ItemDefinitionId": 76627,
+                "Weight": 1,
+                "Quantity": 1
+            },
+            {
+                "RewardType": "Item",
+                "ItemDefinitionId": 76622,
+                "Weight": 1,
+                "Quantity": 1
+            },
+            {
+                "RewardType": "Item",
+                "ItemDefinitionId": 76625,
+                "Weight": 1,
+                "Quantity": 1
+            },
+            {
+                "RewardType": "Item",
+                "ItemDefinitionId": 76626,
+                "Weight": 1,
+                "Quantity": 1
+            }
+        ]
+    },
+    {
+        "Key": "snow-days-unexpected-gift",
+        "DropTable": [
+            {
+                "RewardType": "Item",
+                "ItemDefinitionId": 76539,
+                "Weight": 1,
+                "Quantity": 1
+            }
+        ]
     }
 ]

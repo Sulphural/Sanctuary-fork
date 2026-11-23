@@ -21,6 +21,8 @@ public sealed class QuestProgress
 
     public bool Completed { get; private set; }
 
+    public DateTimeOffset? CompletedAt { get; private set; }
+
     public int GoalIndex { get; private set; }
 
     public int StepEnd { get; private set; }
@@ -56,9 +58,10 @@ public sealed class QuestProgress
         return true;
     }
 
-    internal void Complete()
+    internal void Complete(DateTimeOffset? completedAt = null)
     {
         Completed = true;
+        CompletedAt = completedAt ?? DateTimeOffset.UtcNow;
         _openGoals.Clear();
     }
 }

@@ -20,6 +20,7 @@ public abstract class DatabaseContext : DbContext
     public DbSet<DbGuildMember> GuildMembers => Set<DbGuildMember>();
     public DbSet<DbCharacterQuest> CharacterQuests => Set<DbCharacterQuest>();
     public DbSet<DbCharacterQuestProgress> CharacterQuestProgress => Set<DbCharacterQuestProgress>();
+    public DbSet<DbProgressiveQuestClaim> ProgressiveQuestClaims => Set<DbProgressiveQuestClaim>();
 
     public DatabaseContext()
     {

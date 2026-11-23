@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 using Sanctuary.Game.Entities;
+using Sanctuary.Game.Interactions;
 using Sanctuary.Game.Quests;
 using Sanctuary.Game.Resources.Definitions.QuestGoals;
 
@@ -40,8 +42,20 @@ public sealed class QuestDefinition
 
     public int RewardCollectionId { get; set; }
 
+    public string? RandomRewardTable { get; set; }
+
+    public List<int> AcceptItems { get; set; } = [];
+
+    public int RandomRewardDisplayItemId { get; set; }
+
     public int? PrerequisiteQuestId { get; set; }
     public int? NextQuestId { get; set; }
+
+    public bool IsDaily { get; set; }
+
+    public string? Season { get; set; }
+
+    public List<int> NpcIdsWhileActive { get; set; } = [];
 
     public bool HideObjectiveTarget { get; set; }
 
@@ -55,6 +69,8 @@ public sealed class QuestDefinition
     public int NotificationAvailable { get; set; } = 2;
     public int NotificationActive { get; set; } = 6;
 
+    public int OfferIconId { get; set; } = ContextIcons.QuestOffer;
+
     // The final goal's line, since a quest can end back at its giver.
     public int TurnInDialogueId =>
         Goals.Count > 0 && Goals[^1].ConversationFor(TargetNpcId) is { Count: > 0 } lines ? lines[^1].TextId : 0;
@@ -66,7 +82,8 @@ public sealed class QuestDefinition
             : TargetNpcId;
 
     public IEnumerable<int> StateNpcIds()
-        => Goals.SelectMany(goal => goal.HideNpcIdsWhenDone.Concat(goal.NpcEffectsUntilDone.Select(effect => effect.NpcId))).Distinct();
+        => Goals.SelectMany(goal => goal.HideNpcIdsWhenDone.Concat(goal.NpcEffectsUntilDone.Select(effect => effect.NpcId)))
+            .Concat(NpcIdsWhileActive).Distinct();
 
     public int StepEnd(int stepStart)
     {
@@ -98,6 +115,9 @@ public sealed class QuestDefinition
 
     public bool HidesNpcFor(QuestLog playerQuests, int npcId)
     {
+        if (NpcIdsWhileActive.Contains(npcId) && !playerQuests.TryGetInProgress(QuestId, out _))
+            return true;
+
         for (var i = 0; i < Goals.Count; i++)
         {
             if (Goals[i].HideNpcIdsWhenDone.Contains(npcId) && IsGoalDoneFor(playerQuests, i))
@@ -141,7 +161,7 @@ public sealed class QuestDefinition
 
     public bool IsOfferableFor(QuestLog playerQuests)
     {
-        if (playerQuests.Contains(QuestId))
+        if (playerQuests.Contains(QuestId) && !IsReadyToRepeat(playerQuests))
             return false;
 
         // Before the prerequisite, so exclusive branches that share one still lock each other out.
@@ -154,4 +174,10 @@ public sealed class QuestDefinition
 
         return true;
     }
+
+    public bool IsReadyToRepeat(QuestLog playerQuests)
+        => IsDaily
+            && playerQuests.TryGet(QuestId, out var progress)
+            && progress.Completed
+            && (progress.CompletedAt is not { } completedAt || completedAt.UtcDateTime.Date < DateTime.UtcNow.Date);
 }

@@ -7,4 +7,6 @@ public class TransformAbilityDefinition
     public int DurationMs { get; set; }
     public int CooldownMs { get; set; }
     public int CompositeEffectId { get; set; }
+    public int RepeatCompositeEffectId { get; set; }
+    public int RepeatAnimationId { get; set; }
 }

@@ -10,6 +10,10 @@ namespace Sanctuary.Game.Resources.Definitions.QuestGoals;
 [JsonDerivedType(typeof(TalkToNpcGoal), 0)]
 [JsonDerivedType(typeof(ReachLocationGoal), 1)]
 [JsonDerivedType(typeof(CollectGoal), 2)]
+[JsonDerivedType(typeof(EmoteGoal), 8)]
+[JsonDerivedType(typeof(ItemCountGoal), 9)]
+[JsonDerivedType(typeof(UseItemGoal), 10)]
+[JsonDerivedType(typeof(EquipItemGoal), 11)]
 public abstract class QuestGoal
 {
     public int NameId { get; set; }
@@ -34,6 +38,23 @@ public abstract class QuestGoal
     public int HideEffectId { get; set; }
     public int HideDelayMs { get; set; }
     public List<QuestNpcEffect> NpcEffectsUntilDone { get; set; } = [];
+
+    public List<int> CompletionAppearanceModelIds { get; set; } = [];
+    public int CompletionAppearanceMs { get; set; }
+    public int CompletionAppearanceEffectId { get; set; }
+    public int CompletionAppearanceNameId { get; set; }
+
+    public int CoinCost { get; set; }
+    public int NpcUseAnimationId { get; set; }
+    public int NotEnoughCoinsTextId { get; set; }
+
+    public int PayPromptTextId { get; set; }
+    public int PayResponseTextId { get; set; }
+    public int DeclinePayResponseTextId { get; set; }
+
+    public int TakeItemDefinitionId { get; set; }
+    public int TakeItemCount { get; set; }
+    public int NotEnoughItemsTextId { get; set; }
 
     public QuestSceneDefinition? CompletionScene { get; set; }
 

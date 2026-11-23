@@ -123,7 +123,10 @@
     { "AbilityId": 660,  "CompositeEffectId": 5343,  "QuickChatId": 3340, "EffectDelayMs": 300, "Comment": "Can of Beans" },
     { "AbilityId": 900122, "CompositeEffectId": 5028,  "DurationMs": 60000, "CooldownMs": 60000, "Comment": "Slice of Mystery Cake - magic-steam_orange_skel_aura_loop" },
     { "AbilityId": 900123, "CompositeEffectId": 15128, "DurationMs": 60000, "CooldownMs": 60000, "Comment": "Slice of Mystery Cake - shadow_sprite_skel_loop" },
-    { "AbilityId": 900124, "CompositeEffectId": 0, "Scale": 2.0, "DurationMs": 60000, "CooldownMs": 60000, "Comment": "Slice of Mystery Cake - grow to twice normal size" }
+    { "AbilityId": 900124, "CompositeEffectId": 0, "Scale": 2.0, "DurationMs": 60000, "CooldownMs": 60000, "Comment": "Slice of Mystery Cake - grow to twice normal size" },
+    { "AbilityId": 5037, "CompositeEffectId": 16418, "DurationMs": 1800000, "CooldownMs": 120000, "Comment": "Bell Cut-Out Cookie - bells_gold_falling_head_medium_loop" },
+    { "AbilityId": 5038, "CompositeEffectId": 16412, "DurationMs": 1800000, "CooldownMs": 120000, "Comment": "Candy Cane - beam_red-white_hands_candycane" },
+    { "AbilityId": 5040, "CompositeEffectId": 0, "Scale": 0.5, "MovementSpeedBonus": 4, "DurationMs": 1800000, "CooldownMs": 30000, "Comment": "Gingerbread Cookie - small like the gingerbread man" }
   ],
 
   "Transformations": [
@@ -205,7 +208,13 @@
     { "AbilityId": 900100, "ModelId": 750,   "DurationMs": 1800000, "CooldownMs": 1800000, "CompositeEffectId": 21, "Comment": "Seaside Birthday Cake - Seagull" },
     { "AbilityId": 900101, "ModelId": 749,   "DurationMs": 1800000, "CooldownMs": 1800000, "CompositeEffectId": 21, "Comment": "Seaside Birthday Cake - Parrot" },
     { "AbilityId": 900120, "ModelId": 208, "DurationMs": 60000, "CooldownMs": 60000, "CompositeEffectId": 21, "Comment": "Slice of Mystery Cake - female changeling (cook, with frying pan)" },
-    { "AbilityId": 900121, "ModelId": 145, "DurationMs": 60000, "CooldownMs": 60000, "CompositeEffectId": 21, "Comment": "Slice of Mystery Cake - cow" }
+    { "AbilityId": 900121, "ModelId": 145, "DurationMs": 60000, "CooldownMs": 60000, "CompositeEffectId": 21, "Comment": "Slice of Mystery Cake - cow" },
+    { "AbilityId": 5088, "ModelId": 535, "DurationMs": 1800000, "CooldownMs": 5000, "CompositeEffectId": 21, "RepeatCompositeEffectId": 16409, "RepeatAnimationId": 2003, "Comment": "Eggnog - chicken, a second one makes it barf" },
+    { "AbilityId": 5045, "ModelId": 1964, "DurationMs": 1800000, "CooldownMs": 120000, "CompositeEffectId": 21, "Comment": "Fruit Cake - fruitcake_m_basic" },
+    { "AbilityId": 5053, "ModelId": 1943, "DurationMs": 1800000, "CooldownMs": 120000, "CompositeEffectId": 21, "Comment": "Ornament Cut-Out Cookie - giantornament" },
+    { "AbilityId": 5044, "ModelId": 1932, "DurationMs": 1800000, "CooldownMs": 120000, "CompositeEffectId": 21, "Comment": "Tree Cut-Out Cookie - floren_christmastree" },
+    { "AbilityId": 5054, "ModelId": 16, "DurationMs": 1800000, "CooldownMs": 120000, "CompositeEffectId": 21, "Comment": "Penguin Cut-out Cookie - penguin_01 (guess, no retail data)" },
+    { "AbilityId": 900130, "ModelId": 140, "DurationMs": 3600000, "CooldownMs": 5000, "CompositeEffectId": 21, "Comment": "Snowman Mask - Illusion: Snowman - 1 hour (441236/441237)" }
   ],
 
   "PartyFavors": [

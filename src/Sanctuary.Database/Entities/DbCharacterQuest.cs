@@ -16,5 +16,7 @@ public class DbCharacterQuest
 
     public DateTimeOffset Started { get; set; } = DateTimeOffset.UtcNow;
 
+    public DateTimeOffset? CompletedAt { get; set; }
+
     public ICollection<DbCharacterQuestProgress> Progress { get; set; } = new HashSet<DbCharacterQuestProgress>();
 }

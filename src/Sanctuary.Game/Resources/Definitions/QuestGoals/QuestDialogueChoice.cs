@@ -8,5 +8,7 @@ public sealed class QuestDialogueChoice
 
     public bool Retry { get; set; }
 
+    public bool Cancels { get; set; }
+
     public List<QuestDialogueLine> Then { get; set; } = [];
 }

@@ -2493,5 +2493,896 @@
         "Targets": [{ "NpcId": 2222 }]
       }
     ]
+  },
+  {
+    "Name": "Present Problems",
+    "QuestId": 3501,
+    "Season": "SnowDays",
+    "TitleId": 420268,
+    "DescriptionId": 420269,
+    "GiverDialogueId": 420267,
+    "ObjectiveDescriptionId": 420300,
+    "IconId": 43278,
+    "GiverNpcId": 33668,
+    "TargetNpcId": 33668,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [76627, 76627, 76627, 76627, 76627],
+    "PrerequisiteQuestId": 3500,
+    "NextQuestId": 3502,
+    "NotificationAvailable": 242,
+    "OfferIconId": 28294,
+    "NotificationActive": 6,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 420301,
+        "DescriptionId": 420302,
+        "Dialogue": [{ "TextId": 420309, "ResponseTextId": 423484 }],
+        "Targets": [{ "NpcId": 33648 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 420303,
+        "DescriptionId": 420304,
+        "Dialogue": [{ "TextId": 420311, "ResponseTextId": 422354 }],
+        "Targets": [{ "NpcId": 33664 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 91368,
+        "DescriptionId": 420306,
+        "Dialogue": [{ "TextId": 420313, "ResponseTextId": 428407 }],
+        "Targets": [{ "NpcId": 33740 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 419846,
+        "DescriptionId": 420308,
+        "DialogueId": 420270,
+        "Targets": [{ "NpcId": 33668 }]
+      }
+    ]
+  },
+  {
+    "Name": "Party Animal",
+    "QuestId": 3513,
+    "Season": "SnowDays",
+    "TitleId": 424749,
+    "DescriptionId": 424750,
+    "GiverDialogueId": 424748,
+    "ObjectiveDescriptionId": 424750,
+    "IconId": 43278,
+    "GiverNpcId": 33320,
+    "TargetNpcId": 33320,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [76553],
+    "NotificationAvailable": 2,
+    "NotificationActive": 6,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 424831,
+        "DescriptionId": 424832,
+        "RequiredCount": 4,
+        "Targets": [
+          { "NpcId": 2968, "DialogueId": 424879, "ResponseId": 2112 },
+          { "NpcId": 33400, "DialogueId": 424871, "ResponseId": 1785 },
+          { "NpcId": 33306, "DialogueId": 424899, "ResponseId": 422283 },
+          { "NpcId": 2728, "DialogueId": 424902, "ResponseId": 423990 }
+        ]
+      },
+      {
+        "Type": 0,
+        "NameId": 424926,
+        "DescriptionId": 424927,
+        "DialogueId": 424751,
+        "Targets": [{ "NpcId": 33320 }]
+      }
+    ]
+  },
+  {
+    "Name": "The Gifting Tree",
+    "QuestId": 3500,
+    "Season": "SnowDays",
+    "TitleId": 419835,
+    "DescriptionId": 419836,
+    "GiverDialogueId": 419834,
+    "ObjectiveDescriptionId": 419836,
+    "IconId": 43278,
+    "GiverNpcId": 33668,
+    "TargetNpcId": 33668,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "RandomRewardTable": "snow-days-gifting-tree",
+    "RandomRewardDisplayItemId": 76631,
+    "IsDaily": true,
+    "NextQuestId": 3501,
+    "NotificationAvailable": 242,
+    "OfferIconId": 28294,
+    "NotificationActive": 6,
+    "Goals": [
+      {
+        "Type": 2,
+        "NameId": 419863,
+        "DescriptionId": 419864,
+        "CollectNodeType": "gifting-tree-present",
+        "RequiredCount": 1
+      },
+      {
+        "Type": 0,
+        "NameId": 419846,
+        "DescriptionId": 419847,
+        "DialogueId": 419837,
+        "Targets": [{ "NpcId": 33668 }]
+      }
+    ]
+  },
+  {
+    "Name": "Holiday Cheer",
+    "QuestId": 3502,
+    "Season": "SnowDays",
+    "TitleId": 420272,
+    "DescriptionId": 420273,
+    "GiverDialogueId": 420271,
+    "ObjectiveDescriptionId": 420273,
+    "IconId": 43278,
+    "GiverNpcId": 33668,
+    "TargetNpcId": 33668,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [76624, 76624, 76624, 76624, 76624],
+    "PrerequisiteQuestId": 3501,
+    "NextQuestId": 3504,
+    "NotificationAvailable": 242,
+    "OfferIconId": 28294,
+    "NotificationActive": 6,
+    "Goals": [
+      {
+        "Type": 8,
+        "NameId": 420406,
+        "DescriptionId": 420407,
+        "QuickChatId": 145,
+        "EmotePosition": [250.0, 27.1, 406.5],
+        "EmoteRadius": 18
+      },
+      {
+        "Type": 0,
+        "NameId": 420413,
+        "DescriptionId": 420413,
+        "DialogueId": 420274,
+        "Targets": [{ "NpcId": 33668 }]
+      }
+    ]
+  },
+  {
+    "Name": "Guarding the Gifting Tree",
+    "QuestId": 3504,
+    "Season": "SnowDays",
+    "TitleId": 420280,
+    "DescriptionId": 420281,
+    "GiverDialogueId": 420279,
+    "ObjectiveDescriptionId": 420281,
+    "IconId": 43278,
+    "GiverNpcId": 33668,
+    "TargetNpcId": 33668,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [76606, 76591],
+    "PrerequisiteQuestId": 3502,
+    "NextQuestId": 3505,
+    "NpcIdsWhileActive": [40300, 40301],
+    "NotificationAvailable": 242,
+    "OfferIconId": 28294,
+    "NotificationActive": 6,
+    "Goals": [
+      {
+        "Type": 1,
+        "NameId": 420481,
+        "DescriptionId": 420482,
+        "ReachPosition": [262.98, 28.45, 411.47],
+        "ReachRadius": 12,
+        "HideNpcIdsWhenDone": [40300, 40301],
+        "HideDelayMs": 10000,
+        "CompletionScene": {
+          "Lines": [
+            { "NpcId": 40300, "TextId": 420475, "DelayMs": 0, "AnimationId": 3109 },
+            { "NpcId": 40301, "TextId": 420476, "DelayMs": 2000, "AnimationId": 3112 },
+            { "NpcId": 40300, "TextId": 420477, "DelayMs": 4500, "AnimationId": 3112 },
+            { "NpcId": 40301, "TextId": 420478, "DelayMs": 7000, "AnimationId": 3105 }
+          ]
+        }
+      },
+      {
+        "Type": 0,
+        "NameId": 419846,
+        "DescriptionId": 420492,
+        "DialogueId": 420282,
+        "Targets": [{ "NpcId": 33668 }]
+      }
+    ]
+  },
+  {
+    "Name": "The Perfect Disguise",
+    "QuestId": 3505,
+    "Season": "SnowDays",
+    "TitleId": 420284,
+    "DescriptionId": 420285,
+    "GiverDialogueId": 420283,
+    "ObjectiveDescriptionId": 420285,
+    "IconId": 43278,
+    "GiverNpcId": 33668,
+    "TargetNpcId": 33668,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [76605, 76590],
+    "PrerequisiteQuestId": 3504,
+    "NextQuestId": 3508,
+    "NpcIdsWhileActive": [40303, 40304, 40305],
+    "NotificationAvailable": 242,
+    "OfferIconId": 28294,
+    "NotificationActive": 6,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 420507,
+        "DescriptionId": 420508,
+        "Dialogue": [{ "TextId": 420529, "ResponseTextId": 3729 }],
+        "Targets": [{ "NpcId": 33723 }]
+      },
+      {
+        "Type": 0,
+        "NameId": 420531,
+        "DescriptionId": 420532,
+        "Targets": [{ "NpcId": 40302 }],
+        "CompletionAppearanceModelIds": [1928, 1935, 188],
+        "CompletionAppearanceMs": 300000,
+        "CompletionAppearanceEffectId": 16311,
+        "CompletionAppearanceNameId": 420284,
+        "CoinCost": 50,
+        "NpcUseAnimationId": 2001,
+        "NotEnoughCoinsTextId": 420557,
+        "PayPromptTextId": 420557,
+        "PayResponseTextId": 420545,
+        "DeclinePayResponseTextId": 420547
+      },
+      {
+        "Type": 1,
+        "NameId": 420533,
+        "DescriptionId": 420534,
+        "ReachPosition": [205.08, 96.63, 124.31],
+        "ReachRadius": 15,
+        "RequiredAppearanceModelIds": [1928, 1935, 188],
+        "CompletionScene": {
+          "Lines": [
+            { "NpcId": 40303, "TextId": 420589, "DelayMs": 0, "AnimationId": 3109 },
+            { "NpcId": 40304, "TextId": 420590, "DelayMs": 2500, "AnimationId": 3112 }
+          ]
+        }
+      },
+      {
+        "Type": 0,
+        "NameId": 419846,
+        "DescriptionId": 420536,
+        "DialogueId": 420286,
+        "Targets": [{ "NpcId": 33668 }]
+      }
+    ]
+  },
+  {
+    "Name": "Coal Collector",
+    "QuestId": 3514,
+    "Season": "SnowDays",
+    "TitleId": 420810,
+    "DescriptionId": 420813,
+    "GiverDialogueId": 420811,
+    "ObjectiveDescriptionId": 420816,
+    "IconId": 43278,
+    "GiverNpcId": 33763,
+    "TargetNpcId": 33763,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "IsDaily": true,
+    "NotificationAvailable": 242,
+    "OfferIconId": 28294,
+    "NotificationActive": 6,
+    "Goals": [
+      {
+        "Type": 9,
+        "NameId": 420817,
+        "DescriptionId": 420816,
+        "ItemDefinitionId": 70454,
+        "RequiredCount": 50
+      },
+      {
+        "Type": 0,
+        "NameId": 420819,
+        "DescriptionId": 420820,
+        "DialogueId": 420814,
+        "Targets": [{ "NpcId": 33763 }],
+        "TakeItemDefinitionId": 70454,
+        "TakeItemCount": 50,
+        "NotEnoughItemsTextId": 420821
+      }
+    ]
+  },
+  {
+    "Name": "An Unexpected Gift",
+    "QuestId": 3508,
+    "Season": "SnowDays",
+    "TitleId": 420296,
+    "DescriptionId": 420297,
+    "GiverDialogueId": 420295,
+    "ObjectiveDescriptionId": 420297,
+    "IconId": 43278,
+    "GiverNpcId": 33668,
+    "TargetNpcId": 33668,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [],
+    "RandomRewardTable": "snow-days-unexpected-gift",
+    "RandomRewardDisplayItemId": 76631,
+    "PrerequisiteQuestId": 3505,
+    "NotificationAvailable": 242,
+    "OfferIconId": 28294,
+    "NotificationActive": 6,
+    "Goals": [
+      {
+        "Type": 2,
+        "NameId": 419863,
+        "DescriptionId": 420670,
+        "CollectNodeType": "mysterious-present",
+        "RequiredCount": 1
+      },
+      {
+        "Type": 0,
+        "NameId": 419846,
+        "DescriptionId": 419847,
+        "DialogueId": 420298,
+        "Targets": [{ "NpcId": 33668 }]
+      }
+    ]
+  },
+  {
+    "Name": "Day 1: Penguin Defense",
+    "QuestId": 3520,
+    "TitleId": 441078,
+    "DescriptionId": 441079,
+    "GiverDialogueId": 441077,
+    "ObjectiveDescriptionId": 441079,
+    "IconId": 43278,
+    "GiverNpcId": 0,
+    "TargetNpcId": 40310,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [960001],
+    "NotificationAvailable": 2,
+    "NotificationActive": 6,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 441127,
+        "DescriptionId": 441126,
+        "Targets": [
+          {
+            "NpcId": 33710
+          }
+        ]
+      },
+      {
+        "Type": 0,
+        "NameId": 441129,
+        "DescriptionId": 441129,
+        "DialogueId": 441080,
+        "Targets": [
+          {
+            "NpcId": 40310
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "Name": "Day 2: Snowball Fight",
+    "QuestId": 3521,
+    "TitleId": 441082,
+    "DescriptionId": 441083,
+    "GiverDialogueId": 441081,
+    "ObjectiveDescriptionId": 441083,
+    "IconId": 43278,
+    "GiverNpcId": 0,
+    "TargetNpcId": 40310,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [960002],
+    "NotificationAvailable": 2,
+    "NotificationActive": 6,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 441133,
+        "DescriptionId": 441132,
+        "Targets": [
+          {
+            "NpcId": 33615
+          }
+        ]
+      },
+      {
+        "Type": 0,
+        "NameId": 441135,
+        "DescriptionId": 441135,
+        "DialogueId": 441084,
+        "Targets": [
+          {
+            "NpcId": 40310
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "Name": "Day 3: Crafty Robgoblins",
+    "QuestId": 3522,
+    "TitleId": 441086,
+    "DescriptionId": 441087,
+    "GiverDialogueId": 441085,
+    "ObjectiveDescriptionId": 441087,
+    "IconId": 43278,
+    "GiverNpcId": 0,
+    "TargetNpcId": 40310,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [960003],
+    "NotificationAvailable": 2,
+    "NotificationActive": 6,
+    "Goals": [
+      {
+        "Type": 1,
+        "NameId": 441139,
+        "DescriptionId": 441138,
+        "ReachPosition": [205.08, 96.63, 124.31],
+        "ReachRadius": 15
+      },
+      {
+        "Type": 0,
+        "NameId": 441141,
+        "DescriptionId": 441141,
+        "DialogueId": 441088,
+        "Targets": [
+          {
+            "NpcId": 40310
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "Name": "Day 4: Cookie! Nom Nom!",
+    "QuestId": 3523,
+    "TitleId": 441090,
+    "DescriptionId": 441091,
+    "GiverDialogueId": 441089,
+    "ObjectiveDescriptionId": 441091,
+    "IconId": 43278,
+    "GiverNpcId": 0,
+    "TargetNpcId": 40310,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [960004],
+    "NotificationAvailable": 2,
+    "NotificationActive": 6,
+    "Goals": [
+      {
+        "Type": 10,
+        "NameId": 441145,
+        "DescriptionId": 441144,
+        "ItemDefinitionId": 76625,
+        "RequiredCount": 1
+      },
+      {
+        "Type": 10,
+        "NameId": 441147,
+        "DescriptionId": 441144,
+        "ItemDefinitionId": 76620,
+        "RequiredCount": 1,
+        "WithPrevious": true
+      },
+      {
+        "Type": 10,
+        "NameId": 441149,
+        "DescriptionId": 441144,
+        "ItemDefinitionId": 76634,
+        "RequiredCount": 1,
+        "WithPrevious": true
+      },
+      {
+        "Type": 10,
+        "NameId": 441151,
+        "DescriptionId": 441144,
+        "ItemDefinitionId": 76622,
+        "RequiredCount": 1,
+        "WithPrevious": true
+      },
+      {
+        "Type": 10,
+        "NameId": 441153,
+        "DescriptionId": 441144,
+        "ItemDefinitionId": 76626,
+        "RequiredCount": 1,
+        "WithPrevious": true
+      },
+      {
+        "Type": 0,
+        "NameId": 441155,
+        "DescriptionId": 441155,
+        "DialogueId": 441092,
+        "Targets": [
+          {
+            "NpcId": 40310
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "Name": "Day 5: Wintery Fishing",
+    "QuestId": 3524,
+    "TitleId": 441094,
+    "DescriptionId": 441095,
+    "GiverDialogueId": 441093,
+    "ObjectiveDescriptionId": 441095,
+    "IconId": 43278,
+    "GiverNpcId": 0,
+    "TargetNpcId": 40310,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [960005],
+    "NotificationAvailable": 2,
+    "NotificationActive": 6,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 441159,
+        "DescriptionId": 441158,
+        "Targets": [
+          {
+            "NpcId": 33649
+          }
+        ]
+      },
+      {
+        "Type": 0,
+        "NameId": 441161,
+        "DescriptionId": 441161,
+        "DialogueId": 441096,
+        "Targets": [
+          {
+            "NpcId": 40310
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "Name": "Day 6: Defend the Gifting Tree",
+    "QuestId": 3525,
+    "TitleId": 441098,
+    "DescriptionId": 441099,
+    "GiverDialogueId": 441097,
+    "ObjectiveDescriptionId": 441099,
+    "IconId": 43278,
+    "GiverNpcId": 0,
+    "TargetNpcId": 40310,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [960006],
+    "NotificationAvailable": 2,
+    "NotificationActive": 6,
+    "Goals": [
+      {
+        "Type": 1,
+        "NameId": 441165,
+        "DescriptionId": 441164,
+        "ReachPosition": [250.0, 27.1, 406.5],
+        "ReachRadius": 18
+      },
+      {
+        "Type": 0,
+        "NameId": 441167,
+        "DescriptionId": 441167,
+        "DialogueId": 441100,
+        "Targets": [
+          {
+            "NpcId": 40310
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "Name": "Day 7: Snowhill Racing",
+    "QuestId": 3526,
+    "TitleId": 441102,
+    "DescriptionId": 441103,
+    "GiverDialogueId": 441101,
+    "ObjectiveDescriptionId": 441103,
+    "IconId": 43278,
+    "GiverNpcId": 0,
+    "TargetNpcId": 40310,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [960007],
+    "NotificationAvailable": 2,
+    "NotificationActive": 6,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 441171,
+        "DescriptionId": 441170,
+        "Targets": [
+          {
+            "NpcId": 33824
+          }
+        ]
+      },
+      {
+        "Type": 0,
+        "NameId": 441173,
+        "DescriptionId": 441173,
+        "DialogueId": 441104,
+        "Targets": [
+          {
+            "NpcId": 40310
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "Name": "Day 8: Nog Hog",
+    "QuestId": 3527,
+    "TitleId": 441106,
+    "DescriptionId": 441107,
+    "GiverDialogueId": 441105,
+    "ObjectiveDescriptionId": 441107,
+    "IconId": 43278,
+    "GiverNpcId": 0,
+    "TargetNpcId": 40310,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [960008],
+    "NotificationAvailable": 2,
+    "NotificationActive": 6,
+    "Goals": [
+      {
+        "Type": 10,
+        "NameId": 441177,
+        "DescriptionId": 441176,
+        "ItemDefinitionId": 76624,
+        "RequiredCount": 3
+      },
+      {
+        "Type": 0,
+        "NameId": 441179,
+        "DescriptionId": 441179,
+        "DialogueId": 441108,
+        "Targets": [
+          {
+            "NpcId": 40310
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "Name": "Day 9: Snowhill Soccer",
+    "QuestId": 3528,
+    "TitleId": 441110,
+    "DescriptionId": 441111,
+    "GiverDialogueId": 441109,
+    "ObjectiveDescriptionId": 441111,
+    "IconId": 43278,
+    "GiverNpcId": 0,
+    "TargetNpcId": 40310,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [960009],
+    "NotificationAvailable": 2,
+    "NotificationActive": 6,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 441183,
+        "DescriptionId": 441182,
+        "Targets": [
+          {
+            "NpcId": 33954
+          }
+        ]
+      },
+      {
+        "Type": 0,
+        "NameId": 441185,
+        "DescriptionId": 441185,
+        "DialogueId": 441112,
+        "Targets": [
+          {
+            "NpcId": 40310
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "Name": "Day 10: Battle for Snowhill",
+    "QuestId": 3529,
+    "TitleId": 441114,
+    "DescriptionId": 441115,
+    "GiverDialogueId": 441113,
+    "ObjectiveDescriptionId": 441115,
+    "IconId": 43278,
+    "GiverNpcId": 0,
+    "TargetNpcId": 40310,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [960010],
+    "NotificationAvailable": 2,
+    "NotificationActive": 6,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 441189,
+        "DescriptionId": 441188,
+        "Targets": [
+          {
+            "NpcId": 33823
+          }
+        ]
+      },
+      {
+        "Type": 0,
+        "NameId": 441191,
+        "DescriptionId": 441191,
+        "DialogueId": 441116,
+        "Targets": [
+          {
+            "NpcId": 40310
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "Name": "Day 11: Snowhill Derby",
+    "QuestId": 3530,
+    "TitleId": 441118,
+    "DescriptionId": 441119,
+    "GiverDialogueId": 441117,
+    "ObjectiveDescriptionId": 441119,
+    "IconId": 43278,
+    "GiverNpcId": 0,
+    "TargetNpcId": 40310,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [960011],
+    "NotificationAvailable": 2,
+    "NotificationActive": 6,
+    "Goals": [
+      {
+        "Type": 0,
+        "NameId": 441195,
+        "DescriptionId": 441194,
+        "Targets": [
+          {
+            "NpcId": 33824
+          }
+        ]
+      },
+      {
+        "Type": 0,
+        "NameId": 441197,
+        "DescriptionId": 441197,
+        "DialogueId": 441120,
+        "Targets": [
+          {
+            "NpcId": 40310
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "Name": "Day 12: Abominable Invasion",
+    "QuestId": 3531,
+    "TitleId": 441122,
+    "DescriptionId": 441123,
+    "GiverDialogueId": 441121,
+    "ObjectiveDescriptionId": 441123,
+    "IconId": 43278,
+    "GiverNpcId": 0,
+    "TargetNpcId": 40310,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [960012],
+    "NotificationAvailable": 2,
+    "NotificationActive": 6,
+    "Goals": [
+      {
+        "Type": 1,
+        "NameId": 441201,
+        "DescriptionId": 441200,
+        "ReachPosition": [250.0, 27.1, 406.5],
+        "ReachRadius": 18
+      },
+      {
+        "Type": 0,
+        "NameId": 441203,
+        "DescriptionId": 441203,
+        "DialogueId": 441124,
+        "Targets": [
+          {
+            "NpcId": 40310
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "Name": "Falling With Style",
+    "QuestId": 3600,
+    "TitleId": 440569,
+    "DescriptionId": 440570,
+    "GiverDialogueId": 440568,
+    "ObjectiveDescriptionId": 440573,
+    "IconId": 43278,
+    "GiverNpcId": 1735,
+    "TargetNpcId": 1735,
+    "RewardCoins": 0,
+    "RewardExperience": 0,
+    "RewardItems": [
+      930008
+    ],
+    "AcceptItems": [
+      960205,
+      960205,
+      960205,
+      960205,
+      960205,
+      960205,
+      960205,
+      960205,
+      960205,
+      960205
+    ],
+    "Goals": [
+      {
+        "Type": 11,
+        "NameId": 440574,
+        "DescriptionId": 440574,
+        "ItemDefinitionId": 960205
+      },
+      {
+        "Type": 10,
+        "NameId": 440576,
+        "DescriptionId": 440577,
+        "ItemDefinitionId": 960205,
+        "TargetPosition": [-591.961, 2.407, -1133.201]
+      },
+      {
+        "Type": 0,
+        "NameId": 440578,
+        "DescriptionId": 440578,
+        "DialogueId": 440571,
+        "Targets": [
+          {
+            "NpcId": 1735
+          }
+        ]
+      }
+    ]
   }
 ]

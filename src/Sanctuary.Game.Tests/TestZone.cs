@@ -41,6 +41,7 @@ public sealed class TestZone : BaseZone
         services.AddSingleton<IDbContextFactory<DatabaseContext>, NoDatabase>();
         services.AddSingleton<IRewardManager, RewardManager>();
         services.AddSingleton<IQuestManager, QuestManager>();
+        services.AddSingleton<IProgressiveQuestManager, ProgressiveQuestManager>();
         services.AddSingleton<IZoneManager, ZoneManager>();
         if (trades is not null)
             services.AddSingleton(trades);

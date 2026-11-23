@@ -1,13 +1,17 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 using Sanctuary.Game.Entities;
 using Sanctuary.Game.Interactions;
+using Sanctuary.Game.Resources.Definitions;
 using Sanctuary.Packet.Common;
 
 namespace Sanctuary.Game.Quests;
 
 public interface IQuestManager
 {
+    event Action<Player, QuestDefinition>? QuestCompleted;
+
     bool IsQuestNpc(int npcId);
 
     List<NpcInteractionOption> GetInteractionOptions(Player player, Npc npc);
@@ -21,6 +25,8 @@ public interface IQuestManager
     bool CompleteQuest(Player player, int questId);
 
     bool OfferNextQuest(Player player, int questId);
+
+    bool OfferQuest(Player player, int questId, ulong npcGuid);
 
     void AbandonQuest(Player player, int questId);
 
@@ -37,6 +43,8 @@ public interface IQuestManager
     NotificationInfo? GetQuestBadge(Player player, Npc npc);
 
     bool IsHiddenByQuest(Player player, Npc npc);
+
+    bool IsNeededByActiveQuest(Player player, Npc npc);
 
     int GetQuestEffectId(Player player, Npc npc);
 

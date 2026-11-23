@@ -75,6 +75,7 @@ public class DbCharacter
     public ICollection<DbIgnore> Ignores { get; set; } = new HashSet<DbIgnore>();
     public ICollection<DbProfile> Profiles { get; set; } = new HashSet<DbProfile>();
     public ICollection<DbCharacterQuest> Quests { get; set; } = new HashSet<DbCharacterQuest>();
+    public ICollection<DbProgressiveQuestClaim> ProgressiveQuestClaims { get; set; } = new HashSet<DbProgressiveQuestClaim>();
 
     public ulong UserId { get; set; }
     public DbUser User { get; set; } = null!;

@@ -105,6 +105,7 @@ builder.ConfigureServices((hostBuilderContext, serviceCollection) =>
     serviceCollection.AddSingleton<TradeManager>();
     serviceCollection.AddSingleton<IChatCommandManager, ChatCommandManager>();
     serviceCollection.AddSingleton<IQuestManager, QuestManager>();
+    serviceCollection.AddSingleton<IProgressiveQuestManager, ProgressiveQuestManager>();
     serviceCollection.AddSingleton<IRewardManager, RewardManager>();
 });
 

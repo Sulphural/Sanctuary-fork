@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Collections.Generic;
+using System.Numerics;
 using System.Text.Json.Serialization;
 
 using Sanctuary.Core.Extensions;
@@ -19,9 +20,12 @@ public sealed class ReachLocationGoal : QuestGoal
 
     public int ZoneDefinitionId { get; set; } = FabledRealmsZoneDefinitionId;
 
+    public List<int> RequiredAppearanceModelIds { get; set; } = [];
+
     public override bool Matches(QuestDefinition quest, QuestEvent questEvent)
         => ReachPosition != Vector3.Zero
-            && questEvent is PlayerMovedEvent { Position: var position, ZoneDefinitionId: var zoneDefinitionId }
+            && questEvent is PlayerMovedEvent { Position: var position, ZoneDefinitionId: var zoneDefinitionId, TemporaryAppearance: var temporaryAppearance }
             && zoneDefinitionId == ZoneDefinitionId
+            && (RequiredAppearanceModelIds.Count == 0 || RequiredAppearanceModelIds.Contains(temporaryAppearance))
             && position.IsInCircle(ReachPosition, ReachRadius);
 }

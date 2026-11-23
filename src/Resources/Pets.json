@@ -4362,5 +4362,330 @@
     ],
     "IdleAnimations": [],
     "RestPostures": []
+  },
+  {
+    "Id": 4109,
+    "IconId": 652,
+    "IsVanityPet": false,
+    "PetTricks": [
+      {
+        "Id": 17,
+        "IconId": 7532,
+        "NameId": 22714,
+        "SkillLevel": 1,
+        "Unknown5": 0,
+        "Unknown6": 0,
+        "TooltipStringId": 0,
+        "Unknown8": 1,
+        "Known": true
+      },
+      {
+        "Id": 16,
+        "IconId": 7520,
+        "NameId": 22713,
+        "SkillLevel": 1,
+        "Unknown5": 0,
+        "Unknown6": 0,
+        "TooltipStringId": 0,
+        "Unknown8": 5,
+        "Known": true
+      },
+      {
+        "Id": 15,
+        "IconId": 7523,
+        "NameId": 6518,
+        "SkillLevel": 1,
+        "Unknown5": 0,
+        "Unknown6": 0,
+        "TooltipStringId": 0,
+        "Unknown8": 4,
+        "Known": true
+      },
+      {
+        "Id": 14,
+        "IconId": 7517,
+        "NameId": 7210,
+        "SkillLevel": 1,
+        "Unknown5": 0,
+        "Unknown6": 0,
+        "TooltipStringId": 0,
+        "Unknown8": 6,
+        "Known": true
+      },
+      {
+        "Id": 13,
+        "IconId": 7514,
+        "NameId": 60,
+        "SkillLevel": 1,
+        "Unknown5": 0,
+        "Unknown6": 0,
+        "TooltipStringId": 0,
+        "Unknown8": 7,
+        "Known": true
+      },
+      {
+        "Id": 12,
+        "IconId": 7526,
+        "NameId": 61,
+        "SkillLevel": 1,
+        "Unknown5": 0,
+        "Unknown6": 0,
+        "TooltipStringId": 0,
+        "Unknown8": 3,
+        "Known": true
+      },
+      {
+        "Id": 11,
+        "IconId": 7529,
+        "NameId": 62,
+        "SkillLevel": 1,
+        "Unknown5": 0,
+        "Unknown6": 0,
+        "TooltipStringId": 0,
+        "Unknown8": 2,
+        "Known": true
+      }
+    ],
+    "ItemClasses": [
+      {
+        "Key": 31,
+        "Value": {
+          "Id": 31,
+          "Unknown": 5
+        }
+      },
+      {
+        "Key": 73,
+        "Value": {
+          "Id": 73,
+          "Unknown": 3
+        }
+      },
+      {
+        "Key": 144,
+        "Value": {
+          "Id": 144,
+          "Unknown": 0
+        }
+      },
+      {
+        "Key": 145,
+        "Value": {
+          "Id": 145,
+          "Unknown": 0
+        }
+      },
+      {
+        "Key": 146,
+        "Value": {
+          "Id": 146,
+          "Unknown": 0
+        }
+      }
+    ],
+    "TrickAnimations": {
+      "11": {
+        "AnimationId": 5004,
+        "OwnerAnimationId": 5001,
+        "DurationMs": 4667,
+        "StartDelayMs": 3500
+      },
+      "12": {
+        "AnimationId": 5014,
+        "OwnerAnimationId": 5011,
+        "DurationMs": 5917,
+        "StartDelayMs": 3500
+      },
+      "13": {
+        "AnimationId": 5024,
+        "OwnerAnimationId": 5021,
+        "DurationMs": 4583,
+        "StartDelayMs": 3500
+      },
+      "14": {
+        "AnimationId": 5034,
+        "OwnerAnimationId": 5031,
+        "DurationMs": 5333,
+        "StartDelayMs": 3500
+      },
+      "15": {
+        "AnimationId": 5044,
+        "OwnerAnimationId": 5041,
+        "DurationMs": 10667,
+        "StartDelayMs": 3500
+      },
+      "16": {
+        "AnimationId": 5054,
+        "OwnerAnimationId": 5051,
+        "DurationMs": 5333,
+        "StartDelayMs": 3500
+      },
+      "17": {
+        "AnimationId": 5064,
+        "OwnerAnimationId": 5061,
+        "DurationMs": 1167,
+        "StartDelayMs": 3500
+      }
+    },
+    "IdleAnimations": [
+      {
+        "AnimationId": 5251,
+        "DurationMs": 2417
+      },
+      {
+        "AnimationId": 5252,
+        "DurationMs": 5000
+      },
+      {
+        "AnimationId": 5253,
+        "DurationMs": 3000
+      },
+      {
+        "AnimationId": 5254,
+        "DurationMs": 3000
+      },
+      {
+        "AnimationId": 5255,
+        "DurationMs": 4625
+      },
+      {
+        "AnimationId": 5256,
+        "DurationMs": 4167
+      },
+      {
+        "AnimationId": 5257,
+        "DurationMs": 4667
+      },
+      {
+        "AnimationId": 5258,
+        "DurationMs": 5333
+      },
+      {
+        "AnimationId": 5263,
+        "DurationMs": 8700
+      },
+      {
+        "AnimationId": 5264,
+        "DurationMs": 1750
+      },
+      {
+        "AnimationId": 5265,
+        "DurationMs": 2708
+      },
+      {
+        "AnimationId": 5266,
+        "DurationMs": 3958
+      },
+      {
+        "AnimationId": 5269,
+        "DurationMs": 4667
+      },
+      {
+        "AnimationId": 5270,
+        "DurationMs": 2333
+      }
+    ],
+    "BathroomAnimations": [
+      {
+        "AnimationId": 5511,
+        "DurationMs": 3750
+      },
+      {
+        "AnimationId": 5514,
+        "DurationMs": 5000
+      }
+    ],
+    "RestPostures": [
+      {
+        "EnterAnimationId": 5106,
+        "EnterDurationMs": 1000,
+        "ExitAnimationId": 5104,
+        "ExitDurationMs": 1000,
+        "LoopAnimationIds": [
+          5301,
+          5302,
+          5303
+        ],
+        "FidgetAnimations": [
+          {
+            "AnimationId": 5351,
+            "DurationMs": 2667
+          },
+          {
+            "AnimationId": 5352,
+            "DurationMs": 2750
+          },
+          {
+            "AnimationId": 5353,
+            "DurationMs": 2667
+          },
+          {
+            "AnimationId": 5354,
+            "DurationMs": 2750
+          },
+          {
+            "AnimationId": 5355,
+            "DurationMs": 3125
+          },
+          {
+            "AnimationId": 5356,
+            "DurationMs": 2083
+          },
+          {
+            "AnimationId": 5357,
+            "DurationMs": 2083
+          },
+          {
+            "AnimationId": 5359,
+            "DurationMs": 8917
+          },
+          {
+            "AnimationId": 5360,
+            "DurationMs": 4042
+          }
+        ]
+      },
+      {
+        "EnterAnimationId": 5105,
+        "EnterDurationMs": 1000,
+        "ExitAnimationId": 5102,
+        "ExitDurationMs": 1000,
+        "LoopAnimationIds": [
+          5401,
+          5403,
+          5405
+        ],
+        "FidgetAnimations": [
+          {
+            "AnimationId": 5451,
+            "DurationMs": 4000
+          },
+          {
+            "AnimationId": 5452,
+            "DurationMs": 4000
+          },
+          {
+            "AnimationId": 5453,
+            "DurationMs": 4000
+          },
+          {
+            "AnimationId": 5454,
+            "DurationMs": 4000
+          },
+          {
+            "AnimationId": 5455,
+            "DurationMs": 4000
+          },
+          {
+            "AnimationId": 5456,
+            "DurationMs": 11333
+          },
+          {
+            "AnimationId": 5457,
+            "DurationMs": 6667
+          }
+        ]
+      }
+    ]
   }
 ]

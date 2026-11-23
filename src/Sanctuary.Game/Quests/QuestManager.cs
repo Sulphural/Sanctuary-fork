@@ -6,6 +6,7 @@ using System.Numerics;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
+using Sanctuary.Core.Collections;
 using Sanctuary.Core.Extensions;
 using Sanctuary.Core.Helpers;
 using Sanctuary.Database;
@@ -16,6 +17,7 @@ using Sanctuary.Game.Interactions;
 using Sanctuary.Game.Resources.Definitions;
 using Sanctuary.Game.Resources.Definitions.QuestGoals;
 using Sanctuary.Game.Resources.Definitions.Rewards;
+using Sanctuary.Game.Routines;
 using Sanctuary.Game.Zones;
 using Sanctuary.Packet;
 using Sanctuary.Packet.Common;
@@ -28,6 +30,8 @@ public sealed class QuestManager : IQuestManager
 
     public const int GoalDoneCount = -1;
 
+    public event Action<Player, QuestDefinition>? QuestCompleted;
+
     private readonly IResourceManager _resourceManager;
     private readonly IRewardManager _rewardManager;
     private readonly IDbContextFactory<DatabaseContext> _dbContextFactory;
@@ -39,6 +43,9 @@ public sealed class QuestManager : IQuestManager
         _rewardManager = rewardManager;
         _dbContextFactory = dbContextFactory;
         _logger = logger;
+
+        _rewardManager.ItemCountChanged += (player, itemDefinitionId) =>
+            OnEvent(player, new ItemCountChangedEvent(itemDefinitionId, _rewardManager.CountItems(player, itemDefinitionId)));
     }
 
     public bool IsQuestNpc(int npcId)
@@ -66,7 +73,7 @@ public sealed class QuestManager : IQuestManager
             if (!quests.TryGet(progress.QuestId, out var activeQuest))
                 continue;
 
-            if (!AdvancesHere(activeQuest, progress, npc) && !TurnsInHere(activeQuest, progress, npc))
+            if (!AdvancesHere(activeQuest, progress, npc) && !TurnsInHere(activeQuest, progress, npc) && AppearanceGoalHere(activeQuest, progress, npc) < 0)
                 continue;
 
             var quest = activeQuest;
@@ -79,18 +86,34 @@ public sealed class QuestManager : IQuestManager
             });
         }
 
+        foreach (var finished in player.Quests.All.Where(quest => quest.Completed))
+        {
+            if (!quests.TryGet(finished.QuestId, out var finishedQuest))
+                continue;
+
+            foreach (var goal in finishedQuest.Goals.Where(goal => goal.CompletionAppearanceModelIds.Count > 0 && goal.Matches(finishedQuest, new NpcTalkedEvent(npc))))
+            {
+                options.Add(new NpcInteractionOption
+                {
+                    IconId = ContextIcons.QuestTurnIn,
+                    ButtonTextId = goal.NameId,
+                    Invoke = interactingPlayer => UseAppearanceGoal(interactingPlayer, goal, npc)
+                });
+            }
+        }
+
         if (quests.ByGiver.TryGetValue(npc.DefinitionId, out var giverQuestIds))
         {
             foreach (var questId in giverQuestIds)
             {
-                if (!quests.TryGet(questId, out var offerableQuest) || !offerableQuest.IsOfferableFor(player.Quests))
+                if (!quests.TryGet(questId, out var offerableQuest) || !IsOfferable(player, offerableQuest))
                     continue;
 
                 var quest = offerableQuest;
 
                 options.Add(new NpcInteractionOption
                 {
-                    IconId = ContextIcons.QuestOffer,
+                    IconId = quest.OfferIconId,
                     ButtonTextId = quest.TitleId,
                     Invoke = interactingPlayer => Offer(interactingPlayer, quest)
                 });
@@ -99,6 +122,9 @@ public sealed class QuestManager : IQuestManager
 
         return options;
     }
+
+    private static bool IsOfferable(Player player, QuestDefinition quest)
+        => quest.IsOfferableFor(player.Quests) && (quest.Season is null || player.Zone.IsSeasonActive(quest.Season));
 
     private static bool AdvancesHere(QuestDefinition quest, QuestProgress progress, Npc npc)
         => TalkGoalHere(quest, progress, npc) >= 0;
@@ -112,6 +138,73 @@ public sealed class QuestManager : IQuestManager
         }
 
         return -1;
+    }
+
+    private static int AppearanceGoalHere(QuestDefinition quest, QuestProgress progress, Npc npc)
+    {
+        for (var goalIndex = 0; goalIndex < progress.GoalIndex && goalIndex < quest.Goals.Count; goalIndex++)
+        {
+            var goal = quest.Goals[goalIndex];
+
+            if (goal.CompletionAppearanceModelIds.Count > 0 && goal.Matches(quest, new NpcTalkedEvent(npc)))
+                return goalIndex;
+        }
+
+        return -1;
+    }
+
+    private bool TryPayForGoal(Player player, QuestGoal goal, Npc npc)
+    {
+        if (goal.TakeItemCount > 0 && _rewardManager.CountItems(player, goal.TakeItemDefinitionId) < goal.TakeItemCount)
+        {
+            if (goal.NotEnoughItemsTextId != 0)
+                QuestDialogue.Begin(player, [new QuestDialogueLine { TextId = goal.NotEnoughItemsTextId }], npc.Guid);
+
+            return false;
+        }
+
+        if (!_rewardManager.TrySpendCoins(player, goal.CoinCost))
+        {
+            if (goal.NotEnoughCoinsTextId != 0)
+                player.SendTunneled(new ChatPacketFromStringId { SpeakerGuid = npc.Guid, StringId = goal.NotEnoughCoinsTextId });
+
+            return false;
+        }
+
+        if (!_rewardManager.TryTakeItems(player, goal.TakeItemDefinitionId, goal.TakeItemCount))
+            return false;
+
+        if (goal.NpcUseAnimationId != 0)
+            player.SendTunneledToVisible(new PlayerUpdatePacketSetAnimation { Guid = npc.Guid, AnimationId = goal.NpcUseAnimationId }, true);
+
+        return true;
+    }
+
+    private void RecountItemGoals(Player player, QuestDefinition quest)
+    {
+        foreach (var itemDefinitionId in quest.Goals.OfType<ItemCountGoal>().Select(goal => goal.ItemDefinitionId).Distinct().ToList())
+            OnEvent(player, new ItemCountChangedEvent(itemDefinitionId, _rewardManager.CountItems(player, itemDefinitionId)));
+
+        CheckEquippedItems(player, quest);
+    }
+
+    private void CheckEquippedItems(Player player, QuestDefinition quest)
+    {
+        var equippedItemDefinitionIds = player.ActiveProfile.Items.Values
+            .Select(profileItem => player.Items.FirstOrDefault(item => item.Id == profileItem.Id)?.Definition ?? 0)
+            .ToHashSet();
+
+        foreach (var itemDefinitionId in quest.Goals.OfType<EquipItemGoal>().Select(goal => goal.ItemDefinitionId).Where(equippedItemDefinitionIds.Contains).Distinct().ToList())
+            OnEvent(player, new ItemEquippedEvent(itemDefinitionId));
+    }
+
+    private void GrantAcceptItems(Player player, QuestDefinition quest)
+    {
+        foreach (var group in quest.AcceptItems.GroupBy(itemDefinitionId => itemDefinitionId))
+        {
+            if (_resourceManager.ClientItemDefinitions.TryGetValue(group.Key, out var itemDefinition))
+                _rewardManager.TryGrantItem(player, group.Key, itemDefinition.IsTintable ? 0 : itemDefinition.Icon.TintId, group.Count());
+        }
     }
 
     private static bool TurnsInHere(QuestDefinition quest, QuestProgress progress, Npc npc)
@@ -130,9 +223,58 @@ public sealed class QuestManager : IQuestManager
 
         var goalIndex = TalkGoalHere(quest, progress, npc);
         if (goalIndex < 0)
+        {
+            var appearanceGoalIndex = AppearanceGoalHere(quest, progress, npc);
+
+            if (appearanceGoalIndex >= 0)
+                UseAppearanceGoal(player, quest.Goals[appearanceGoalIndex], npc);
+
+            return;
+        }
+
+        ConfirmPayment(player, quest.Goals[goalIndex], npc, () => AdvanceTalkGoal(player, quest, goalIndex, npc));
+    }
+
+    private static void ConfirmPayment(Player player, QuestGoal goal, Npc npc, Action onConfirmed)
+    {
+        if (goal.PayPromptTextId == 0)
+        {
+            onConfirmed();
+            return;
+        }
+
+        QuestDialogue.Begin(player,
+        [
+            new QuestDialogueLine
+            {
+                TextId = goal.PayPromptTextId,
+                Choices =
+                [
+                    new QuestDialogueChoice { ResponseTextId = goal.PayResponseTextId },
+                    new QuestDialogueChoice { ResponseTextId = goal.DeclinePayResponseTextId, Cancels = true }
+                ]
+            }
+        ], npc.Guid, onConfirmed);
+    }
+
+    private void UseAppearanceGoal(Player player, QuestGoal goal, Npc npc)
+    {
+        ConfirmPayment(player, goal, npc, () =>
+        {
+            if (TryPayForGoal(player, goal, npc))
+                ApplyCompletionAppearance(player, goal);
+        });
+    }
+
+    private void AdvanceTalkGoal(Player player, QuestDefinition quest, int goalIndex, Npc npc)
+    {
+        if (!player.Quests.TryGetInProgress(quest.QuestId, out var progress) || !progress.OpenGoals.ContainsKey(goalIndex))
             return;
 
         var goal = quest.Goals[goalIndex];
+
+        if (!TryPayForGoal(player, goal, npc))
+            return;
 
         if (goal is TalkToNpcGoal { CompleteAfterDialogue: true })
         {
@@ -279,8 +421,10 @@ public sealed class QuestManager : IQuestManager
 
     public void AcceptQuest(Player player, int questId)
     {
-        if (!_resourceManager.Quests.TryGet(questId, out var quest) || !quest.IsOfferableFor(player.Quests))
+        if (!_resourceManager.Quests.TryGet(questId, out var quest) || !IsOfferable(player, quest))
             return;
+
+        var isRepeat = player.Quests.Remove(questId);
 
         var progress = new QuestProgress(questId);
         progress.StartStep(quest, 0);
@@ -291,6 +435,12 @@ public sealed class QuestManager : IQuestManager
 
         using (var db = _dbContextFactory.CreateDbContext())
         {
+            if (isRepeat && db.CharacterQuests.FirstOrDefault(x => x.QuestId == questId && x.CharacterId == player.CharacterId) is { } previous)
+            {
+                db.CharacterQuests.Remove(previous);
+                db.SaveChanges();
+            }
+
             db.CharacterQuests.Add(new DbCharacterQuest
             {
                 QuestId = questId,
@@ -313,7 +463,13 @@ public sealed class QuestManager : IQuestManager
 
         RefreshQuestNodes(player, quest);
 
+        RefreshActiveQuestNpcs(player, quest);
+
         player.SendTunneled(new CommandPacketQuestDialogComplete());
+
+        GrantAcceptItems(player, quest);
+
+        RecountItemGoals(player, quest);
     }
 
     public bool CompleteQuest(Player player, int questId)
@@ -325,7 +481,11 @@ public sealed class QuestManager : IQuestManager
             return false;
 
         player.Quests.Complete(questId);
-        SaveQuestRow(player, questId, q => q.Completed = true);
+        SaveQuestRow(player, questId, q =>
+        {
+            q.Completed = true;
+            q.CompletedAt = progress.CompletedAt;
+        });
 
         if (player.Quests.ActiveQuestId == questId)
         {
@@ -347,6 +507,10 @@ public sealed class QuestManager : IQuestManager
         if (quest.CompletionScene is { } scene)
             QuestScene.Play(player, scene, $"quest-scene-{quest.QuestId}", _logger);
 
+        QuestCompleted?.Invoke(player, quest);
+
+        RefreshActiveQuestNpcs(player, quest);
+
         RefreshQuestNotifications(player, quest);
 
         if (quest.NextQuestId is { } nextQuestId && _resourceManager.Quests.TryGet(nextQuestId, out var next))
@@ -362,7 +526,7 @@ public sealed class QuestManager : IQuestManager
             || quest.NextQuestId is not { } nextQuestId
             || !_resourceManager.Quests.TryGet(nextQuestId, out var next)
             || next.GiverNpcId != quest.GoalTargetNpcId(quest.Goals.Count - 1)
-            || !next.IsOfferableFor(player.Quests))
+            || !IsOfferable(player, next))
             return false;
 
         Offer(player, next, NextOfferDelayMs);
@@ -370,6 +534,15 @@ public sealed class QuestManager : IQuestManager
     }
 
     private const int NextOfferDelayMs = 750;
+
+    public bool OfferQuest(Player player, int questId, ulong npcGuid)
+    {
+        if (!_resourceManager.Quests.TryGet(questId, out var quest) || !IsOfferable(player, quest))
+            return false;
+
+        Offer(player, quest, npcGuid: npcGuid);
+        return true;
+    }
 
     private static readonly TimeSpan AbandonBlockedAfterAccept = TimeSpan.FromSeconds(3);
 
@@ -435,6 +608,8 @@ public sealed class QuestManager : IQuestManager
         player.SendTunneled(new QuestAbandonedPacket { QuestId = questId });
 
         RefreshQuestNodes(player, quest);
+
+        RefreshActiveQuestNpcs(player, quest);
 
         RefreshQuestNotifications(player, quest);
 
@@ -521,6 +696,33 @@ public sealed class QuestManager : IQuestManager
             RefreshQuestNotifications(player, npcId);
     }
 
+    private static void ApplyCompletionAppearance(Player player, QuestGoal goal)
+    {
+        if (goal.CompletionAppearanceModelIds.Count == 0)
+            return;
+
+        var modelId = goal.CompletionAppearanceModelIds[Random.Shared.Next(goal.CompletionAppearanceModelIds.Count)];
+
+        player.ApplyTemporaryAppearance(modelId, goal.CompletionAppearanceMs, goal.CompletionAppearanceEffectId, goal.CompletionAppearanceNameId);
+    }
+
+    private void RefreshActiveQuestNpcs(Player player, QuestDefinition quest)
+    {
+        if (quest.NpcIdsWhileActive.Count == 0)
+            return;
+
+        foreach (var npc in player.Zone.Npcs.Where(npc => quest.NpcIdsWhileActive.Contains(npc.DefinitionId)).ToList())
+        {
+            var hidden = IsHiddenByQuest(player, npc);
+            var shown = player.VisibleNpcs.ContainsKey(npc.Guid);
+
+            if (hidden && shown)
+                player.OnRemoveVisibleNpcGracefully(npc, animate: false);
+            else if (!hidden && !shown && npc.VisiblePlayers.ContainsKey(player.Guid))
+                player.OnAddVisibleNpcs(npc);
+        }
+    }
+
     private static void RemoveHiddenNpcs(Player player, QuestGoal goal)
     {
         foreach (var npcId in goal.HideNpcIdsWhenDone)
@@ -568,12 +770,12 @@ public sealed class QuestManager : IQuestManager
 
         var questBadge = GetQuestBadge(player, npc);
 
-        var cursorEntry = questBadge is not null && !ReferenceEquals(questBadge, npc.Notification)
+        var cursorEntry = questBadge is not null && !npc.IsOwnNotification(questBadge)
             ? InteractionMenuHelper.GetQuestCursorEntry(npc.Guid)
             : InteractionMenuHelper.GetOwnCursorEntry(npc);
         player.SendTunneled(new PlayerUpdatePacketNpcRelevance { Entries = { cursorEntry } });
 
-        if ((questBadge ?? npc.Notification) is { } badge)
+        if ((questBadge ?? npc.Notification) is { } badge && !npc.IsListedNotification(badge))
             player.SendTunneled(new PlayerUpdatePacketAddNotifications { Notifications = { badge } });
     }
 
@@ -586,8 +788,8 @@ public sealed class QuestManager : IQuestManager
         if (imageId == 0)
             return null;
 
-        if (waiting && npc.Notification is not null)
-            return npc.Notification;
+        if (waiting && npc.OwnNotification is { } ownNotification)
+            return ownNotification;
 
         return new NotificationInfo
         {
@@ -610,7 +812,7 @@ public sealed class QuestManager : IQuestManager
         {
             foreach (var questId in giverQuestIds)
             {
-                if (quests.TryGet(questId, out var quest) && quest.IsOfferableFor(player.Quests))
+                if (quests.TryGet(questId, out var quest) && IsOfferable(player, quest))
                     return (quest.NotificationAvailable, false);
             }
         }
@@ -670,6 +872,10 @@ public sealed class QuestManager : IQuestManager
         return false;
     }
 
+    public bool IsNeededByActiveQuest(Player player, Npc npc)
+        => player.Quests.InProgress.Any(progress => _resourceManager.Quests.TryGet(progress.QuestId, out var quest)
+            && (quest.TargetNpcId == npc.DefinitionId || quest.Goals.Any(goal => goal.Matches(quest, new NpcTalkedEvent(npc)))));
+
     public int GetQuestEffectId(Player player, Npc npc)
     {
         var quests = _resourceManager.Quests;
@@ -726,7 +932,7 @@ public sealed class QuestManager : IQuestManager
 
     private const float DefaultOfferCameraDistance = 0f;
 
-    private void Offer(Player player, QuestDefinition quest, int delayMs = 0)
+    private void Offer(Player player, QuestDefinition quest, int delayMs = 0, ulong npcGuid = 0)
     {
         var offer = new QuestInfoPacket
         {
@@ -736,13 +942,13 @@ public sealed class QuestManager : IQuestManager
             NameId = quest.TitleId,
             DescriptionId = quest.DescriptionId,
             MembersOnly = false,
-            NpcGuid = EntityHelper.NearestNpcGuid(player, quest.GiverNpcId),
+            NpcGuid = npcGuid != 0 ? npcGuid : EntityHelper.NearestNpcGuid(player, quest.GiverNpcId),
             CameraDistance = quest.CameraDistance ?? DefaultOfferCameraDistance,
             Unknown11 = false,
             AcceptOnly = false
         };
 
-        FillRewardBundle(offer.RewardBundle, quest);
+        FillRewardBundle(offer.RewardBundle, player, quest);
 
         if (delayMs > 0)
             player.SendTunneledDelayed(offer, delayMs);
@@ -750,7 +956,12 @@ public sealed class QuestManager : IQuestManager
             player.SendTunneled(offer);
     }
 
-    private void FillRewardBundle(RewardBundleBase bundle, QuestDefinition quest)
+    private bool FitsPlayerGender(Player player, int itemDefinitionId) =>
+        !_resourceManager.ClientItemDefinitions.TryGetValue(itemDefinitionId, out var itemDefinition)
+        || itemDefinition.GenderUsage == 0
+        || itemDefinition.GenderUsage == player.Gender;
+
+    private void FillRewardBundle(RewardBundleBase bundle, Player player, QuestDefinition quest)
     {
         bundle.Coins = quest.RewardCoins;
         bundle.Experience = quest.RewardExperience;
@@ -759,17 +970,23 @@ public sealed class QuestManager : IQuestManager
         bundle.IconId = -1;
         bundle.NameId = -1;
 
-        foreach (var entry in BuildRewardEntries(quest))
+        foreach (var entry in BuildRewardEntries(player, quest))
             bundle.Entries.Add(entry);
 
         bundle.Success = bundle.Entries.Any(entry => entry is RewardBundleEntryCollectionAdd);
     }
 
-    private List<RewardBundleEntryBase> BuildRewardEntries(QuestDefinition quest)
+    private List<RewardBundleEntryBase> BuildRewardEntries(Player player, QuestDefinition quest)
     {
         var entries = new List<RewardBundleEntryBase>();
-        foreach (var definitionId in quest.RewardItems)
+        var shownItemIds = quest.RandomRewardDisplayItemId != 0
+            ? quest.RewardItems.Append(quest.RandomRewardDisplayItemId)
+            : quest.RewardItems;
+
+        foreach (var group in shownItemIds.Where(id => FitsPlayerGender(player, id)).GroupBy(id => id))
         {
+            var definitionId = group.Key;
+
             if (_resourceManager.ClientItemDefinitions.TryGetValue(definitionId, out var itemDef))
             {
                 entries.Add(new RewardBundleEntryItem
@@ -778,7 +995,7 @@ public sealed class QuestManager : IQuestManager
                     TintId = itemDef.Icon.TintId,
                     NameId = itemDef.NameId,
                     DefinitionId = definitionId,
-                    Quantity = 1
+                    Quantity = group.Count()
                 });
             }
         }
@@ -833,6 +1050,7 @@ public sealed class QuestManager : IQuestManager
             SaveGoalDone(player, quest.QuestId, completedGoal.NameId);
         }
 
+        ApplyCompletionAppearance(player, completedGoal);
         RemoveHiddenNpcs(player, completedGoal);
         RefreshNpcEffects(player, completedGoal);
 
@@ -869,6 +1087,9 @@ public sealed class QuestManager : IQuestManager
 
             QuestDialogue.Begin(player, completedGoal.ConversationFor(speakerNpcId), speakerGuid);
         }
+
+        if (stepDone)
+            RecountItemGoals(player, quest);
     }
 
     private const int YouGotItTextId = 103085;
@@ -891,7 +1112,7 @@ public sealed class QuestManager : IQuestManager
             CameraDistance = quest.CameraDistance ?? DefaultOfferCameraDistance
         };
 
-        FillRewardBundle(end.RewardBundle, quest);
+        FillRewardBundle(end.RewardBundle, player, quest);
 
         player.SendTunneled(end);
 
@@ -916,7 +1137,7 @@ public sealed class QuestManager : IQuestManager
             PlayerGuid = player.Guid
         };
 
-        bundle.Entries.AddRange(BuildRewardEntries(quest));
+        bundle.Entries.AddRange(BuildRewardEntries(player, quest));
 
         if (bundle.Entries.Count > 0)
         {
@@ -1040,6 +1261,8 @@ public sealed class QuestManager : IQuestManager
         return EntityHelper.NearestNpcGuid(player, quest.GoalTargetNpcId(goalIndex));
     }
 
+    private const ulong LocationTargetGuidBase = 0x7000000000000000;
+
     private void SendObjectiveForGoal(Player player, QuestDefinition quest, int goalIndex)
     {
         var goals = quest.Goals;
@@ -1050,16 +1273,17 @@ public sealed class QuestManager : IQuestManager
             return;
         }
 
-        if (goalIndex >= 0 && goalIndex < goals.Count
-            && goals[goalIndex] is ReachLocationGoal reachGoal && reachGoal.ReachPosition != Vector3.Zero)
+        var goalSpot = GoalSpot(quest, goalIndex);
+
+        if (goalSpot.Position != Vector3.Zero)
         {
-            if (reachGoal.ZoneDefinitionId != player.Zone.DefinitionId)
+            if (goalSpot.ZoneDefinitionId != player.Zone.DefinitionId)
             {
                 player.SendTunneled(new ObjectiveTargetUpdatePacket { Active = false });
                 return;
             }
 
-            var reachPos = new Vector4(reachGoal.ReachPosition, 1f);
+            var reachPos = new Vector4(goalSpot.Position, 1f);
 
             player.SendTunneled(new ObjectiveTargetUpdatePacket
             {
@@ -1118,6 +1342,20 @@ public sealed class QuestManager : IQuestManager
         return false;
     }
 
+    private static (Vector3 Position, int ZoneDefinitionId) GoalSpot(QuestDefinition quest, int goalIndex)
+    {
+        if (goalIndex < 0 || goalIndex >= quest.Goals.Count)
+            return (Vector3.Zero, 0);
+
+        return quest.Goals[goalIndex] switch
+        {
+            ReachLocationGoal reachGoal => (reachGoal.ReachPosition, reachGoal.ZoneDefinitionId),
+            EmoteGoal emoteGoal => (emoteGoal.EmotePosition, emoteGoal.ZoneDefinitionId),
+            UseItemGoal useItemGoal => (useItemGoal.TargetPosition, useItemGoal.ZoneDefinitionId),
+            _ => (Vector3.Zero, 0)
+        };
+    }
+
     private bool TryGetTrackableGoal(Player player, int questId, out QuestDefinition quest, out int goalIndex)
     {
         quest = null!;
@@ -1131,10 +1369,11 @@ public sealed class QuestManager : IQuestManager
         if (q.HideObjectiveTarget || (currentGoalIndex >= 0 && currentGoalIndex < goals.Count && goals[currentGoalIndex] is CollectGoal))
             return false;
 
-        if (currentGoalIndex >= 0 && currentGoalIndex < goals.Count
-            && goals[currentGoalIndex] is ReachLocationGoal reachGoal && reachGoal.ReachPosition != Vector3.Zero)
+        var goalSpot = GoalSpot(q, currentGoalIndex);
+
+        if (goalSpot.Position != Vector3.Zero)
         {
-            if (reachGoal.ZoneDefinitionId != player.Zone.DefinitionId)
+            if (goalSpot.ZoneDefinitionId != player.Zone.DefinitionId)
                 return false;
 
             quest = q;
@@ -1193,10 +1432,31 @@ public sealed class QuestManager : IQuestManager
             player.SendTunneled(celebration);
         }
 
-        foreach (var itemDefinitionId in quest.RewardItems)
+        foreach (var group in quest.RewardItems.Where(id => FitsPlayerGender(player, id)).GroupBy(id => id))
         {
-            if (_resourceManager.ClientItemDefinitions.TryGetValue(itemDefinitionId, out var itemDefinition))
-                _rewardManager.TryGrantItem(player, itemDefinitionId, itemDefinition.IsTintable ? 0 : itemDefinition.Icon.TintId);
+            if (_resourceManager.ClientItemDefinitions.TryGetValue(group.Key, out var itemDefinition))
+                _rewardManager.TryGrantItem(player, group.Key, itemDefinition.IsTintable ? 0 : itemDefinition.Icon.TintId, group.Count());
         }
+
+        GrantRandomReward(player, quest);
+    }
+
+    private void GrantRandomReward(Player player, QuestDefinition quest)
+    {
+        if (string.IsNullOrWhiteSpace(quest.RandomRewardTable))
+            return;
+
+        if (!_resourceManager.RewardTables.TryGetValue(quest.RandomRewardTable.Trim().ToLowerInvariant(), out var table))
+        {
+            _logger.LogError("Quest {questId} references unknown reward table {key}.", quest.QuestId, quest.RandomRewardTable);
+            return;
+        }
+
+        var drops = table.DropTable
+            .Where(drop => drop is not ItemRewardDropDefinition item || FitsPlayerGender(player, item.ItemDefinitionId))
+            .ToList();
+
+        if (drops.Count > 0)
+            _rewardManager.TryGrantReward(player, new WeightedDropTable<RewardDropDefinition>(drops).SelectRandom());
     }
 }

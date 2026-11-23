@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using Sanctuary.Game;
+using Sanctuary.Game.Quests;
 using Sanctuary.Gateway.Helpers;
 using Sanctuary.Packet;
 using Sanctuary.Packet.Common.Attributes;
@@ -18,6 +19,7 @@ public static class QuickChatSendChatToChannelPacketHandler
     private static ILogger _logger = null!;
     private static IZoneManager _zoneManager = null!;
     private static IResourceManager _resourceManager = null!;
+    private static IQuestManager _questManager = null!;
 
     public static void ConfigureServices(IServiceProvider serviceProvider)
     {
@@ -25,6 +27,7 @@ public static class QuickChatSendChatToChannelPacketHandler
         _logger = loggerFactory.CreateLogger(nameof(QuickChatSendChatToChannelPacketHandler));
         _zoneManager = serviceProvider.GetRequiredService<IZoneManager>();
         _resourceManager = serviceProvider.GetRequiredService<IResourceManager>();
+        _questManager = serviceProvider.GetRequiredService<IQuestManager>();
     }
 
     public static bool HandlePacket(GatewayConnection connection, ReadOnlySpan<byte> data)
@@ -36,6 +39,8 @@ public static class QuickChatSendChatToChannelPacketHandler
         }
 
         _logger.LogTrace("Received {name} packet. ( {packet} )", nameof(QuickChatSendChatToChannelPacket), packet);
+
+        _questManager.OnEvent(connection.Player, new EmoteUsedEvent(packet.Id, connection.Player.Position, connection.Player.Zone.DefinitionId));
 
         if (connection.Player.IsMuted())
             return true;

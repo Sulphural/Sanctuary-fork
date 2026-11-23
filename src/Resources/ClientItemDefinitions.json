@@ -1455360,5 +1455360,876 @@
     "TintAlias": "dyetint",
     "MemberDiscount": 10,
     "Rarity": 2
+  },
+  {
+    "Comment": "12 Days Present - Day 1",
+    "Id": 960001,
+    "Type": 1,
+    "NameId": 441513,
+    "Icon": {
+      "Id": 8196
+    },
+    "MaxStackSize": 1,
+    "NoTrade": true,
+    "MinProfileRank": 1,
+    "MemberDiscount": 10,
+    "CategoryId": 29,
+    "NoSale": true
+  },
+  {
+    "Comment": "12 Days Present - Day 2",
+    "Id": 960002,
+    "Type": 1,
+    "NameId": 441514,
+    "Icon": {
+      "Id": 8198
+    },
+    "MaxStackSize": 1,
+    "NoTrade": true,
+    "MinProfileRank": 1,
+    "MemberDiscount": 10,
+    "CategoryId": 29,
+    "NoSale": true
+  },
+  {
+    "Comment": "12 Days Present - Day 3",
+    "Id": 960003,
+    "Type": 1,
+    "NameId": 441515,
+    "Icon": {
+      "Id": 8200
+    },
+    "MaxStackSize": 1,
+    "NoTrade": true,
+    "MinProfileRank": 1,
+    "MemberDiscount": 10,
+    "CategoryId": 29,
+    "NoSale": true
+  },
+  {
+    "Comment": "12 Days Present - Day 4",
+    "Id": 960004,
+    "Type": 1,
+    "NameId": 441516,
+    "Icon": {
+      "Id": 8202
+    },
+    "MaxStackSize": 1,
+    "NoTrade": true,
+    "MinProfileRank": 1,
+    "MemberDiscount": 10,
+    "CategoryId": 29,
+    "NoSale": true
+  },
+  {
+    "Comment": "12 Days Present - Day 5",
+    "Id": 960005,
+    "Type": 1,
+    "NameId": 441517,
+    "Icon": {
+      "Id": 8204
+    },
+    "MaxStackSize": 1,
+    "NoTrade": true,
+    "MinProfileRank": 1,
+    "MemberDiscount": 10,
+    "CategoryId": 29,
+    "NoSale": true
+  },
+  {
+    "Comment": "12 Days Present - Day 6",
+    "Id": 960006,
+    "Type": 1,
+    "NameId": 441518,
+    "Icon": {
+      "Id": 8206
+    },
+    "MaxStackSize": 1,
+    "NoTrade": true,
+    "MinProfileRank": 1,
+    "MemberDiscount": 10,
+    "CategoryId": 29,
+    "NoSale": true
+  },
+  {
+    "Comment": "12 Days Present - Day 7",
+    "Id": 960007,
+    "Type": 1,
+    "NameId": 441519,
+    "Icon": {
+      "Id": 8208
+    },
+    "MaxStackSize": 1,
+    "NoTrade": true,
+    "MinProfileRank": 1,
+    "MemberDiscount": 10,
+    "CategoryId": 29,
+    "NoSale": true
+  },
+  {
+    "Comment": "12 Days Present - Day 8",
+    "Id": 960008,
+    "Type": 1,
+    "NameId": 441520,
+    "Icon": {
+      "Id": 8210
+    },
+    "MaxStackSize": 1,
+    "NoTrade": true,
+    "MinProfileRank": 1,
+    "MemberDiscount": 10,
+    "CategoryId": 29,
+    "NoSale": true
+  },
+  {
+    "Comment": "12 Days Present - Day 9",
+    "Id": 960009,
+    "Type": 1,
+    "NameId": 441521,
+    "Icon": {
+      "Id": 8212
+    },
+    "MaxStackSize": 1,
+    "NoTrade": true,
+    "MinProfileRank": 1,
+    "MemberDiscount": 10,
+    "CategoryId": 29,
+    "NoSale": true
+  },
+  {
+    "Comment": "12 Days Present - Day 10",
+    "Id": 960010,
+    "Type": 1,
+    "NameId": 441522,
+    "Icon": {
+      "Id": 8214
+    },
+    "MaxStackSize": 1,
+    "NoTrade": true,
+    "MinProfileRank": 1,
+    "MemberDiscount": 10,
+    "CategoryId": 29,
+    "NoSale": true
+  },
+  {
+    "Comment": "12 Days Present - Day 11",
+    "Id": 960011,
+    "Type": 1,
+    "NameId": 441523,
+    "Icon": {
+      "Id": 8216
+    },
+    "MaxStackSize": 1,
+    "NoTrade": true,
+    "MinProfileRank": 1,
+    "MemberDiscount": 10,
+    "CategoryId": 29,
+    "NoSale": true
+  },
+  {
+    "Comment": "12 Days Present - Day 12",
+    "Id": 960012,
+    "Type": 1,
+    "NameId": 441524,
+    "Icon": {
+      "Id": 8218
+    },
+    "MaxStackSize": 1,
+    "NoTrade": true,
+    "MinProfileRank": 1,
+    "MemberDiscount": 10,
+    "CategoryId": 29,
+    "NoSale": true
+  },
+  {
+    "Comment": "12 Days Bow - Day 1",
+    "Id": 960013,
+    "Type": 1,
+    "NameId": 441525,
+    "Icon": {
+      "Id": 8195
+    },
+    "MaxStackSize": 1,
+    "NoTrade": true,
+    "MinProfileRank": 1,
+    "MemberDiscount": 10,
+    "CategoryId": 29,
+    "NoSale": true
+  },
+  {
+    "Comment": "12 Days Bow - Day 2",
+    "Id": 960014,
+    "Type": 1,
+    "NameId": 441526,
+    "Icon": {
+      "Id": 8197
+    },
+    "MaxStackSize": 1,
+    "NoTrade": true,
+    "MinProfileRank": 1,
+    "MemberDiscount": 10,
+    "CategoryId": 29,
+    "NoSale": true
+  },
+  {
+    "Comment": "12 Days Bow - Day 3",
+    "Id": 960015,
+    "Type": 1,
+    "NameId": 441527,
+    "Icon": {
+      "Id": 8199
+    },
+    "MaxStackSize": 1,
+    "NoTrade": true,
+    "MinProfileRank": 1,
+    "MemberDiscount": 10,
+    "CategoryId": 29,
+    "NoSale": true
+  },
+  {
+    "Comment": "12 Days Bow - Day 4",
+    "Id": 960016,
+    "Type": 1,
+    "NameId": 441528,
+    "Icon": {
+      "Id": 8201
+    },
+    "MaxStackSize": 1,
+    "NoTrade": true,
+    "MinProfileRank": 1,
+    "MemberDiscount": 10,
+    "CategoryId": 29,
+    "NoSale": true
+  },
+  {
+    "Comment": "12 Days Bow - Day 5",
+    "Id": 960017,
+    "Type": 1,
+    "NameId": 441529,
+    "Icon": {
+      "Id": 8203
+    },
+    "MaxStackSize": 1,
+    "NoTrade": true,
+    "MinProfileRank": 1,
+    "MemberDiscount": 10,
+    "CategoryId": 29,
+    "NoSale": true
+  },
+  {
+    "Comment": "12 Days Bow - Day 6",
+    "Id": 960018,
+    "Type": 1,
+    "NameId": 441530,
+    "Icon": {
+      "Id": 8205
+    },
+    "MaxStackSize": 1,
+    "NoTrade": true,
+    "MinProfileRank": 1,
+    "MemberDiscount": 10,
+    "CategoryId": 29,
+    "NoSale": true
+  },
+  {
+    "Comment": "12 Days Bow - Day 7",
+    "Id": 960019,
+    "Type": 1,
+    "NameId": 441531,
+    "Icon": {
+      "Id": 8207
+    },
+    "MaxStackSize": 1,
+    "NoTrade": true,
+    "MinProfileRank": 1,
+    "MemberDiscount": 10,
+    "CategoryId": 29,
+    "NoSale": true
+  },
+  {
+    "Comment": "12 Days Bow - Day 8",
+    "Id": 960020,
+    "Type": 1,
+    "NameId": 441532,
+    "Icon": {
+      "Id": 8209
+    },
+    "MaxStackSize": 1,
+    "NoTrade": true,
+    "MinProfileRank": 1,
+    "MemberDiscount": 10,
+    "CategoryId": 29,
+    "NoSale": true
+  },
+  {
+    "Comment": "12 Days Bow - Day 9",
+    "Id": 960021,
+    "Type": 1,
+    "NameId": 441533,
+    "Icon": {
+      "Id": 8211
+    },
+    "MaxStackSize": 1,
+    "NoTrade": true,
+    "MinProfileRank": 1,
+    "MemberDiscount": 10,
+    "CategoryId": 29,
+    "NoSale": true
+  },
+  {
+    "Comment": "12 Days Bow - Day 10",
+    "Id": 960022,
+    "Type": 1,
+    "NameId": 441534,
+    "Icon": {
+      "Id": 8213
+    },
+    "MaxStackSize": 1,
+    "NoTrade": true,
+    "MinProfileRank": 1,
+    "MemberDiscount": 10,
+    "CategoryId": 29,
+    "NoSale": true
+  },
+  {
+    "Comment": "12 Days Bow - Day 11",
+    "Id": 960023,
+    "Type": 1,
+    "NameId": 441535,
+    "Icon": {
+      "Id": 8215
+    },
+    "MaxStackSize": 1,
+    "NoTrade": true,
+    "MinProfileRank": 1,
+    "MemberDiscount": 10,
+    "CategoryId": 29,
+    "NoSale": true
+  },
+  {
+    "Comment": "12 Days Bow - Day 12",
+    "Id": 960024,
+    "Type": 1,
+    "NameId": 441536,
+    "Icon": {
+      "Id": 8217
+    },
+    "MaxStackSize": 1,
+    "NoTrade": true,
+    "MinProfileRank": 1,
+    "MemberDiscount": 10,
+    "CategoryId": 29,
+    "NoSale": true
+  },
+  {
+    "Comment": "Snow Days Unicorn Sweater",
+    "Id": 960101,
+    "Type": 1,
+    "NameId": 441217,
+    "DescriptionId": 441232,
+    "Icon": {
+      "Id": 8133
+    },
+    "Class": 1,
+    "MaxStackSize": -1,
+    "NoTrade": true,
+    "TintAlias": "dyetint",
+    "TextureAlias": "freestyle-winterunicorn-M",
+    "MemberDiscount": 10,
+    "Slot": 3,
+    "ModelName": "freestyle_<race>_<gender>_chest_sweater.adr",
+    "CategoryId": 103,
+    "NoSale": true
+  },
+  {
+    "Comment": "Temporary Snowflake Parachute",
+    "Id": 960104,
+    "Type": 1,
+    "NameId": 441213,
+    "DescriptionId": 441228,
+    "Icon": {
+      "Id": 8136
+    },
+    "Class": 158,
+    "MaxStackSize": 100,
+    "SingleUse": true,
+    "NoTrade": true,
+    "TintAlias": "dyetint",
+    "TextureAlias": "parachute-snowflake-P",
+    "MemberDiscount": 10,
+    "Slot": 6,
+    "ModelName": "equipment_ar_ag_parachute.adr",
+    "CategoryId": 106,
+    "NoSale": true,
+    "Stats": {
+      "59": {
+        "Id": 59,
+        "Type": 0,
+        "Value": 1090519040,
+        "Unknown": false
+      },
+      "60": {
+        "Id": 60,
+        "Type": 0,
+        "Value": 1073741824,
+        "Unknown": false
+      },
+      "61": {
+        "Id": 61,
+        "Type": 0,
+        "Value": 1099956224,
+        "Unknown": false
+      },
+      "62": {
+        "Id": 62,
+        "Type": 0,
+        "Value": 1061158912,
+        "Unknown": false
+      },
+      "63": {
+        "Id": 63,
+        "Type": 0,
+        "Value": 1082130432,
+        "Unknown": false
+      },
+      "64": {
+        "Id": 64,
+        "Type": 0,
+        "Value": 1065353216,
+        "Unknown": false
+      },
+      "67": {
+        "Id": 67,
+        "Type": 0,
+        "Value": 1082130432,
+        "Unknown": false
+      }
+    }
+  },
+  {
+    "Comment": "Icy Snow Days Flair Shard",
+    "Id": 960105,
+    "Type": 1,
+    "NameId": 441211,
+    "DescriptionId": 441226,
+    "Icon": {
+      "Id": 8232
+    },
+    "Class": 69,
+    "MaxStackSize": 1,
+    "NoTrade": true,
+    "MinProfileRank": 1,
+    "TintAlias": "dyetint",
+    "MemberDiscount": 10,
+    "Slot": 13,
+    "CategoryId": 124,
+    "CompositeEffectId": 5704
+  },
+  {
+    "Comment": "Snowman Mask",
+    "Id": 960106,
+    "Type": 1,
+    "NameId": 441215,
+    "DescriptionId": 441230,
+    "Icon": {
+      "Id": 5602
+    },
+    "Class": 9,
+    "MaxStackSize": 1,
+    "NoTrade": true,
+    "MinProfileRank": 1,
+    "TintAlias": "dyetint",
+    "MemberDiscount": 10,
+    "CategoryId": 10,
+    "ActivatableAbilityId": 900130,
+    "NonMiniGame": true,
+    "NoSale": true
+  },
+  {
+    "Comment": "St. Bernard",
+    "Id": 960107,
+    "Type": 2,
+    "NameId": 441219,
+    "DescriptionId": 441234,
+    "Icon": {
+      "Id": 8224
+    },
+    "Class": 166,
+    "MaxStackSize": -1,
+    "NoTrade": true,
+    "MemberDiscount": 10,
+    "ModelName": "dog_large_stbernard.adr",
+    "NoSale": true,
+    "Rarity": 3
+  },
+  {
+    "Comment": "Snow Days Cube",
+    "Id": 960110,
+    "Type": 29,
+    "NameId": 441332,
+    "Icon": {
+      "Id": 8182
+    },
+    "MaxStackSize": -1,
+    "TintAlias": "dyetint",
+    "TextureAlias": "block-snowflake-L1",
+    "MemberDiscount": 10,
+    "ModelName": "hsg_square_block_v2_01_snowflake.adr",
+    "CategoryId": 4
+  },
+  {
+    "Comment": "Snow Days Floor",
+    "Id": 960111,
+    "Type": 29,
+    "NameId": 441325,
+    "Icon": {
+      "Id": 8157
+    },
+    "MaxStackSize": -1,
+    "TintAlias": "dyetint",
+    "TextureAlias": "block-snowflake-L1",
+    "MemberDiscount": 10,
+    "ModelName": "hsg_large_floor_block_v2_01_snowflake.adr",
+    "CategoryId": 4
+  },
+  {
+    "Comment": "Snow Days Large Floor",
+    "Id": 960112,
+    "Type": 29,
+    "NameId": 441318,
+    "Icon": {
+      "Id": 8156
+    },
+    "MaxStackSize": -1,
+    "TintAlias": "dyetint",
+    "TextureAlias": "block-snowflake-L1",
+    "MemberDiscount": 10,
+    "ModelName": "hsg_floor_9x9_snowflake.adr",
+    "CategoryId": 4
+  },
+  {
+    "Comment": "Snow Days Pillar",
+    "Id": 960113,
+    "Type": 29,
+    "NameId": 441326,
+    "Icon": {
+      "Id": 8158
+    },
+    "MaxStackSize": -1,
+    "TintAlias": "dyetint",
+    "TextureAlias": "block-snowflake-L1",
+    "MemberDiscount": 10,
+    "ModelName": "hsg_large_pilar_block_v2_01_snowflake.adr",
+    "CategoryId": 4
+  },
+  {
+    "Comment": "Snow Days Ramp",
+    "Id": 960114,
+    "Type": 29,
+    "NameId": 441328,
+    "Icon": {
+      "Id": 8168
+    },
+    "MaxStackSize": -1,
+    "TintAlias": "dyetint",
+    "TextureAlias": "block-snowflake-L1",
+    "MemberDiscount": 10,
+    "ModelName": "hsg_ramp_block_v2_01_snowflake.adr",
+    "CategoryId": 4
+  },
+  {
+    "Comment": "Snow Days Small Floor",
+    "Id": 960115,
+    "Type": 29,
+    "NameId": 441329,
+    "Icon": {
+      "Id": 8179
+    },
+    "MaxStackSize": -1,
+    "TintAlias": "dyetint",
+    "TextureAlias": "block-snowflake-L1",
+    "MemberDiscount": 10,
+    "ModelName": "hsg_small_floor_block_v2_01_snowflake.adr",
+    "CategoryId": 4
+  },
+  {
+    "Comment": "Snow Days Small Pillar",
+    "Id": 960116,
+    "Type": 29,
+    "NameId": 441330,
+    "Icon": {
+      "Id": 8180
+    },
+    "MaxStackSize": -1,
+    "TintAlias": "dyetint",
+    "TextureAlias": "block-snowflake-L1",
+    "MemberDiscount": 10,
+    "ModelName": "hsg_small_pilar_block_v2_01_snowflake.adr",
+    "CategoryId": 4
+  },
+  {
+    "Comment": "Snow Days Small Wall",
+    "Id": 960117,
+    "Type": 29,
+    "NameId": 441331,
+    "Icon": {
+      "Id": 8181
+    },
+    "MaxStackSize": -1,
+    "TintAlias": "dyetint",
+    "TextureAlias": "block-snowflake-L1",
+    "MemberDiscount": 10,
+    "ModelName": "hsg_small_wall_block_v2_01_snowflake.adr",
+    "CategoryId": 4
+  },
+  {
+    "Comment": "Snow Days Tall Wall",
+    "Id": 960118,
+    "Type": 29,
+    "NameId": 441541,
+    "Icon": {
+      "Id": 8192
+    },
+    "MaxStackSize": -1,
+    "TintAlias": "dyetint",
+    "TextureAlias": "block-snowflake-L1",
+    "MemberDiscount": 10,
+    "ModelName": "hsg_wall_3x9_snowflake.adr",
+    "CategoryId": 4
+  },
+  {
+    "Comment": "Snow Days Wall",
+    "Id": 960119,
+    "Type": 29,
+    "NameId": 441327,
+    "Icon": {
+      "Id": 8159
+    },
+    "MaxStackSize": -1,
+    "TintAlias": "dyetint",
+    "TextureAlias": "block-snowflake-L1",
+    "MemberDiscount": 10,
+    "ModelName": "hsg_large_wall_block_v2_01_snowflake.adr",
+    "CategoryId": 4
+  },
+  {
+    "Comment": "Snow Days Wedge",
+    "Id": 960120,
+    "Type": 29,
+    "NameId": 441333,
+    "Icon": {
+      "Id": 8194
+    },
+    "MaxStackSize": -1,
+    "TintAlias": "dyetint",
+    "TextureAlias": "block-snowflake-L1",
+    "MemberDiscount": 10,
+    "ModelName": "hsg_wedge_block_v2_01_snowflake.adr",
+    "CategoryId": 4
+  },
+  {
+    "Comment": "Snow Days Wide Wall",
+    "Id": 960121,
+    "Type": 29,
+    "NameId": 441540,
+    "Icon": {
+      "Id": 8193
+    },
+    "MaxStackSize": -1,
+    "TintAlias": "dyetint",
+    "TextureAlias": "block-snowflake-L1",
+    "MemberDiscount": 10,
+    "ModelName": "hsg_wall_9x3_snowflake.adr",
+    "CategoryId": 4
+  },
+  {
+    "Comment": "Snow Days Wood-Frame Circle Window",
+    "Id": 960122,
+    "Type": 29,
+    "NameId": 441324,
+    "Icon": {
+      "Id": 8183
+    },
+    "MaxStackSize": -1,
+    "TintAlias": "dyetint",
+    "TextureAlias": "snowflake-woodframe",
+    "MemberDiscount": 10,
+    "ModelName": "hsg_circlewindow_3x3_snowflake.adr",
+    "CategoryId": 4
+  },
+  {
+    "Comment": "Snow Days Wood-Frame Door",
+    "Id": 960123,
+    "Type": 29,
+    "NameId": 441538,
+    "Icon": {
+      "Id": 8178
+    },
+    "MaxStackSize": -1,
+    "TintAlias": "dyetint",
+    "TextureAlias": "snowflake-woodframe",
+    "MemberDiscount": 10,
+    "ModelName": "hsg_singledoor_3x3_snowflake.adr",
+    "CategoryId": 4
+  },
+  {
+    "Comment": "Snow Days Wood-Frame Double Doors",
+    "Id": 960124,
+    "Type": 29,
+    "NameId": 441539,
+    "Icon": {
+      "Id": 8147
+    },
+    "MaxStackSize": -1,
+    "TintAlias": "dyetint",
+    "TextureAlias": "snowflake-woodframe",
+    "MemberDiscount": 10,
+    "ModelName": "hsg_doubledoor_3x3_snowflake.adr",
+    "CategoryId": 4
+  },
+  {
+    "Comment": "Snow Days Wood-Frame Square Window",
+    "Id": 960125,
+    "Type": 29,
+    "NameId": 441323,
+    "Icon": {
+      "Id": 8183
+    },
+    "MaxStackSize": -1,
+    "TintAlias": "dyetint",
+    "TextureAlias": "snowflake-woodframe",
+    "MemberDiscount": 10,
+    "ModelName": "hsg_squarewindow_3x3_snowflake.adr",
+    "CategoryId": 4
+  },
+  {
+    "Comment": "Teddy Bear Parachute",
+    "Id": 960204,
+    "Type": 1,
+    "NameId": 9297,
+    "DescriptionId": 9298,
+    "Icon": {
+      "Id": 87
+    },
+    "Class": 158,
+    "MaxStackSize": -1,
+    "NoTrade": true,
+    "TintAlias": "dyetint",
+    "TextureAlias": "parachute-childsplay-P",
+    "MemberDiscount": 10,
+    "Slot": 6,
+    "ModelName": "equipment_ar_ag_parachute.adr",
+    "CategoryId": 106,
+    "NoSale": true,
+    "Rarity": 3,
+    "Stats": {
+      "59": {
+        "Id": 59,
+        "Type": 0,
+        "Value": 1090519040,
+        "Unknown": false
+      },
+      "60": {
+        "Id": 60,
+        "Type": 0,
+        "Value": 1073741824,
+        "Unknown": false
+      },
+      "61": {
+        "Id": 61,
+        "Type": 0,
+        "Value": 1099956224,
+        "Unknown": false
+      },
+      "62": {
+        "Id": 62,
+        "Type": 0,
+        "Value": 1061158912,
+        "Unknown": false
+      },
+      "63": {
+        "Id": 63,
+        "Type": 0,
+        "Value": 1082130432,
+        "Unknown": false
+      },
+      "64": {
+        "Id": 64,
+        "Type": 0,
+        "Value": 1065353216,
+        "Unknown": false
+      },
+      "67": {
+        "Id": 67,
+        "Type": 0,
+        "Value": 1082130432,
+        "Unknown": false
+      }
+    }
+  },
+  {
+    "Comment": "Tattered Parachute",
+    "Id": 960205,
+    "Type": 1,
+    "NameId": 1234,
+    "DescriptionId": 1235,
+    "Icon": {
+      "Id": 90
+    },
+    "Class": 158,
+    "MaxStackSize": 10,
+    "SingleUse": true,
+    "NoTrade": true,
+    "TintAlias": "dyetint",
+    "TextureAlias": "parachute-tattered-P",
+    "MemberDiscount": 10,
+    "Slot": 6,
+    "ModelName": "equipment_ar_ag_parachute.adr",
+    "CategoryId": 106,
+    "NoSale": true,
+    "Stats": {
+      "59": {
+        "Id": 59,
+        "Type": 0,
+        "Value": 1086324736,
+        "Unknown": false
+      },
+      "60": {
+        "Id": 60,
+        "Type": 0,
+        "Value": 1073741824,
+        "Unknown": false
+      },
+      "61": {
+        "Id": 61,
+        "Type": 0,
+        "Value": 1096810496,
+        "Unknown": false
+      },
+      "62": {
+        "Id": 62,
+        "Type": 0,
+        "Value": 1061158912,
+        "Unknown": false
+      },
+      "63": {
+        "Id": 63,
+        "Type": 0,
+        "Value": 1086324736,
+        "Unknown": false
+      },
+      "64": {
+        "Id": 64,
+        "Type": 0,
+        "Value": 1065353216,
+        "Unknown": false
+      },
+      "67": {
+        "Id": 67,
+        "Type": 0,
+        "Value": 1082130432,
+        "Unknown": false
+      }
+    }
   }
 ]

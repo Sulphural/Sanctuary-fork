@@ -457,7 +457,7 @@ public sealed class Player : ClientPcData, IEntity, ITradeParticipant
 
         RefreshEquipmentGlide();
 
-        if (BoomboxDanceTransform != 0 && TemporaryAppearance == BoomboxDanceTransform)
+        if (TemporaryAppearance != 0)
             SendTunneledToVisible(new PlayerUpdatePacketUpdateTemporaryAppearance
             {
                 Guid = Guid,
@@ -1027,7 +1027,7 @@ public sealed class Player : ClientPcData, IEntity, ITradeParticipant
 
         var playerUpdatePacketNpcRelevance = InteractionMenuHelper.GetNpcRelevancePacket(
             visibleNpcs.Where(npc => npc is not PetTreasureChest petTreasureChest || petTreasureChest.IsOwner(this)),
-            npc => Zone.GetQuestBadge(this, npc) is { } badge && !ReferenceEquals(badge, npc.Notification));
+            npc => Zone.GetQuestBadge(this, npc) is { } badge && !npc.IsOwnNotification(badge));
         if (playerUpdatePacketNpcRelevance.Entries.Count > 0)
             SendTunneled(playerUpdatePacketNpcRelevance);
 
@@ -1048,7 +1048,7 @@ public sealed class Player : ClientPcData, IEntity, ITradeParticipant
         foreach (var notification in npc.Notifications)
             yield return notification;
 
-        if ((Zone.GetQuestBadge(this, npc) ?? npc.Notification) is { } badge)
+        if ((Zone.GetQuestBadge(this, npc) ?? npc.Notification) is { } badge && !npc.IsListedNotification(badge))
             yield return badge;
     }
 
@@ -1129,12 +1129,12 @@ public sealed class Player : ClientPcData, IEntity, ITradeParticipant
         CompositeEffectId = notification.Unknown2
     };
 
-    public void OnRemoveVisibleNpcGracefully(Npc npc, bool animate)
+    public void OnRemoveVisibleNpcGracefully(Npc npc, bool animate, int delay = 0, int compositeEffectId = 0)
     {
         if (npc is Mount)
             return;
 
-        SendTunneled(EntityHelper.GetRemovePlayerGracefullyPacket(npc.Guid, animate));
+        SendTunneled(EntityHelper.GetRemovePlayerGracefullyPacket(npc.Guid, animate, delay, compositeEffectId: compositeEffectId));
 
         VisibleNpcs.TryRemove(npc.Guid, out _);
     }

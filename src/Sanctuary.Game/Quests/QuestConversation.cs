@@ -52,6 +52,9 @@ public sealed class QuestConversation
 
             var choice = Current.Choices[index];
 
+            if (choice.Cancels)
+                _onFinished = null;
+
             if (choice.Retry)
                 _remaining.Insert(0, Current);
 

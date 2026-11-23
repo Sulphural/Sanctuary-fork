@@ -78,10 +78,16 @@ public sealed class QuestLog
         }
     }
 
-    public void AddCompleted(int questId)
+    public bool TryGet(int questId, [MaybeNullWhen(false)] out QuestProgress quest)
+    {
+        lock (_lock)
+            return _quests.TryGetValue(questId, out quest);
+    }
+
+    public void AddCompleted(int questId, DateTimeOffset? completedAt = null)
     {
         var quest = new QuestProgress(questId);
-        quest.Complete();
+        quest.Complete(completedAt);
         Add(quest);
     }
 

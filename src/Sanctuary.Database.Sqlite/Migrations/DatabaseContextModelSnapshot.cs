@@ -219,6 +219,9 @@ namespace Sanctuary.Database.Sqlite.Migrations
                     b.Property<bool>("Completed")
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("CurrentGoalId")
                         .HasColumnType("INTEGER");
 
@@ -538,6 +541,36 @@ namespace Sanctuary.Database.Sqlite.Migrations
                     b.ToTable("Profiles");
                 });
 
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbProgressiveQuestClaim", b =>
+                {
+                    b.Property<ulong>("CharacterId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ProgressiveQuestId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsPrize")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("SlotId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset>("Claimed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValueSql("DATE()");
+
+                    b.Property<int>("RewardIndex")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("CharacterId", "ProgressiveQuestId", "Year", "IsPrize", "SlotId");
+
+                    b.ToTable("ProgressiveQuestClaims");
+                });
+
             modelBuilder.Entity("Sanctuary.Database.Entities.DbTitle", b =>
                 {
                     b.Property<int>("Id")
@@ -792,6 +825,17 @@ namespace Sanctuary.Database.Sqlite.Migrations
                     b.Navigation("Character");
                 });
 
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbProgressiveQuestClaim", b =>
+                {
+                    b.HasOne("Sanctuary.Database.Entities.DbCharacter", "Character")
+                        .WithMany("ProgressiveQuestClaims")
+                        .HasForeignKey("CharacterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Character");
+                });
+
             modelBuilder.Entity("Sanctuary.Database.Entities.DbTitle", b =>
                 {
                     b.HasOne("Sanctuary.Database.Entities.DbCharacter", "Character")
@@ -818,6 +862,8 @@ namespace Sanctuary.Database.Sqlite.Migrations
                     b.Navigation("Pets");
 
                     b.Navigation("Profiles");
+
+                    b.Navigation("ProgressiveQuestClaims");
 
                     b.Navigation("Quests");
 

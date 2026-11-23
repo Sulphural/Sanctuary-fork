@@ -69,6 +69,19 @@ public sealed class QuestGoalTests
     }
 
     [TestMethod]
+    public void EmoteGoal_NeedsTheRightEmoteNearItsSpot()
+    {
+        var goal = new EmoteGoal { QuickChatId = 145, EmotePosition = new Vector3(250f, 27f, 406f), EmoteRadius = 18f };
+        var nearby = new Vector4(255f, 27f, 410f, 1f);
+        var farAway = new Vector4(300f, 27f, 406f, 1f);
+
+        Assert.IsTrue(goal.Matches(Quest, new EmoteUsedEvent(145, nearby, ReachLocationGoal.FabledRealmsZoneDefinitionId)));
+        Assert.IsFalse(goal.Matches(Quest, new EmoteUsedEvent(146, nearby, ReachLocationGoal.FabledRealmsZoneDefinitionId)));
+        Assert.IsFalse(goal.Matches(Quest, new EmoteUsedEvent(145, farAway, ReachLocationGoal.FabledRealmsZoneDefinitionId)));
+        Assert.IsFalse(goal.Matches(Quest, new EmoteUsedEvent(145, nearby, 2)));
+    }
+
+    [TestMethod]
     public void CollectGoal_CountsItsNodeTypeUntilTheRequiredCount()
     {
         var goal = new CollectGoal { CollectNodeType = "tin-ore", RequiredCount = 2 };
@@ -139,6 +152,40 @@ public sealed class QuestGoalTests
         var progress = goal.CreateProgress();
 
         Assert.AreEqual(QuestGoalResult.None, goal.Progress(Quest, Move(105f, 100f, zoneDefinitionId: 2), progress));
+    }
+
+    [TestMethod]
+    public void ReachGoal_WithRequiredAppearanceNeedsTheDisguise()
+    {
+        var goal = new ReachLocationGoal { ReachPosition = new Vector3(100f, 0f, 100f), ReachRadius = 10f, RequiredAppearanceModelIds = [1928, 188] };
+        var progress = goal.CreateProgress();
+
+        Assert.AreEqual(QuestGoalResult.None, goal.Progress(Quest, Move(105f, 100f), progress));
+        Assert.AreEqual(QuestGoalResult.None, goal.Progress(Quest, Move(105f, 100f, temporaryAppearance: 535), progress));
+        Assert.AreEqual(QuestGoalResult.Completed, goal.Progress(Quest, Move(105f, 100f, temporaryAppearance: 188), progress));
+    }
+
+    [TestMethod]
+    public void ItemCountGoal_FollowsTheBagCountUpAndDown()
+    {
+        var goal = new ItemCountGoal { ItemDefinitionId = 70454, RequiredCount = 50 };
+        var progress = goal.CreateProgress();
+
+        Assert.AreEqual(QuestGoalResult.None, goal.Progress(Quest, new ItemCountChangedEvent(70455, 10), progress));
+        Assert.AreEqual(QuestGoalResult.Progressed, goal.Progress(Quest, new ItemCountChangedEvent(70454, 10), progress));
+        Assert.AreEqual(QuestGoalResult.None, goal.Progress(Quest, new ItemCountChangedEvent(70454, 10), progress));
+        Assert.AreEqual(QuestGoalResult.Progressed, goal.Progress(Quest, new ItemCountChangedEvent(70454, 4), progress));
+        Assert.AreEqual(4, progress.Count);
+        Assert.AreEqual(QuestGoalResult.Completed, goal.Progress(Quest, new ItemCountChangedEvent(70454, 63), progress));
+        Assert.AreEqual(50, progress.Count);
+    }
+
+    [TestMethod]
+    public void ItemCountGoal_CompletesAtOnceWhenTheBagAlreadyHasEnough()
+    {
+        var goal = new ItemCountGoal { ItemDefinitionId = 70454, RequiredCount = 50 };
+
+        Assert.AreEqual(QuestGoalResult.Completed, goal.Progress(Quest, new ItemCountChangedEvent(70454, 50), goal.CreateProgress()));
     }
 
     [TestMethod]
@@ -213,12 +260,42 @@ public sealed class QuestGoalTests
         Assert.IsTrue(quest.IsWaitingOn(progress, Npc(700)));
     }
 
+    [TestMethod]
+    public void UseItemGoal_CountsUsesOfItsItemUntilTheRequiredCount()
+    {
+        var goal = new UseItemGoal { ItemDefinitionId = 5, RequiredCount = 2 };
+        var progress = goal.CreateProgress();
+
+        Assert.AreEqual(QuestGoalResult.None, goal.Progress(Quest, new ItemUsedEvent(6), progress));
+        Assert.AreEqual(QuestGoalResult.Progressed, goal.Progress(Quest, new ItemUsedEvent(5), progress));
+        Assert.AreEqual(QuestGoalResult.Completed, goal.Progress(Quest, new ItemUsedEvent(5), progress));
+    }
+
+    [TestMethod]
+    public void UseItemGoal_WithoutACountCompletesOnTheFirstUse()
+    {
+        var goal = new UseItemGoal { ItemDefinitionId = 5 };
+
+        Assert.AreEqual(QuestGoalResult.Completed, goal.Progress(Quest, new ItemUsedEvent(5), goal.CreateProgress()));
+    }
+
+    [TestMethod]
+    public void EquipItemGoal_CompletesWhenItsItemIsEquipped()
+    {
+        var goal = new EquipItemGoal { ItemDefinitionId = 5 };
+        var progress = goal.CreateProgress();
+
+        Assert.AreEqual(QuestGoalResult.None, goal.Progress(Quest, new ItemEquippedEvent(6), progress));
+        Assert.AreEqual(QuestGoalResult.None, goal.Progress(Quest, new ItemUsedEvent(5), progress));
+        Assert.AreEqual(QuestGoalResult.Completed, goal.Progress(Quest, new ItemEquippedEvent(5), progress));
+    }
+
     private static Npc Npc(int npcId) => new(Zone) { DefinitionId = npcId };
 
     private static NpcTalkedEvent Talk(int npcId) => new(Npc(npcId));
 
-    private static PlayerMovedEvent Move(float x, float z, int zoneDefinitionId = ReachLocationGoal.FabledRealmsZoneDefinitionId)
-        => new(new Vector4(x, 0f, z, 1f), zoneDefinitionId);
+    private static PlayerMovedEvent Move(float x, float z, int zoneDefinitionId = ReachLocationGoal.FabledRealmsZoneDefinitionId, int temporaryAppearance = 0)
+        => new(new Vector4(x, 0f, z, 1f), zoneDefinitionId, temporaryAppearance);
 
     private static CollectionNode PlayerNode(string nodeType, int spawnId) => new(Zone,
         new CollectionNodeTypeDefinition { Key = nodeType, Name = nodeType },

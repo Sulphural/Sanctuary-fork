@@ -23,6 +23,7 @@ public sealed class WorldZone : BaseZone
 {
     private readonly WorldZoneDefinition _zoneDefinition;
     private readonly IQuestManager _questManager;
+    private readonly IProgressiveQuestManager _progressiveQuestManager;
 
     private readonly object _clientAreasLock = new();
     private readonly HashSet<SeasonalClientAreaDefinition> _activeSeasonalClientAreas = [];
@@ -75,6 +76,7 @@ public sealed class WorldZone : BaseZone
         }
 
         _questManager = serviceProvider.GetRequiredService<IQuestManager>();
+        _progressiveQuestManager = serviceProvider.GetRequiredService<IProgressiveQuestManager>();
     }
 
     public override void OnClientIsReady(Player player)
@@ -108,12 +110,23 @@ public sealed class WorldZone : BaseZone
     }
 
     public override IReadOnlyList<NpcInteractionOption> GetInteractionOptions(Player player, Npc npc)
-        => _questManager.IsQuestNpc(npc.DefinitionId) ? _questManager.GetInteractionOptions(player, npc) : [];
+    {
+        var options = _questManager.IsQuestNpc(npc.DefinitionId) ? _questManager.GetInteractionOptions(player, npc) : [];
+
+        options.AddRange(_progressiveQuestManager.GetInteractionOptions(player, npc));
+
+        return options;
+    }
 
     public override NotificationInfo? GetQuestBadge(Player player, Npc npc)
         => _questManager.IsQuestNpc(npc.DefinitionId) ? _questManager.GetQuestBadge(player, npc) : null;
 
-    public override bool IsHiddenByQuest(Player player, Npc npc) => _questManager.IsHiddenByQuest(player, npc);
+    public override bool IsHiddenByQuest(Player player, Npc npc) => IsHiddenBySeason(player, npc) || _questManager.IsHiddenByQuest(player, npc);
+
+    private bool IsHiddenBySeason(Player player, Npc npc)
+        => _zoneDefinition.SeasonalClientAreas.FirstOrDefault(season => season.NpcIds.Contains(npc.DefinitionId)) is { } season
+            && !season.IsActive(_progressiveQuestManager.Now)
+            && !_questManager.IsNeededByActiveQuest(player, npc);
 
     public override int GetQuestEffectId(Player player, Npc npc) => _questManager.GetQuestEffectId(player, npc);
 
@@ -130,7 +143,8 @@ public sealed class WorldZone : BaseZone
     {
         base.UpdateEverySecond();
 
-        var now = DateTime.Now;
+        var now = _progressiveQuestManager.Now;
+        var seasonChanged = false;
 
         lock (_clientAreasLock)
         {
@@ -146,6 +160,8 @@ public sealed class WorldZone : BaseZone
                 else
                     _activeSeasonalClientAreas.Remove(seasonalClientArea);
 
+                seasonChanged = true;
+
                 Logger.LogInformation("Seasonal client areas {name} {state}", seasonalClientArea.Name, isActive ? "enabled" : "disabled");
 
                 if (!isActive)
@@ -156,6 +172,9 @@ public sealed class WorldZone : BaseZone
             }
         }
 
+        if (seasonChanged)
+            RefreshSeasonalNpcs();
+
         if (++_secondsSinceClientAreaRefresh < ClientAreaRefreshSeconds)
             return;
 
@@ -165,9 +184,32 @@ public sealed class WorldZone : BaseZone
             SendEnabledClientAreas(player);
     }
 
+    private void RefreshSeasonalNpcs()
+    {
+        var seasonalNpcIds = _zoneDefinition.SeasonalClientAreas.SelectMany(season => season.NpcIds).ToHashSet();
+        var seasonalNpcs = Npcs.Where(npc => seasonalNpcIds.Contains(npc.DefinitionId)).ToList();
+
+        foreach (var player in Players)
+        {
+            foreach (var npc in seasonalNpcs)
+            {
+                var hidden = IsHiddenBySeason(player, npc);
+                var shown = player.VisibleNpcs.ContainsKey(npc.Guid);
+
+                if (hidden && shown)
+                    player.OnRemoveVisibleNpcGracefully(npc, animate: false);
+                else if (!hidden && !shown && npc.VisiblePlayers.ContainsKey(player.Guid))
+                    player.OnAddVisibleNpcs(npc);
+            }
+
+            foreach (var npc in player.VisibleNpcs.Values.Where(npc => _questManager.IsQuestNpc(npc.DefinitionId)).ToList())
+                _questManager.RefreshQuestNotification(player, npc.Guid);
+        }
+    }
+
     public override bool IsSeasonActive(string seasonName)
     {
-        var now = DateTime.Now;
+        var now = _progressiveQuestManager.Now;
 
         return _zoneDefinition.SeasonalClientAreas.Any(x => x.Name == seasonName && x.IsActive(now));
     }

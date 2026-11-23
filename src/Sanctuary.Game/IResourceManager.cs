@@ -46,6 +46,7 @@ public interface IResourceManager
     NpcMovementDefinitionCollection NpcMovements { get; }
     NpcAmbientDefinitionCollection NpcAmbient { get; }
     QuestDefinitionCollection Quests { get; }
+    ProgressiveQuestDefinitionCollection ProgressiveQuests { get; }
     NavMeshCollection NavMeshes { get; }
 
     RewardTableDefinitionCollection RewardTables { get; }

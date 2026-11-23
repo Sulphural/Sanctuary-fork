@@ -1,0 +1,436 @@
+[
+  {
+    "Id": 1,
+    "Comment": "12 Days of Presents",
+    "NameId": 441964,
+    "IconId": 28546,
+    "ObjectiveStringIds": [
+      441923,
+      441925,
+      441927
+    ],
+    "ButtonOpenId": 441928,
+    "ButtonOpenedId": 441930,
+    "ButtonBuyId": 441926,
+    "NpcId": 40310,
+    "IntroductionButtonId": 441439,
+    "IntroductionIconId": 40759,
+    "Introduction": [
+      {
+        "TextId": 441441,
+        "ResponseTextId": 441442
+      },
+      {
+        "TextId": 441450,
+        "ResponseTextId": 439938
+      }
+    ],
+    "StartMonth": 12,
+    "StartDay": 13,
+    "OpenMonth": 12,
+    "OpenDay": 25,
+    "EndMonth": 1,
+    "EndDay": 3,
+    "LockedIconId": 40757,
+    "LockedKeyIconId": 40756,
+    "OpenedIconId": 41049,
+    "Slots": [
+      {
+        "QuestId": 3520,
+        "NameId": 441950,
+        "IconId": 40733,
+        "KeyIconId": 40732,
+        "LockedTooltipId": 441932,
+        "SlotItemId": 960001,
+        "KeyItemId": 960013,
+        "KeyBundleId": 960001
+      },
+      {
+        "QuestId": 3521,
+        "NameId": 441951,
+        "IconId": 40735,
+        "KeyIconId": 40734,
+        "LockedTooltipId": 441933,
+        "SlotItemId": 960002,
+        "KeyItemId": 960014,
+        "KeyBundleId": 960002
+      },
+      {
+        "QuestId": 3522,
+        "NameId": 441952,
+        "IconId": 40737,
+        "KeyIconId": 40736,
+        "LockedTooltipId": 441934,
+        "SlotItemId": 960003,
+        "KeyItemId": 960015,
+        "KeyBundleId": 960003
+      },
+      {
+        "QuestId": 3523,
+        "NameId": 441953,
+        "IconId": 40739,
+        "KeyIconId": 40738,
+        "LockedTooltipId": 441935,
+        "SlotItemId": 960004,
+        "KeyItemId": 960016,
+        "KeyBundleId": 960004
+      },
+      {
+        "QuestId": 3524,
+        "NameId": 441954,
+        "IconId": 40741,
+        "KeyIconId": 40740,
+        "LockedTooltipId": 441936,
+        "SlotItemId": 960005,
+        "KeyItemId": 960017,
+        "KeyBundleId": 960005
+      },
+      {
+        "QuestId": 3525,
+        "NameId": 441955,
+        "IconId": 40743,
+        "KeyIconId": 40742,
+        "LockedTooltipId": 441937,
+        "SlotItemId": 960006,
+        "KeyItemId": 960018,
+        "KeyBundleId": 960006
+      },
+      {
+        "QuestId": 3526,
+        "NameId": 441956,
+        "IconId": 40745,
+        "KeyIconId": 40744,
+        "LockedTooltipId": 441938,
+        "SlotItemId": 960007,
+        "KeyItemId": 960019,
+        "KeyBundleId": 960007
+      },
+      {
+        "QuestId": 3527,
+        "NameId": 441957,
+        "IconId": 40747,
+        "KeyIconId": 40746,
+        "LockedTooltipId": 441939,
+        "SlotItemId": 960008,
+        "KeyItemId": 960020,
+        "KeyBundleId": 960008
+      },
+      {
+        "QuestId": 3528,
+        "NameId": 441958,
+        "IconId": 40749,
+        "KeyIconId": 40748,
+        "LockedTooltipId": 441940,
+        "SlotItemId": 960009,
+        "KeyItemId": 960021,
+        "KeyBundleId": 960009
+      },
+      {
+        "QuestId": 3529,
+        "NameId": 441959,
+        "IconId": 40751,
+        "KeyIconId": 40750,
+        "LockedTooltipId": 441941,
+        "SlotItemId": 960010,
+        "KeyItemId": 960022,
+        "KeyBundleId": 960010
+      },
+      {
+        "QuestId": 3530,
+        "NameId": 441960,
+        "IconId": 40753,
+        "KeyIconId": 40752,
+        "LockedTooltipId": 441942,
+        "SlotItemId": 960011,
+        "KeyItemId": 960023,
+        "KeyBundleId": 960011
+      },
+      {
+        "QuestId": 3531,
+        "NameId": 441961,
+        "IconId": 40755,
+        "KeyIconId": 40754,
+        "LockedTooltipId": 441943,
+        "SlotItemId": 960012,
+        "KeyItemId": 960024,
+        "KeyBundleId": 960012
+      }
+    ],
+    "Prizes": [
+      {
+        "NameId": 441947,
+        "IconId": 40758,
+        "TooltipId": 441944,
+        "RequiredSlots": 4,
+        "Reward": {
+          "TitleId": 441218,
+          "BodyId": 441233,
+          "IconId": 8227,
+          "Items": [
+            {
+              "ItemDefinitionId": 930214,
+              "Quantity": 1
+            }
+          ]
+        }
+      },
+      {
+        "NameId": 441948,
+        "IconId": 40759,
+        "TooltipId": 441945,
+        "RequiredSlots": 8,
+        "Reward": {
+          "TitleId": 441219,
+          "BodyId": 441234,
+          "IconId": 8224,
+          "Items": [
+            {
+              "ItemDefinitionId": 960107,
+              "Quantity": 1
+            }
+          ]
+        }
+      },
+      {
+        "NameId": 441949,
+        "IconId": 40760,
+        "TooltipId": 441946,
+        "RequiredSlots": 12,
+        "Reward": {
+          "TitleId": 441220,
+          "BodyId": 441235,
+          "IconId": 8225,
+          "Items": [
+            {
+              "ItemDefinitionId": 79447,
+              "Quantity": 1
+            }
+          ]
+        }
+      }
+    ],
+    "SlotRewards": [
+      {
+        "TitleId": 441211,
+        "BodyId": 441226,
+        "IconId": 8232,
+        "Items": [
+          {
+            "ItemDefinitionId": 960105,
+            "Quantity": 1
+          }
+        ]
+      },
+      {
+        "TitleId": 441207,
+        "BodyId": 441222,
+        "IconId": 8230,
+        "Items": [
+          {
+            "ItemDefinitionId": 76609,
+            "Quantity": 1
+          },
+          {
+            "ItemDefinitionId": 76612,
+            "Quantity": 1
+          },
+          {
+            "ItemDefinitionId": 76611,
+            "Quantity": 1
+          },
+          {
+            "ItemDefinitionId": 76610,
+            "Quantity": 1
+          }
+        ]
+      },
+      {
+        "TitleId": 441206,
+        "BodyId": 441221,
+        "IconId": 8229,
+        "Items": [
+          {
+            "ItemDefinitionId": 76625,
+            "Quantity": 1
+          },
+          {
+            "ItemDefinitionId": 76620,
+            "Quantity": 1
+          },
+          {
+            "ItemDefinitionId": 76634,
+            "Quantity": 1
+          },
+          {
+            "ItemDefinitionId": 76622,
+            "Quantity": 1
+          },
+          {
+            "ItemDefinitionId": 76626,
+            "Quantity": 1
+          }
+        ]
+      },
+      {
+        "TitleId": 441215,
+        "BodyId": 441230,
+        "IconId": 5602,
+        "Items": [
+          {
+            "ItemDefinitionId": 960106,
+            "Quantity": 1
+          }
+        ]
+      },
+      {
+        "TitleId": 441208,
+        "BodyId": 441223,
+        "IconId": 8231,
+        "Items": [
+          {
+            "ItemDefinitionId": 36208,
+            "Quantity": 4
+          },
+          {
+            "ItemDefinitionId": 2712,
+            "Quantity": 4
+          },
+          {
+            "ItemDefinitionId": 225,
+            "Quantity": 2
+          },
+          {
+            "ItemDefinitionId": 2707,
+            "Quantity": 4
+          }
+        ]
+      },
+      {
+        "TitleId": 441214,
+        "BodyId": 441229,
+        "IconId": 8226,
+        "Items": [
+          {
+            "ItemDefinitionId": 950010,
+            "Quantity": 1
+          }
+        ]
+      },
+      {
+        "TitleId": 441216,
+        "BodyId": 441231,
+        "IconId": 8141,
+        "Items": [
+          {
+            "ItemDefinitionId": 930213,
+            "Quantity": 1
+          }
+        ]
+      },
+      {
+        "TitleId": 441210,
+        "BodyId": 441225,
+        "IconId": 6435,
+        "Coins": 5000
+      },
+      {
+        "TitleId": 441217,
+        "BodyId": 441232,
+        "IconId": 8133,
+        "Items": [
+          {
+            "ItemDefinitionId": 960101,
+            "Quantity": 1
+          }
+        ]
+      },
+      {
+        "TitleId": 441213,
+        "BodyId": 441228,
+        "IconId": 8136,
+        "Items": [
+          {
+            "ItemDefinitionId": 960104,
+            "Quantity": 100
+          }
+        ]
+      },
+      {
+        "TitleId": 441212,
+        "BodyId": 441227,
+        "IconId": 8228
+      },
+      {
+        "TitleId": 441209,
+        "BodyId": 441224,
+        "IconId": 8182,
+        "Items": [
+          {
+            "ItemDefinitionId": 960110,
+            "Quantity": 30
+          },
+          {
+            "ItemDefinitionId": 960111,
+            "Quantity": 20
+          },
+          {
+            "ItemDefinitionId": 960112,
+            "Quantity": 4
+          },
+          {
+            "ItemDefinitionId": 960113,
+            "Quantity": 10
+          },
+          {
+            "ItemDefinitionId": 960114,
+            "Quantity": 10
+          },
+          {
+            "ItemDefinitionId": 960115,
+            "Quantity": 30
+          },
+          {
+            "ItemDefinitionId": 960116,
+            "Quantity": 15
+          },
+          {
+            "ItemDefinitionId": 960117,
+            "Quantity": 30
+          },
+          {
+            "ItemDefinitionId": 960118,
+            "Quantity": 3
+          },
+          {
+            "ItemDefinitionId": 960119,
+            "Quantity": 20
+          },
+          {
+            "ItemDefinitionId": 960120,
+            "Quantity": 15
+          },
+          {
+            "ItemDefinitionId": 960121,
+            "Quantity": 3
+          },
+          {
+            "ItemDefinitionId": 960122,
+            "Quantity": 4
+          },
+          {
+            "ItemDefinitionId": 960123,
+            "Quantity": 2
+          },
+          {
+            "ItemDefinitionId": 960124,
+            "Quantity": 2
+          },
+          {
+            "ItemDefinitionId": 960125,
+            "Quantity": 4
+          }
+        ]
+      }
+    ]
+  }
+]

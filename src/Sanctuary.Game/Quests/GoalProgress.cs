@@ -68,3 +68,15 @@ public sealed class CollectProgress : GoalProgress
             base.Load(targetId, count);
     }
 }
+
+public sealed class ItemCountProgress : GoalProgress
+{
+    public bool TrySet(int count)
+    {
+        if (count == Count)
+            return false;
+
+        Count = count;
+        return true;
+    }
+}

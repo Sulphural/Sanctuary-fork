@@ -40,6 +40,7 @@ public static class PacketBaseInGamePurchaseHandler
             PacketInGamePurchaseAccountInfoRequest.OpCode => PacketInGamePurchaseAccountInfoRequestHandler.HandlePacket(connection, reader.Span),
             PacketInGamePurchaseStoreBundleContentRequest.OpCode => PacketInGamePurchaseStoreBundleContentRequestHandler.HandlePacket(connection, reader.Span),
             InGamePurchaseUpdateItemRequirementsRequest.OpCode => InGamePurchaseUpdateItemRequirementsRequestHandler.HandlePacket(connection),
+            InGamePurchaseBuyBundleFromMerchantRequest.OpCode => InGamePurchaseBuyBundleFromMerchantRequestHandler.HandlePacket(connection, reader.Span),
             _ => false
         };
     }

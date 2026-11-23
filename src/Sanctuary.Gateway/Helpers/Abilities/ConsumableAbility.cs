@@ -11,6 +11,7 @@ using Sanctuary.Database;
 using Sanctuary.Game;
 using Sanctuary.Game.Entities;
 using Sanctuary.Game.Helpers;
+using Sanctuary.Game.Quests;
 using Sanctuary.Packet;
 using Sanctuary.Packet.Common;
 
@@ -20,7 +21,8 @@ public sealed record AbilityServices(
     ILogger Logger,
     IResourceManager ResourceManager,
     IDbContextFactory<DatabaseContext> DbContextFactory,
-    IRewardManager RewardManager);
+    IRewardManager RewardManager,
+    IQuestManager QuestManager);
 
 public abstract class ConsumableAbility(AbilityServices services)
 {
@@ -34,6 +36,7 @@ public abstract class ConsumableAbility(AbilityServices services)
     protected readonly ILogger _logger = services.Logger;
     protected readonly IResourceManager _resourceManager = services.ResourceManager;
     protected readonly IRewardManager _rewardManager = services.RewardManager;
+    private readonly IQuestManager _questManager = services.QuestManager;
 
     private readonly IDbContextFactory<DatabaseContext> _dbContextFactory = services.DbContextFactory;
 
@@ -125,9 +128,9 @@ public abstract class ConsumableAbility(AbilityServices services)
         return true;
     }
 
-    protected static void ApplyFoodEffect(Player player, int nameId, int effectId, int durationMs, int delayMs = 0, float scale = 0)
+    protected static void ApplyFoodEffect(Player player, int nameId, int effectId, int durationMs, int delayMs = 0, float scale = 0, float movementSpeedBonus = 0)
     {
-        if (effectId == 0 && scale == 0)
+        if (effectId == 0 && scale == 0 && movementSpeedBonus == 0)
             return;
 
         if (player.ActiveFoodEffectId != 0)
@@ -139,6 +142,7 @@ public abstract class ConsumableAbility(AbilityServices services)
             WorldEffectId = effectId,
             WorldEffectStartsAt = delayMs > 0 ? DateTimeOffset.UtcNow.AddMilliseconds(delayMs) : null,
             Scale = scale,
+            MovementSpeedBonus = movementSpeedBonus,
             BuffIconId = Player.ChangeFormBuffIconId,
             BuffNameId = nameId,
             OnRemoved = () => player.ActiveFoodEffectId = 0
@@ -152,7 +156,7 @@ public abstract class ConsumableAbility(AbilityServices services)
         if (_resourceManager.Consumables.Transformations.TryGetValue(abilityId, out var transform))
             player.ApplyTemporaryAppearance(transform.ModelId, transform.DurationMs, transform.CompositeEffectId, nameId);
         else if (_resourceManager.Consumables.FoodEffects.TryGetValue(abilityId, out var foodEffect))
-            ApplyFoodEffect(player, nameId, foodEffect.CompositeEffectId, foodEffect.DurationMs, foodEffect.EffectDelayMs, foodEffect.Scale);
+            ApplyFoodEffect(player, nameId, foodEffect.CompositeEffectId, foodEffect.DurationMs, foodEffect.EffectDelayMs, foodEffect.Scale, foodEffect.MovementSpeedBonus);
     }
 
     protected static void PlayEffect(Player player, int effectId, int delayMs = 0)
@@ -260,5 +264,7 @@ public abstract class ConsumableAbility(AbilityServices services)
         if (hasItemLeft)
             player.StartActionBarCooldown(ActionBarId, slot, itemDefinition.Icon.Id, itemDefinition.NameId,
                 itemDefinition.SingleUse ? count - 1 : count, cooldownMs, iconTintId);
+
+        _questManager.OnEvent(player, new ItemUsedEvent(itemDefinition.Id));
     }
 }

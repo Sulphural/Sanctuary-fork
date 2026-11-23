@@ -33,6 +33,21 @@ public sealed class TransformFoodAbility(AbilityServices services) : ConsumableA
         var cooldownMs = hasTransform ? transform!.CooldownMs
             : _resourceManager.Consumables.FoodEffects.TryGetValue(transformAbilityId, out var foodEffect) ? foodEffect.CooldownMs : 0;
 
+        if (hasTransform && transform!.RepeatCompositeEffectId != 0 && player.TemporaryAppearance == transform.ModelId)
+        {
+            player.SendTunneledToVisible(new PlayerUpdatePacketPlayCompositeEffect
+            {
+                Guid = player.Guid,
+                CompositeEffectId = transform.RepeatCompositeEffectId
+            }, true);
+
+            if (transform.RepeatAnimationId != 0)
+                player.SendTunneledToVisible(new PlayerUpdatePacketSetAnimation { Guid = player.Guid, AnimationId = transform.RepeatAnimationId }, true);
+
+            FinishActivation(player, clientItem, itemDefinition, slot, 0);
+            return true;
+        }
+
         if (player.IsItemOnCooldown(itemDefinition.Id))
             return SendFailure(player);
 

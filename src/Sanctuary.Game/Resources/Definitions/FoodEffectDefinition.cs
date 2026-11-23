@@ -11,4 +11,6 @@ public class FoodEffectDefinition
     public int CooldownMs { get; set; }
 
     public float Scale { get; set; }
+
+    public float MovementSpeedBonus { get; set; }
 }
