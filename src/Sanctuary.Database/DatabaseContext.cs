@@ -32,6 +32,10 @@ public abstract class DatabaseContext : DbContext
     public DbSet<DbCodeRedemption> CodeRedemptions => Set<DbCodeRedemption>();
     public DbSet<DbPendingReward> PendingRewards => Set<DbPendingReward>();
     public DbSet<DbAccountToken> AccountTokens => Set<DbAccountToken>();
+    public DbSet<DbForum> Forums => Set<DbForum>();
+    public DbSet<DbForumThread> ForumThreads => Set<DbForumThread>();
+    public DbSet<DbForumPost> ForumPosts => Set<DbForumPost>();
+    public DbSet<DbForumPostReport> ForumPostReports => Set<DbForumPostReport>();
 
     public DatabaseContext()
     {

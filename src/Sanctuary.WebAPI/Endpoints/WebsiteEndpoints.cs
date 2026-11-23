@@ -77,6 +77,7 @@ public static class WebsiteEndpoints
         group.MapStaffEndpoints(loggerFactory);
         group.MapStaffPlayerEndpoints(loggerFactory);
         group.MapNewsEndpoints();
+        group.MapForumEndpoints();
         group.MapRedeemEndpoints(loggerFactory);
         group.MapMembershipEndpoints(loggerFactory);
         group.MapAccountRecoveryEndpoints(loggerFactory);

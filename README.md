@@ -265,7 +265,9 @@ In-game purchases (buying membership with Station Cash from the client's members
 
 ## Website and plugin
 
-The WebAPI can serve a full website: set `WebAPI:WebsiteRoot` to its folder. The website talks to the WebAPI through `/website/*` (accounts, characters, profiles, redeem codes, membership and staff tools).
+The WebAPI can serve a full website: set `WebAPI:WebsiteRoot` to its folder. The website talks to the WebAPI through `/website/*` (accounts, characters, profiles, forums, redeem codes, membership and staff tools).
+
+The forums (`/website/forums*`) store categories, threads, posts and reports in the database (`AddForums` migration, applied by the Login server at startup). The forum list is seeded from `ForumSeed.cs`. Players post as one of their characters; muted or locked accounts can't post, members-only forums need membership, and only staff can start threads in News & Announcements. Staff can stick, lock and delete threads, edit or delete any post, and handle reports in Staff Tools; every action goes in the staff log.
 
 Players install the plugin (`src/Sanctuary.Plugin`) once. The website's **Play Now!** button then opens a `freerealms://` link, and the plugin downloads the game client, starts it and logs the player in. On Linux and macOS it downloads and runs Wine by itself. Build the installers with:
 

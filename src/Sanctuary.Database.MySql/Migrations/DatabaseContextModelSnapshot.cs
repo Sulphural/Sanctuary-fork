@@ -345,6 +345,329 @@ namespace Sanctuary.Database.MySql.Migrations
                     b.ToTable("CollectionEntries");
                 });
 
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbForum", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<int>("CategoryOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("varchar(300)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("MembersOnly")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("StaffThreadsOnly")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Forums");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Category = "News & Announcements",
+                            CategoryOrder = 1,
+                            Description = "Official news and announcements from the Open Source Free Realms team.",
+                            DisplayOrder = 1,
+                            MembersOnly = false,
+                            StaffThreadsOnly = true,
+                            Title = "News & Announcements"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Category = "Free Realms Game Discussion",
+                            CategoryOrder = 2,
+                            Description = "A forum for everyone to discuss the game!",
+                            DisplayOrder = 1,
+                            MembersOnly = false,
+                            StaffThreadsOnly = false,
+                            Title = "Free Realms Discussion"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Category = "Free Realms Game Discussion",
+                            CategoryOrder = 2,
+                            Description = "Check here to read what's new in the community and to participate in fun activities and discussions.",
+                            DisplayOrder = 2,
+                            MembersOnly = false,
+                            StaffThreadsOnly = false,
+                            Title = "Community News"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Category = "Free Realms Game Discussion",
+                            CategoryOrder = 2,
+                            Description = "[Members Only] Discuss general game-related topics",
+                            DisplayOrder = 3,
+                            MembersOnly = true,
+                            StaffThreadsOnly = false,
+                            Title = "Members Only Discussion"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Category = "Free Realms Game Discussion",
+                            CategoryOrder = 2,
+                            Description = "Have an item to trade? Questions about collections? Look here!",
+                            DisplayOrder = 4,
+                            MembersOnly = false,
+                            StaffThreadsOnly = false,
+                            Title = "Trade and Collections"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Category = "Free Realms Game Discussion",
+                            CategoryOrder = 2,
+                            Description = "Have a guild you want to promote? Questions about joining a guild? This is the place!",
+                            DisplayOrder = 5,
+                            MembersOnly = false,
+                            StaffThreadsOnly = false,
+                            Title = "Guild Recruitment and Discussion"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Category = "Free Realms Game Discussion",
+                            CategoryOrder = 2,
+                            Description = "Do you have a great idea for the game or run into something that isn't right? Let us know about it in this forum!",
+                            DisplayOrder = 6,
+                            MembersOnly = false,
+                            StaffThreadsOnly = false,
+                            Title = "Suggestions and Bugs"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            Category = "Free Realms Game Discussion",
+                            CategoryOrder = 2,
+                            Description = "A place to talk about everything not related to Free Realms.",
+                            DisplayOrder = 7,
+                            MembersOnly = false,
+                            StaffThreadsOnly = false,
+                            Title = "Off-Topic Talk"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            Category = "Trading Card Game",
+                            CategoryOrder = 3,
+                            Description = "Talk about decks, cards and strategies for the Free Realms Trading Card Game.",
+                            DisplayOrder = 1,
+                            MembersOnly = false,
+                            StaffThreadsOnly = false,
+                            Title = "Trading Card Game Discussion"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            Category = "Trading Card Game",
+                            CategoryOrder = 3,
+                            Description = "Found a problem with the Trading Card Game? Report it here.",
+                            DisplayOrder = 2,
+                            MembersOnly = false,
+                            StaffThreadsOnly = false,
+                            Title = "Trading Card Game Support and Bugs"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            Category = "Technical Support",
+                            CategoryOrder = 4,
+                            Description = "Trouble connecting, lag or slow loading? Ask for help here.",
+                            DisplayOrder = 1,
+                            MembersOnly = false,
+                            StaffThreadsOnly = false,
+                            Title = "Connection and Performance Issues"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            Category = "Technical Support",
+                            CategoryOrder = 4,
+                            Description = "Crashes, launcher and plugin problems, and other technical issues.",
+                            DisplayOrder = 2,
+                            MembersOnly = false,
+                            StaffThreadsOnly = false,
+                            Title = "Technical Issues and Crashes"
+                        },
+                        new
+                        {
+                            Id = 13,
+                            Category = "Technical Support",
+                            CategoryOrder = 4,
+                            Description = "Questions about your account, membership and Station Cash.",
+                            DisplayOrder = 3,
+                            MembersOnly = false,
+                            StaffThreadsOnly = false,
+                            Title = "Account Issues"
+                        });
+                });
+
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbForumPost", b =>
+                {
+                    b.Property<ulong>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint unsigned");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<ulong>("Id"));
+
+                    b.Property<ulong?>("AuthorCharacterId")
+                        .HasColumnType("bigint unsigned");
+
+                    b.Property<string>("AuthorName")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<ulong?>("AuthorUserId")
+                        .HasColumnType("bigint unsigned");
+
+                    b.Property<string>("Body")
+                        .IsRequired()
+                        .HasMaxLength(10000)
+                        .HasColumnType("varchar(10000)");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime(6)")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<DateTimeOffset?>("Edited")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("EditedBy")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<ulong>("ThreadId")
+                        .HasColumnType("bigint unsigned");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorCharacterId");
+
+                    b.HasIndex("AuthorUserId");
+
+                    b.HasIndex("ThreadId", "Id");
+
+                    b.ToTable("ForumPosts");
+                });
+
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbForumPostReport", b =>
+                {
+                    b.Property<ulong>("PostId")
+                        .HasColumnType("bigint unsigned");
+
+                    b.Property<ulong>("ReporterUserId")
+                        .HasColumnType("bigint unsigned");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime(6)")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.HasKey("PostId", "ReporterUserId");
+
+                    b.HasIndex("ReporterUserId");
+
+                    b.ToTable("ForumPostReports");
+                });
+
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbForumThread", b =>
+                {
+                    b.Property<ulong>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint unsigned");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<ulong>("Id"));
+
+                    b.Property<ulong?>("AuthorCharacterId")
+                        .HasColumnType("bigint unsigned");
+
+                    b.Property<string>("AuthorName")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<ulong?>("AuthorUserId")
+                        .HasColumnType("bigint unsigned");
+
+                    b.Property<DateTimeOffset>("Created")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime(6)")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<int>("ForumId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsLocked")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsSticky")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTimeOffset>("LastPostAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime(6)")
+                        .HasDefaultValueSql("NOW()");
+
+                    b.Property<ulong?>("LastPostCharacterId")
+                        .HasColumnType("bigint unsigned");
+
+                    b.Property<ulong>("LastPostId")
+                        .HasColumnType("bigint unsigned");
+
+                    b.Property<string>("LastPostName")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<int>("ReplyCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<int>("ViewCount")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuthorCharacterId");
+
+                    b.HasIndex("AuthorUserId");
+
+                    b.HasIndex("ForumId", "IsSticky", "LastPostId");
+
+                    b.ToTable("ForumThreads");
+                });
+
             modelBuilder.Entity("Sanctuary.Database.Entities.DbFriend", b =>
                 {
                     b.Property<ulong>("FriendCharacterId")
@@ -1165,6 +1488,75 @@ namespace Sanctuary.Database.MySql.Migrations
                         .IsRequired();
 
                     b.Navigation("Character");
+                });
+
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbForumPost", b =>
+                {
+                    b.HasOne("Sanctuary.Database.Entities.DbCharacter", "AuthorCharacter")
+                        .WithMany()
+                        .HasForeignKey("AuthorCharacterId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sanctuary.Database.Entities.DbUser", "AuthorUser")
+                        .WithMany()
+                        .HasForeignKey("AuthorUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sanctuary.Database.Entities.DbForumThread", "Thread")
+                        .WithMany()
+                        .HasForeignKey("ThreadId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AuthorCharacter");
+
+                    b.Navigation("AuthorUser");
+
+                    b.Navigation("Thread");
+                });
+
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbForumPostReport", b =>
+                {
+                    b.HasOne("Sanctuary.Database.Entities.DbForumPost", "Post")
+                        .WithMany()
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Sanctuary.Database.Entities.DbUser", "ReporterUser")
+                        .WithMany()
+                        .HasForeignKey("ReporterUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+
+                    b.Navigation("ReporterUser");
+                });
+
+            modelBuilder.Entity("Sanctuary.Database.Entities.DbForumThread", b =>
+                {
+                    b.HasOne("Sanctuary.Database.Entities.DbCharacter", "AuthorCharacter")
+                        .WithMany()
+                        .HasForeignKey("AuthorCharacterId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sanctuary.Database.Entities.DbUser", "AuthorUser")
+                        .WithMany()
+                        .HasForeignKey("AuthorUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("Sanctuary.Database.Entities.DbForum", "Forum")
+                        .WithMany()
+                        .HasForeignKey("ForumId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("AuthorCharacter");
+
+                    b.Navigation("AuthorUser");
+
+                    b.Navigation("Forum");
                 });
 
             modelBuilder.Entity("Sanctuary.Database.Entities.DbFriend", b =>
