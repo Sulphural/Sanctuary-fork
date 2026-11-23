@@ -389,18 +389,18 @@ namespace Sanctuary.Database.Sqlite.Migrations
                         new
                         {
                             Id = 2,
-                            Category = "Free Realms Game Discussion",
+                            Category = "Open Source Free Realms Game Discussion",
                             CategoryOrder = 2,
                             Description = "A forum for everyone to discuss the game!",
                             DisplayOrder = 1,
                             MembersOnly = false,
                             StaffThreadsOnly = false,
-                            Title = "Free Realms Discussion"
+                            Title = "Open Source Free Realms Discussion"
                         },
                         new
                         {
                             Id = 3,
-                            Category = "Free Realms Game Discussion",
+                            Category = "Open Source Free Realms Game Discussion",
                             CategoryOrder = 2,
                             Description = "Check here to read what's new in the community and to participate in fun activities and discussions.",
                             DisplayOrder = 2,
@@ -411,7 +411,7 @@ namespace Sanctuary.Database.Sqlite.Migrations
                         new
                         {
                             Id = 4,
-                            Category = "Free Realms Game Discussion",
+                            Category = "Open Source Free Realms Game Discussion",
                             CategoryOrder = 2,
                             Description = "[Members Only] Discuss general game-related topics",
                             DisplayOrder = 3,
@@ -422,7 +422,7 @@ namespace Sanctuary.Database.Sqlite.Migrations
                         new
                         {
                             Id = 5,
-                            Category = "Free Realms Game Discussion",
+                            Category = "Open Source Free Realms Game Discussion",
                             CategoryOrder = 2,
                             Description = "Have an item to trade? Questions about collections? Look here!",
                             DisplayOrder = 4,
@@ -433,7 +433,7 @@ namespace Sanctuary.Database.Sqlite.Migrations
                         new
                         {
                             Id = 6,
-                            Category = "Free Realms Game Discussion",
+                            Category = "Open Source Free Realms Game Discussion",
                             CategoryOrder = 2,
                             Description = "Have a guild you want to promote? Questions about joining a guild? This is the place!",
                             DisplayOrder = 5,
@@ -444,7 +444,7 @@ namespace Sanctuary.Database.Sqlite.Migrations
                         new
                         {
                             Id = 7,
-                            Category = "Free Realms Game Discussion",
+                            Category = "Open Source Free Realms Game Discussion",
                             CategoryOrder = 2,
                             Description = "Do you have a great idea for the game or run into something that isn't right? Let us know about it in this forum!",
                             DisplayOrder = 6,
@@ -455,9 +455,9 @@ namespace Sanctuary.Database.Sqlite.Migrations
                         new
                         {
                             Id = 8,
-                            Category = "Free Realms Game Discussion",
+                            Category = "Open Source Free Realms Game Discussion",
                             CategoryOrder = 2,
-                            Description = "A place to talk about everything not related to Free Realms.",
+                            Description = "A place to talk about everything not related to Open Source Free Realms.",
                             DisplayOrder = 7,
                             MembersOnly = false,
                             StaffThreadsOnly = false,
@@ -468,7 +468,7 @@ namespace Sanctuary.Database.Sqlite.Migrations
                             Id = 9,
                             Category = "Trading Card Game",
                             CategoryOrder = 3,
-                            Description = "Talk about decks, cards and strategies for the Free Realms Trading Card Game.",
+                            Description = "Talk about decks, cards and strategies for the Open Source Free Realms Trading Card Game.",
                             DisplayOrder = 1,
                             MembersOnly = false,
                             StaffThreadsOnly = false,

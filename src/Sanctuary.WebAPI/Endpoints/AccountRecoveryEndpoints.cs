@@ -117,31 +117,63 @@ public static class AccountRecoveryEndpoints
 
     private static string RetailHtml(string heading, string origin, IEnumerable<string> paragraphs)
     {
+        var site = Encode(origin);
         var body = new StringBuilder();
 
-        body.Append("<div style=\"font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#333333;max-width:560px\">");
-        body.Append("<div style=\"font-size:18px;font-weight:bold;color:#1a75bc;border-bottom:1px solid #666666;padding-bottom:4px;margin-bottom:12px\">").Append(Encode(heading)).Append("</div>");
-        body.Append("<p style=\"margin:0 0 14px\">Dear Customer:</p>");
+        body.Append("<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><meta name=\"color-scheme\" content=\"light only\"><title>Open Source Free Realms</title></head>");
+        body.Append("<body style=\"margin:0;padding:0;background-color:#1b0f4a\">");
+        body.Append("<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"#1b0f4a\" style=\"background-color:#1b0f4a\"><tr><td align=\"center\" style=\"padding:24px 12px 32px\">");
+        body.Append("<table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"width:100%;max-width:600px;font-family:Tahoma,Verdana,Arial,sans-serif\">");
+
+        body.Append("<tr><td align=\"center\" style=\"padding:4px 0 2px\"><a href=\"").Append(site).Append("/\"><img src=\"").Append(site).Append("/images/default/logos/logo.png\" width=\"335\" height=\"68\" alt=\"Free Realms\" style=\"display:block;border:0;width:335px;max-width:100%;height:auto\"></a></td></tr>");
+        body.Append("<tr><td align=\"center\" style=\"padding:4px 0 18px;font-size:13px;font-weight:bold;letter-spacing:4px;color:#ffcf2a\">OPEN SOURCE FREE REALMS</td></tr>");
+
+        body.Append("<tr><td bgcolor=\"#2a1a7a\" style=\"background-color:#2a1a7a;border:3px solid #8c80e6;border-radius:16px\">");
+        body.Append("<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\">");
+        body.Append("<tr><td bgcolor=\"#3d2cc4\" style=\"background-color:#3d2cc4;border-radius:13px 13px 0 0;border-bottom:2px solid #8c80e6;padding:14px 26px;font-size:18px;font-weight:bold;letter-spacing:1px;color:#ffffff\">").Append(Encode(heading)).Append("</td></tr>");
+        body.Append("<tr><td style=\"padding:22px 26px 6px;font-size:14px;line-height:21px;color:#ece8ff\">");
+        body.Append("<div style=\"margin:0 0 14px\">Dear Customer:</div>");
 
         foreach (var paragraph in paragraphs)
-            body.Append("<p style=\"margin:0 0 14px\">").Append(paragraph).Append("</p>");
+            body.Append("<div style=\"margin:0 0 14px\">").Append(paragraph).Append("</div>");
 
-        body.Append("<p style=\"margin:0 0 14px\">Feel free to <a href=\"").Append(Encode(origin)).Append("/\" style=\"color:#1a75bc\">contact us</a> if you have concerns over the security of your account.</p>");
-        body.Append("<p style=\"margin:0 0 14px\">Thank you.</p>");
-        body.Append("<p style=\"margin:0 0 40px\">(This is an automated e-mail. Please do not reply.)</p>");
-        body.Append("<p style=\"margin:0\">Open Source Free Realms<br><a href=\"").Append(Encode(origin)).Append("\" style=\"color:#333333\">").Append(Encode(origin)).Append("</a></p>");
-        body.Append("</div>");
+        body.Append("<div style=\"margin:0 0 14px\">Feel free to <a href=\"").Append(site).Append("/\" style=\"color:#ffcf2a\">contact us</a> if you have concerns over the security of your account.</div>");
+        body.Append("</td></tr>");
+
+        body.Append("<tr><td style=\"padding:0 12px 0 26px\"><table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr>");
+        body.Append("<td valign=\"middle\" style=\"font-size:14px;line-height:21px;color:#ece8ff\">Thank you.<br><b style=\"color:#ffffff\">The Open Source Free Realms Team</b><div style=\"margin-top:6px;font-size:11px;line-height:15px;color:#aaa1ff\">(This is an automated e-mail. Please do not reply.)</div></td>");
+        body.Append("<td width=\"130\" valign=\"bottom\" align=\"right\"><img src=\"").Append(site).Append("/images/email/chatty.png\" width=\"130\" height=\"120\" alt=\"\" style=\"display:block;border:0\"></td>");
+        body.Append("</tr></table></td></tr>");
+        body.Append("</table></td></tr>");
+
+        body.Append("<tr><td align=\"center\" style=\"padding:18px 10px 0;font-size:11px;line-height:17px;color:#aaa1ff\">");
+        body.Append("<a href=\"").Append(site).Append("/\" style=\"color:#d0bfff;font-weight:bold;text-decoration:none\">Open Source Free Realms</a>");
+        body.Append(" &nbsp;|&nbsp; <a href=\"").Append(site).Append("/help.html\" style=\"color:#d0bfff;text-decoration:none\">Help &amp; Support</a>");
+        body.Append(" &nbsp;|&nbsp; <a href=\"").Append(site).Append("/privacy.html\" style=\"color:#d0bfff;text-decoration:none\">Privacy Policy</a><br>");
+        body.Append("Open Source Free Realms is a free, fan-run community project and is not affiliated with Sony or Daybreak Game Company.");
+        body.Append("</td></tr>");
+
+        body.Append("</table></td></tr></table></body></html>");
 
         return body.ToString();
     }
 
     private static string RetailText(string heading, string origin, IEnumerable<string> paragraphs)
     {
-        return heading + "\n\nDear Customer:\n\n" + string.Join("\n\n", paragraphs)
-            + "\n\nFeel free to contact us (" + origin + "/) if you have concerns over the security of your account.\n\nThank you.\n\n(This is an automated e-mail. Please do not reply.)\n\n\nOpen Source Free Realms\n" + origin;
+        return "OPEN SOURCE FREE REALMS\n\n" + heading + "\n\nDear Customer:\n\n" + string.Join("\n\n", paragraphs)
+            + "\n\nFeel free to contact us (" + origin + "/) if you have concerns over the security of your account.\n\nThank you.\nThe Open Source Free Realms Team\n\n(This is an automated e-mail. Please do not reply.)\n\n\nOpen Source Free Realms\n" + origin;
     }
 
-    private static string Link(string url, string label) => "<a href=\"" + Encode(url) + "\" style=\"color:#1a75bc\">" + Encode(label) + "</a>";
+    private static string Link(string url, string label)
+    {
+        var href = Encode(url);
+
+        return "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" align=\"center\" style=\"margin:6px auto 12px\"><tr>"
+            + "<td align=\"center\" bgcolor=\"#7ccf1f\" style=\"background-color:#7ccf1f;background-image:linear-gradient(#f6ff9e,#c9ee3a 30%,#8fd11a 58%,#5eaa0c);border:2px solid #3b6a08;border-radius:12px\">"
+            + "<a href=\"" + href + "\" style=\"display:inline-block;padding:13px 30px;font-family:Tahoma,Verdana,Arial,sans-serif;font-size:18px;font-weight:bold;color:#ffffff;text-decoration:none;text-shadow:1px 1px 0 #2f5a06\">" + Encode(label) + "</a>"
+            + "</td></tr></table>"
+            + "<div style=\"text-align:center;font-size:11px;line-height:16px;color:#aaa1ff\">If the button doesn't work, copy this link into your browser:<br><a href=\"" + href + "\" style=\"color:#d0bfff;word-break:break-all\">" + href + "</a></div>";
+    }
 
     public static async Task<bool> SendVerificationEmailAsync(DatabaseContext dbContext, DbUser user, string origin, EmailSender emailSender, CancellationToken cancellationToken)
     {

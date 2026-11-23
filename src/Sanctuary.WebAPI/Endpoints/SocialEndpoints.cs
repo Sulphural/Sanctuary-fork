@@ -349,6 +349,22 @@ public static class SocialEndpoints
 
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
+        var restrictions = await dbContext.Users.AsNoTracking()
+            .Where(x => x.Id == userId)
+            .Select(x => new { x.LockedUntil, x.MutedUntil })
+            .SingleOrDefaultAsync(cancellationToken);
+
+        if (restrictions is null)
+            return Results.Unauthorized();
+
+        var now = DateTimeOffset.UtcNow;
+
+        if (restrictions.LockedUntil is not null && restrictions.LockedUntil > now)
+            return Results.Json(new { error = "banned" }, statusCode: StatusCodes.Status403Forbidden);
+
+        if (restrictions.MutedUntil is not null && restrictions.MutedUntil > now)
+            return Results.Json(new { error = "muted" }, statusCode: StatusCodes.Status403Forbidden);
+
         if (!await OwnsAsync(dbContext, userId, request.As, cancellationToken))
             return Results.BadRequest();
 
