@@ -79,6 +79,7 @@ public static class WebsiteEndpoints
         group.MapNewsEndpoints();
         group.MapForumEndpoints();
         group.MapServerStatusEndpoints();
+        group.MapServerUpdatesEndpoints();
         group.MapRedeemEndpoints(loggerFactory);
         group.MapMembershipEndpoints(loggerFactory);
         group.MapAccountRecoveryEndpoints(loggerFactory);
