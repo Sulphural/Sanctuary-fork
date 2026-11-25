@@ -23,8 +23,27 @@ public static class PortraitStorage
     // Set the same absolute directory for Gateway and WebAPI when hosted separately.
     public static string GetCharacterDirectory(ulong guid)
     {
+        return Path.Combine(GetRootDirectory(), guid.ToString());
+    }
+
+    private static string GetRootDirectory()
+    {
         var root = Environment.GetEnvironmentVariable("SANCTUARY_PORTRAIT_IMAGE_ROOT");
-        return Path.Combine(string.IsNullOrWhiteSpace(root) ? "Images" : root, guid.ToString());
+        return string.IsNullOrWhiteSpace(root) ? "Images" : root;
+    }
+
+    public static void DeleteAllStalePendingUploads(TimeSpan maxAge)
+    {
+        var root = GetRootDirectory();
+
+        if (!Directory.Exists(root))
+            return;
+
+        foreach (var characterDirectory in Directory.GetDirectories(root))
+        {
+            if (ulong.TryParse(Path.GetFileName(characterDirectory), out var guid))
+                DeleteStalePendingUploads(guid, maxAge);
+        }
     }
 
     public static string GetPendingDirectory(ulong guid, uint portraitCrc)

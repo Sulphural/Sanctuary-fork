@@ -30,6 +30,8 @@ public sealed class DbUser
     public int? Age { get; set; }
     public DateTimeOffset? TermsAccepted { get; set; }
 
+    public bool ReceivedStartingStationCash { get; set; }
+
     public DateTimeOffset Created { get; set; }
     public DateTimeOffset? LastLogin { get; set; }
 

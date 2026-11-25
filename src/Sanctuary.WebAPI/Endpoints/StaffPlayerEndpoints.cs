@@ -10,9 +10,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 using Sanctuary.Database;
 using Sanctuary.Database.Entities;
+using Sanctuary.WebAPI.Options;
 using Sanctuary.WebAPI.Website;
 
 namespace Sanctuary.WebAPI.Endpoints;
@@ -330,6 +332,9 @@ public static class StaffPlayerEndpoints
         if (target is null)
             return Results.NotFound();
 
+        if (!staff.IsAdmin && !StaffAccess.CanActOn(staff, target))
+            return Results.Json(new { error = "notAllowed" }, statusCode: StatusCodes.Status403Forbidden);
+
         Membership.ExpireIfDue(dbContext, target);
 
         string text;
@@ -541,6 +546,9 @@ public static class StaffPlayerEndpoints
     private static async Task<IResult> ResetPasswordAsync(
         ulong userId,
         ClaimsPrincipal principal,
+        HttpContext httpContext,
+        EmailSender emailSender,
+        IOptionsSnapshot<PluginOptions> pluginOptions,
         IDbContextFactory<DatabaseContext> dbContextFactory,
         CancellationToken cancellationToken)
     {
@@ -550,6 +558,25 @@ public static class StaffPlayerEndpoints
 
         if (error is not null)
             return error;
+
+        if (AccountRecoveryEndpoints.IsValidEmail(target!.Email))
+        {
+            var sent = await AccountRecoveryEndpoints.SendPasswordResetEmailAsync(dbContext, target, PluginEndpoints.SiteOrigin(httpContext, pluginOptions.Value), emailSender, cancellationToken);
+
+            if (!sent)
+                return Results.Json(new { error = "sendFailed" }, statusCode: StatusCodes.Status502BadGateway);
+
+            StaffAccess.Log(dbContext, staff!, "resetPassword", target.Id, null, target.Username, "Sent a password reset e-mail.");
+
+            await dbContext.SaveChangesAsync(cancellationToken);
+
+            _logger.LogInformation("Staff {Staff} sent {Username} a password reset e-mail.", staff!.Username, target.Username);
+
+            return Results.Ok(new { emailed = true });
+        }
+
+        if (!staff!.IsAdmin)
+            return Results.Json(new { error = "noEmail" }, statusCode: StatusCodes.Status409Conflict);
 
         const string alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
         var password = string.Create(10, alphabet, (span, chars) =>

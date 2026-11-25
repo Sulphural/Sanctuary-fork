@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -8,6 +9,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 using SixLabors.ImageSharp;
@@ -16,6 +18,7 @@ using SixLabors.ImageSharp.Formats.Png;
 using SixLabors.ImageSharp.PixelFormats;
 
 using Sanctuary.Core.Helpers;
+using Sanctuary.Database;
 using Sanctuary.WebAPI.Website;
 
 namespace Sanctuary.WebAPI.Endpoints;
@@ -26,6 +29,10 @@ public static class PortraitEndpoints
     private const int ThumbnailHeight = 70;
     private const int PortraitWidth = 180;
     private const int PortraitHeight = 330;
+    private const int MaxUploadBytes = 512 * 1024;
+
+    private static readonly TimeSpan PendingSweepInterval = TimeSpan.FromMinutes(10);
+    private static long _lastPendingSweep;
 
     private static readonly DecoderOptions UploadDecoderOptions = new() { SkipMetadata = true };
 
@@ -37,13 +44,14 @@ public static class PortraitEndpoints
 
         _logger = loggerFactory.CreateLogger(nameof(PortraitEndpoints));
 
-        app.MapPost("/image", ImageHandlerAsync).DisableAntiforgery().RequireRateLimiting(WebsiteSecurity.WritePolicy);
+        app.MapPost("/image", ImageHandlerAsync).DisableAntiforgery().WithFormOptions(multipartBodyLengthLimit: MaxUploadBytes * 2).RequireRateLimiting(WebsiteSecurity.WritePolicy);
     }
 
     private static async Task<IResult> ImageHandlerAsync(
         HttpContext context,
         [FromForm] string imageType,
         [FromForm] ulong characterId,
+        IDbContextFactory<DatabaseContext> dbContextFactory,
         CancellationToken cancellationToken,
         [FromForm] IFormFileCollection files)
     {
@@ -70,6 +78,13 @@ public static class PortraitEndpoints
             return Results.BadRequest("Invalid characterId.");
         }
 
+        if (!GuidHelper.IsPlayerGuid(characterId) || !await PlayedRecentlyAsync(dbContextFactory, GuidHelper.GetPlayerId(characterId), cancellationToken))
+        {
+            _logger.LogWarning("Rejected a portrait upload for unknown or inactive character {CharacterId}.", characterId);
+
+            return Results.BadRequest("Invalid characterId.");
+        }
+
         var uploads = new Dictionary<string, Image<Rgba32>>();
         uint? portraitCrc = null;
 
@@ -77,7 +92,7 @@ public static class PortraitEndpoints
         {
             foreach (var file in files)
             {
-                if (file.Length == 0 || file.ContentType != "image/png")
+                if (file.Length == 0 || file.Length > MaxUploadBytes || file.ContentType != "image/png")
                 {
                     _logger.LogWarning("Invalid file name: {FileName}", file.FileName);
 
@@ -136,6 +151,7 @@ public static class PortraitEndpoints
             }
 
             PortraitStorage.DeleteStalePendingUploads(characterId, TimeSpan.FromMinutes(2));
+            SweepPendingUploads();
 
             var pendingDirectory = PortraitStorage.GetPendingDirectory(characterId, portraitCrc.Value);
 
@@ -161,6 +177,37 @@ public static class PortraitEndpoints
         }
 
         return Results.Ok();
+    }
+
+    private static async Task<bool> PlayedRecentlyAsync(IDbContextFactory<DatabaseContext> dbContextFactory, ulong characterId, CancellationToken cancellationToken)
+    {
+        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
+
+        var owner = await dbContext.Characters
+            .AsNoTracking()
+            .Where(x => x.Id == characterId)
+            .Select(x => new { x.User.LastLogin })
+            .SingleOrDefaultAsync(cancellationToken);
+
+        return owner?.LastLogin is { } lastLogin && lastLogin > DateTimeOffset.UtcNow.AddDays(-1);
+    }
+
+    private static void SweepPendingUploads()
+    {
+        var now = DateTimeOffset.UtcNow.UtcTicks;
+        var last = Interlocked.Read(ref _lastPendingSweep);
+
+        if (now - last < PendingSweepInterval.Ticks || Interlocked.CompareExchange(ref _lastPendingSweep, now, last) != last)
+            return;
+
+        try
+        {
+            PortraitStorage.DeleteAllStalePendingUploads(PendingSweepInterval);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _logger.LogWarning("Could not clean up old pending portraits: {Message}", ex.Message);
+        }
     }
 
     private static async Task<bool> HasSizeAsync(Stream stream, int width, int height, CancellationToken cancellationToken)

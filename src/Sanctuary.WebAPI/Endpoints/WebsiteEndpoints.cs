@@ -51,8 +51,7 @@ public static class WebsiteEndpoints
         var group = app.MapGroup("/website");
 
         group.MapPost("/login", LoginAsync).RequireRateLimiting(WebsiteSecurity.AuthPolicy);
-        group.MapPost("/register", RegisterAsync).RequireRateLimiting(WebsiteSecurity.AuthPolicy);
-        group.MapPost("/signup", SignupAsync).RequireRateLimiting(WebsiteSecurity.AuthPolicy);
+        group.MapPost("/signup", SignupAsync).RequireRateLimiting(WebsiteSecurity.SignupPolicy);
         group.MapPost("/logout", LogoutAsync);
 
         group.MapGet("/names", GetNames);
@@ -96,6 +95,9 @@ public static class WebsiteEndpoints
         if (!MiniValidator.TryValidate(request, out var errors))
             return Results.ValidationProblem(errors);
 
+        if (LoginThrottle.IsBlocked(request.Username))
+            return Results.Json(new { error = "tooManyAttempts" }, statusCode: StatusCodes.Status429TooManyRequests);
+
         await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
 
         var dbUser = await dbContext.Users.FirstOrDefaultAsync(x => x.Username == request.Username, cancellationToken);
@@ -103,52 +105,15 @@ public static class WebsiteEndpoints
         if (dbUser is null || !BC.Verify(request.Password, dbUser.Password))
         {
             _logger.LogWarning("Website login failed for username: {Username}", request.Username);
+            LoginThrottle.RecordFailure(request.Username);
 
             return Results.Json(new { error = "invalidLogin" }, statusCode: StatusCodes.Status401Unauthorized);
         }
 
+        LoginThrottle.RecordSuccess(request.Username);
+
         if (IsLocked(dbUser))
             return Results.Json(new { error = "locked", until = dbUser.LockedUntil }, statusCode: StatusCodes.Status403Forbidden);
-
-        await SignInAsync(httpContext, dbUser);
-
-        return Results.Ok(new { username = dbUser.Username });
-    }
-
-    private static async Task<IResult> RegisterAsync(
-        RegisterRequestModel request,
-        HttpContext httpContext,
-        IResourceManager resourceManager,
-        IOptions<WebAPIOptions> webAPIOptions,
-        IDbContextFactory<DatabaseContext> dbContextFactory,
-        CancellationToken cancellationToken)
-    {
-        if (!MiniValidator.TryValidate(request, out var errors))
-            return Results.ValidationProblem(errors);
-
-        if (Usernames.IsBlocked(request.Username, resourceManager))
-            return Results.Json(new { error = "usernameBlocked" }, statusCode: StatusCodes.Status400BadRequest);
-
-        await using var dbContext = await dbContextFactory.CreateDbContextAsync(cancellationToken);
-
-        if (await dbContext.Users.AnyAsync(x => x.Username == request.Username, cancellationToken))
-            return Results.Json(new { error = "usernameTaken" }, statusCode: StatusCodes.Status409Conflict);
-
-        var dbUser = new DbUser
-        {
-            Username = request.Username,
-            Password = BC.HashPassword(request.Password, BC.GenerateSalt()),
-            IsMember = webAPIOptions.Value.MemberByDefault ?? false,
-        };
-
-        await dbContext.Users.AddAsync(dbUser, cancellationToken);
-
-        if (await dbContext.SaveChangesAsync(cancellationToken) <= 0)
-        {
-            _logger.LogError("Website registration failed to add user: {Username}", request.Username);
-
-            return Results.InternalServerError();
-        }
 
         await SignInAsync(httpContext, dbUser);
 
@@ -173,6 +138,13 @@ public static class WebsiteEndpoints
 
         if (!request.AcceptTerms)
             return Results.Json(new { error = "termsRequired" }, statusCode: StatusCodes.Status400BadRequest);
+
+        if (!string.IsNullOrEmpty(request.Website))
+        {
+            _logger.LogWarning("Signup for {Username} filled in the hidden bot field.", request.Username);
+
+            return Results.Json(new { error = "invalid" }, statusCode: StatusCodes.Status400BadRequest);
+        }
 
         CharacterData? characterData = null;
 
@@ -200,6 +172,13 @@ public static class WebsiteEndpoints
                 return holdError;
 
             requestedName = held;
+        }
+
+        if (!WebsiteSecurity.TryAcquireSignup())
+        {
+            _logger.LogWarning("Signup for {Username} refused because too many accounts were made in the last hour.", request.Username);
+
+            return Results.Json(new { error = "tooManyRequests" }, statusCode: StatusCodes.Status429TooManyRequests);
         }
 
         await using var transaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);

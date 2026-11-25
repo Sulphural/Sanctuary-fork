@@ -179,6 +179,9 @@ public static class StaffEndpoints
             .Select(x => new { x.Text, x.AuthorCharacterId, AuthorUserId = x.AuthorCharacter.UserId, x.AuthorCharacter.FullName })
             .SingleOrDefaultAsync(cancellationToken);
 
+        if (message is not null && !await StaffAccess.CanActOnUserAsync(dbContext, staff, message.AuthorUserId, cancellationToken))
+            return Results.Json(new { error = "notAllowed" }, statusCode: StatusCodes.Status403Forbidden);
+
         var deleted = await dbContext.ProfileMessages.Where(x => x.Id == messageId).ExecuteDeleteAsync(cancellationToken);
 
         if (deleted > 0)

@@ -150,7 +150,8 @@ public static class CharacterCreator
         };
 
         dbCharacter.Coins = settings.StartingCoins;
-        dbCharacter.StationCash = settings.StartingStationCash;
+        dbCharacter.StationCash = dbUser.ReceivedStartingStationCash ? 0 : settings.StartingStationCash;
+        dbUser.ReceivedStartingStationCash = true;
 
         if (settings.DefaultTitleId > 0)
         {

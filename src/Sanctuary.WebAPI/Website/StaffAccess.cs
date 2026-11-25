@@ -22,6 +22,16 @@ public static class StaffAccess
 
     public static bool CanActOn(DbUser staff, DbUser target) => RoleOf(staff) > RoleOf(target);
 
+    public static async Task<bool> CanActOnUserAsync(DatabaseContext dbContext, DbUser staff, ulong? targetUserId, CancellationToken cancellationToken)
+    {
+        if (targetUserId is null || targetUserId == staff.Id)
+            return true;
+
+        var target = await dbContext.Users.AsNoTracking().SingleOrDefaultAsync(x => x.Id == targetUserId, cancellationToken);
+
+        return target is null || CanActOn(staff, target);
+    }
+
     public static async Task<DbUser?> GetStaffAsync(DatabaseContext dbContext, ClaimsPrincipal principal, CancellationToken cancellationToken)
     {
         if (!ulong.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var userId))

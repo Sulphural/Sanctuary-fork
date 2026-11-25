@@ -1325,6 +1325,9 @@ namespace Sanctuary.Database.Sqlite.Migrations
                         .HasMaxLength(254)
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("ReceivedStartingStationCash")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Session")
                         .HasMaxLength(32)
                         .HasColumnType("TEXT");

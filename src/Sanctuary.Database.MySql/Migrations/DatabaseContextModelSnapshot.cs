@@ -1348,6 +1348,9 @@ namespace Sanctuary.Database.MySql.Migrations
                         .HasMaxLength(254)
                         .HasColumnType("varchar(254)");
 
+                    b.Property<bool>("ReceivedStartingStationCash")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("Session")
                         .HasMaxLength(32)
                         .HasColumnType("varchar(32)");

@@ -609,6 +609,9 @@ public static class ForumEndpoints
         if (!staff && (!own || post.Thread.IsLocked))
             return Results.Forbid();
 
+        if (staff && !own && !await StaffAccess.CanActOnUserAsync(dbContext, viewer, post.AuthorUserId, cancellationToken))
+            return Error("notAllowed", StatusCodes.Status403Forbidden);
+
         if (!staff && viewer.MutedUntil is not null && viewer.MutedUntil > DateTimeOffset.UtcNow)
             return Error("muted", StatusCodes.Status403Forbidden);
 
@@ -661,6 +664,9 @@ public static class ForumEndpoints
         var thread = post.Thread;
         var staff = IsStaff(viewer);
         var own = post.AuthorUserId == viewer.Id;
+
+        if (staff && !own && !await StaffAccess.CanActOnUserAsync(dbContext, viewer, post.AuthorUserId, cancellationToken))
+            return Error("notAllowed", StatusCodes.Status403Forbidden);
 
         var firstPostId = await dbContext.ForumPosts
             .Where(x => x.ThreadId == thread.Id)
@@ -796,6 +802,9 @@ public static class ForumEndpoints
 
         if (error is not null)
             return error;
+
+        if (!await StaffAccess.CanActOnUserAsync(dbContext, staff!, thread!.AuthorUserId, cancellationToken))
+            return Error("notAllowed", StatusCodes.Status403Forbidden);
 
         dbContext.ForumThreads.Remove(thread!);
         StaffAccess.Log(dbContext, staff!, "deleteForumThread", thread!.AuthorUserId, thread.AuthorCharacterId, thread.AuthorName, thread.Title);

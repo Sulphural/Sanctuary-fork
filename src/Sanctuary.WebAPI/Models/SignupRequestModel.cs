@@ -32,6 +32,9 @@ public class SignupRequestModel
 
     public bool AcceptTerms { get; set; }
 
+    [StringLength(200)]
+    public string? Website { get; set; }
+
     public SignupCharacterModel? Character { get; set; }
 }
 

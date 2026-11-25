@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Mail;
@@ -23,12 +24,18 @@ public sealed class EmailOptions
     public string FromName { get; set; } = "Open Source Free Realms";
     public bool EnableSsl { get; set; } = true;
     public string? OutboxFolder { get; set; }
+    public int DailyLimit { get; set; } = 400;
+    public int DailyLimitPerAddress { get; set; } = 5;
 }
 
 public sealed class EmailSender
 {
     private readonly ILogger<EmailSender> _logger;
     private readonly IOptionsMonitor<EmailOptions> _options;
+    private readonly Lock _quotaLock = new();
+    private readonly Dictionary<string, int> _sentToAddress = new(StringComparer.OrdinalIgnoreCase);
+    private DateOnly _quotaDay;
+    private int _sentToday;
 
     public EmailSender(ILogger<EmailSender> logger, IOptionsMonitor<EmailOptions> options)
     {
@@ -48,9 +55,41 @@ public sealed class EmailSender
         }
     }
 
+    private bool TryTakeQuota(EmailOptions options, string to)
+    {
+        lock (_quotaLock)
+        {
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+            if (today != _quotaDay)
+            {
+                _quotaDay = today;
+                _sentToday = 0;
+                _sentToAddress.Clear();
+            }
+
+            _sentToAddress.TryGetValue(to, out var sentToAddress);
+
+            if (_sentToday >= options.DailyLimit || sentToAddress >= options.DailyLimitPerAddress)
+                return false;
+
+            _sentToday++;
+            _sentToAddress[to] = sentToAddress + 1;
+
+            return true;
+        }
+    }
+
     public async Task<bool> SendAsync(string to, string subject, string text, string html, CancellationToken cancellationToken)
     {
         var options = _options.CurrentValue;
+
+        if (!TryTakeQuota(options, to.Trim()))
+        {
+            _logger.LogWarning("E-mail \"{Subject}\" was not sent because a daily e-mail limit was reached.", subject);
+
+            return false;
+        }
 
         if (!IsConfigured)
             return await SaveToOutboxAsync(options, to, subject, text, cancellationToken);

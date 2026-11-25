@@ -24,6 +24,7 @@ public static class WebsiteSecurity
     public const string AuthPolicy = "auth";
     public const string WritePolicy = "write";
     public const string LookupPolicy = "lookup";
+    public const string SignupPolicy = "signup";
 
     public const string StampClaim = "sanctuary:stamp";
 
@@ -42,7 +43,22 @@ public static class WebsiteSecurity
             options.AddPolicy(AuthPolicy, httpContext => Window(httpContext, AuthPolicy, 10, TimeSpan.FromMinutes(1)));
             options.AddPolicy(WritePolicy, httpContext => Window(httpContext, WritePolicy, 30, TimeSpan.FromMinutes(1)));
             options.AddPolicy(LookupPolicy, httpContext => Window(httpContext, LookupPolicy, 120, TimeSpan.FromMinutes(1)));
+            options.AddPolicy(SignupPolicy, httpContext => Window(httpContext, SignupPolicy, 3, TimeSpan.FromHours(1)));
         });
+    }
+
+    private static readonly FixedWindowRateLimiter SignupLimiter = new(new FixedWindowRateLimiterOptions
+    {
+        PermitLimit = 60,
+        Window = TimeSpan.FromHours(1),
+        QueueLimit = 0
+    });
+
+    public static bool TryAcquireSignup()
+    {
+        using var lease = SignupLimiter.AttemptAcquire();
+
+        return lease.IsAcquired;
     }
 
     private static RateLimitPartition<string> Window(HttpContext httpContext, string policy, int permits, TimeSpan window)

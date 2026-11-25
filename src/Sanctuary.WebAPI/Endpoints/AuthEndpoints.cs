@@ -32,7 +32,6 @@ public static class AuthEndpoints
         _logger = loggerFactory.CreateLogger(nameof(AuthEndpoints));
 
         app.MapPost("/login", LoginHandlerAsync).RequireRateLimiting(WebsiteSecurity.AuthPolicy);
-        app.MapPost("/register", RegisterHandlerAsync).RequireRateLimiting(WebsiteSecurity.AuthPolicy);
     }
 
     private static async Task<IResult> LoginHandlerAsync(
@@ -46,11 +45,15 @@ public static class AuthEndpoints
 
         var dbContext = await dbContextFactory.CreateDbContextAsync();
 
+        if (LoginThrottle.IsBlocked(request.Username))
+            return Results.StatusCode(StatusCodes.Status429TooManyRequests);
+
         var dbUser = await dbContext.Users.FirstOrDefaultAsync(x => x.Username == request.Username, cancellationToken);
 
         if (dbUser is null)
         {
             _logger.LogWarning("Login failed, user not found for username: {Username}", request.Username);
+            LoginThrottle.RecordFailure(request.Username);
 
             return Results.Unauthorized();
         }
@@ -58,9 +61,15 @@ public static class AuthEndpoints
         if (!BC.Verify(request.Password, dbUser.Password))
         {
             _logger.LogWarning("Login failed, invalid password for username: {Username}", request.Username);
+            LoginThrottle.RecordFailure(request.Username);
 
             return Results.Unauthorized();
         }
+
+        LoginThrottle.RecordSuccess(request.Username);
+
+        if (dbUser.LockedUntil is not null && dbUser.LockedUntil > DateTimeOffset.UtcNow)
+            return Results.StatusCode(StatusCodes.Status403Forbidden);
 
         dbUser.Session = Guid.NewGuid().ToString("N");
         dbUser.SessionCreated = DateTimeOffset.UtcNow;
@@ -79,49 +88,4 @@ public static class AuthEndpoints
         });
     }
 
-    private static async Task<IResult> RegisterHandlerAsync(
-        RegisterRequestModel request,
-        CancellationToken cancellationToken,
-        IOptions<WebAPIOptions> webAPIOptions,
-        Sanctuary.Game.IResourceManager resourceManager,
-        IDbContextFactory<DatabaseContext> dbContextFactory)
-    {
-        if (!MiniValidator.TryValidate(request, out var errors))
-            return Results.ValidationProblem(errors);
-
-        if (Usernames.IsBlocked(request.Username, resourceManager))
-            return Results.BadRequest();
-
-        var dbContext = await dbContextFactory.CreateDbContextAsync();
-
-        var usernameTaken = await dbContext.Users.AnyAsync(x => x.Username == request.Username, cancellationToken);
-
-        if (usernameTaken)
-        {
-            _logger.LogWarning("Registration failed, username already taken {Username}", request.Username);
-
-            return Results.Conflict();
-        }
-
-        var salt = BC.GenerateSalt();
-        var hashedPassword = BC.HashPassword(request.Password, salt);
-
-        var dbUser = new DbUser
-        {
-            Username = request.Username,
-            Password = hashedPassword,
-            IsMember = webAPIOptions.Value.MemberByDefault ?? false,
-        };
-
-        await dbContext.Users.AddAsync(dbUser, cancellationToken);
-
-        if (await dbContext.SaveChangesAsync(cancellationToken) <= 0)
-        {
-            _logger.LogError("Failed to add new user: {Username}", request.Username);
-
-            return Results.InternalServerError();
-        }
-
-        return Results.Ok();
-    }
 }

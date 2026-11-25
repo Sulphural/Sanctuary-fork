@@ -175,9 +175,22 @@ public static class AccountRecoveryEndpoints
             + "<div style=\"text-align:center;font-size:11px;line-height:16px;color:#aaa1ff\">If the button doesn't work, copy this link into your browser:<br><a href=\"" + href + "\" style=\"color:#d0bfff;word-break:break-all\">" + href + "</a></div>";
     }
 
+    public static async Task<bool> VerificationSentRecentlyAsync(DatabaseContext dbContext, ulong userId, CancellationToken cancellationToken)
+    {
+        var created = await dbContext.AccountTokens
+            .Where(x => x.UserId == userId && x.Purpose == VerifyPurpose)
+            .Select(x => x.Created)
+            .ToListAsync(cancellationToken);
+
+        return created.Any(x => x > DateTimeOffset.UtcNow - ResendWait);
+    }
+
     public static async Task<bool> SendVerificationEmailAsync(DatabaseContext dbContext, DbUser user, string origin, EmailSender emailSender, CancellationToken cancellationToken)
     {
         if (!IsValidEmail(user.Email))
+            return false;
+
+        if (await VerificationSentRecentlyAsync(dbContext, user.Id, cancellationToken))
             return false;
 
         var token = await CreateTokenAsync(dbContext, user.Id, VerifyPurpose, user.Email, VerifyLifetime, cancellationToken);
@@ -269,6 +282,37 @@ public static class AccountRecoveryEndpoints
         return Results.Ok(new { sent = true });
     }
 
+    public static async Task<bool> SendPasswordResetEmailAsync(DatabaseContext dbContext, DbUser user, string origin, EmailSender emailSender, CancellationToken cancellationToken)
+    {
+        if (!IsValidEmail(user.Email))
+            return false;
+
+        const string heading = "PASSWORD RESET";
+        const string intro = "We are sending this e-mail because we have received a request to reset the password for your OSFR Account {0}. If you did not initiate this request, you may simply disregard this e-mail.";
+        const string limit = "Password reset may only be done once every 24 hours.";
+
+        var token = await CreateTokenAsync(dbContext, user.Id, ResetPurpose, user.Email, ResetLifetime, cancellationToken);
+        var url = origin + "/resetPassword.html?token=" + Uri.EscapeDataString(token);
+
+        var html = RetailHtml(heading, origin,
+        [
+            string.Format(intro, "<b>" + Encode(user.Username) + "</b>"),
+            "Click on the following link to create a new password.",
+            Link(url, "Create a new Password"),
+            limit
+        ]);
+
+        var text = RetailText(heading, origin,
+        [
+            string.Format(intro, user.Username),
+            "Click on the following link to create a new password.",
+            url,
+            limit
+        ]);
+
+        return await emailSender.SendAsync(user.Email!, "Open Source Free Realms - Password Reset", text, html, cancellationToken);
+    }
+
     private static async Task<IResult> RecoverPasswordAsync(
         NameRequest request,
         HttpContext httpContext,
@@ -298,9 +342,6 @@ public static class AccountRecoveryEndpoints
 
         var origin = Origin(httpContext, pluginOptions);
         var now = DateTimeOffset.UtcNow;
-        const string heading = "PASSWORD RESET";
-        const string intro = "We are sending this e-mail because we have received a request to reset the password for your OSFR Account {0}. If you did not initiate this request, you may simply disregard this e-mail.";
-        const string limit = "Password reset may only be done once every 24 hours.";
 
         foreach (var user in users.Where(x => IsValidEmail(x.Email)))
         {
@@ -315,26 +356,7 @@ public static class AccountRecoveryEndpoints
                 continue;
             }
 
-            var token = await CreateTokenAsync(dbContext, user.Id, ResetPurpose, user.Email, ResetLifetime, cancellationToken);
-            var url = origin + "/resetPassword.html?token=" + Uri.EscapeDataString(token);
-
-            var html = RetailHtml(heading, origin,
-            [
-                string.Format(intro, "<b>" + Encode(user.Username) + "</b>"),
-                "Click on the following link to create a new password.",
-                Link(url, "Create a new Password"),
-                limit
-            ]);
-
-            var text = RetailText(heading, origin,
-            [
-                string.Format(intro, user.Username),
-                "Click on the following link to create a new password.",
-                url,
-                limit
-            ]);
-
-            await emailSender.SendAsync(user.Email!, "Open Source Free Realms - Password Reset", text, html, cancellationToken);
+            await SendPasswordResetEmailAsync(dbContext, user, origin, emailSender, cancellationToken);
         }
 
         _logger.LogInformation("Password reset asked for; {Count} accounts matched.", users.Count);
@@ -432,6 +454,9 @@ public static class AccountRecoveryEndpoints
 
         if (user.EmailVerified)
             return Results.Json(new { error = "alreadyVerified" }, statusCode: StatusCodes.Status400BadRequest);
+
+        if (await VerificationSentRecentlyAsync(dbContext, user.Id, cancellationToken))
+            return Results.Json(new { error = "tooSoon" }, statusCode: StatusCodes.Status429TooManyRequests);
 
         var sent = await SendVerificationEmailAsync(dbContext, user, Origin(httpContext, pluginOptions), emailSender, cancellationToken);
 
