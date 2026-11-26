@@ -145,6 +145,23 @@ if (!string.IsNullOrWhiteSpace(websiteRoot))
     {
         var websiteFiles = new PhysicalFileProvider(Path.GetFullPath(websiteRoot));
 
+        app.UseStatusCodePages(async context =>
+        {
+            var http = context.HttpContext;
+
+            if (http.Response.StatusCode != StatusCodes.Status404NotFound || !HttpMethods.IsGet(http.Request.Method) || !http.Request.Headers.Accept.ToString().Contains("text/html"))
+                return;
+
+            var notFoundPage = websiteFiles.GetFileInfo("404.html");
+
+            if (!notFoundPage.Exists)
+                return;
+
+            http.Response.ContentType = "text/html; charset=utf-8";
+            http.Response.Headers.CacheControl = "no-cache";
+            await http.Response.SendFileAsync(notFoundPage);
+        });
+
         app.UseDefaultFiles(new DefaultFilesOptions { FileProvider = websiteFiles });
         app.UseStaticFiles(new StaticFileOptions
         {
