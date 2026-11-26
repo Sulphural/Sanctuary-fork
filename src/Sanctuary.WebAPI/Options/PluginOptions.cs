@@ -14,6 +14,8 @@ public class PluginOptions
 
     public string? LocalLoginAddress { get; set; }
 
+    public string? HomePublicAddress { get; set; }
+
     public string ClientManifestUrl { get; set; } = "https://opensourcefreerealms.com/clientmanifest.xml";
 
     public string ClientBaseUrl { get; set; } = "https://opensourcefreerealms.com/client";

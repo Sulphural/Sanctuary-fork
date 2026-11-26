@@ -111,7 +111,7 @@ public static class PluginEndpoints
         if (remote.AddressFamily == AddressFamily.InterNetworkV6)
             return SharesLocalIPv6Prefix(remote);
 
-        var publicHost = options.GatewayAddress.Split(':')[0];
+        var publicHost = string.IsNullOrWhiteSpace(options.HomePublicAddress) ? options.GatewayAddress.Split(':')[0] : options.HomePublicAddress;
 
         return IPAddress.TryParse(publicHost, out var publicAddress) && publicAddress.Equals(remote);
     }

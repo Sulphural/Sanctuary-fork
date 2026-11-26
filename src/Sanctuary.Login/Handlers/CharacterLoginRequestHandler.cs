@@ -280,7 +280,7 @@ public static class CharacterLoginRequestHandler
             address = address.MapToIPv4();
 
         if (IPAddress.IsLoopback(address))
-            return true;
+            return false;
 
         if (address.AddressFamily == AddressFamily.InterNetworkV6)
             return address.IsIPv6LinkLocal || address.IsIPv6UniqueLocal;
