@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Text.Json;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -28,6 +29,7 @@ public static class PluginEndpoints
 
         group.MapGet("/config", GetConfig);
         group.MapGet("/downloads", GetDownloads);
+        group.MapGet("/version", GetVersion);
         group.MapGet("/download/{platform}", Download);
     }
 
@@ -43,9 +45,29 @@ public static class PluginEndpoints
 
     private const string PurchaseCertificateFileName = "sanctuary-uram-ca.pem";
 
+    private const string VersionFileName = "version.json";
+
+    private static readonly object VersionLock = new();
+    private static (string Path, DateTime Written, Version? Latest, Version? Minimum) _versionCache;
+
+    private sealed record VersionFile(string? Latest, string? Minimum);
+
     private static IResult GetConfig(string? plugin, HttpContext httpContext, IOptionsSnapshot<PluginOptions> pluginOptions, IOptionsSnapshot<WebAPIOptions> webAPIOptions)
     {
         var options = pluginOptions.Value;
+        var (latest, minimum) = ReadVersions(options);
+
+        if (minimum is not null && Version.TryParse(plugin, out var reported) && reported < minimum)
+        {
+            return Results.Json(new
+            {
+                error = "pluginOutdated",
+                message = $"Your Open Source Free Realms Plugin ({reported}) is out of date. Please install version {latest ?? minimum} from the website.",
+                minimum = minimum.ToString(),
+                latest = latest?.ToString()
+            }, statusCode: StatusCodes.Status426UpgradeRequired);
+        }
+
         var arguments = new List<string>((webAPIOptions.Value.LaunchArguments ?? string.Empty).Split(' ', StringSplitOptions.RemoveEmptyEntries));
         var local = IsSameNetwork(httpContext, options);
 
@@ -163,6 +185,53 @@ public static class PluginEndpoints
             available[platform] = TryGetDownload(pluginOptions.Value, download.FileName, out _);
 
         return Results.Ok(available);
+    }
+
+    private static IResult GetVersion(HttpContext httpContext, IOptionsSnapshot<PluginOptions> pluginOptions)
+    {
+        var (latest, minimum) = ReadVersions(pluginOptions.Value);
+
+        httpContext.Response.Headers.CacheControl = "no-cache";
+
+        return Results.Ok(new { latest = latest?.ToString(), minimum = minimum?.ToString() });
+    }
+
+    private static (Version? Latest, Version? Minimum) ReadVersions(PluginOptions options)
+    {
+        if (string.IsNullOrWhiteSpace(options.DownloadsPath))
+            return (null, null);
+
+        var path = Path.GetFullPath(Path.Combine(options.DownloadsPath, VersionFileName));
+
+        lock (VersionLock)
+        {
+            try
+            {
+                if (!File.Exists(path))
+                {
+                    _versionCache = (path, DateTime.MinValue, null, null);
+                    return (null, null);
+                }
+
+                var written = File.GetLastWriteTimeUtc(path);
+
+                if (_versionCache.Path == path && _versionCache.Written == written)
+                    return (_versionCache.Latest, _versionCache.Minimum);
+
+                var file = JsonSerializer.Deserialize<VersionFile>(File.ReadAllText(path), new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                Version.TryParse(file?.Latest, out var latest);
+                Version.TryParse(file?.Minimum, out var minimum);
+
+                _versionCache = (path, written, latest, minimum);
+
+                return (latest, minimum);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+            {
+                return (_versionCache.Latest, _versionCache.Minimum);
+            }
+        }
     }
 
     private static IResult Download(string platform, IOptionsSnapshot<PluginOptions> pluginOptions)
